@@ -1,7 +1,7 @@
-const CACHE='health-app-v1';
+const CACHE='health-app-v2';
 const ASSETS=[
   './',
-  './health-app.html',
+  './index.html',
   './manifest.json',
   './icon.svg',
   './icon-maskable.svg',
@@ -38,7 +38,7 @@ self.addEventListener('fetch', e=>{
         const copy=resp.clone();
         caches.open(CACHE).then(c=>c.put(e.request,copy));
         return resp;
-      }).catch(()=>caches.match(e.request).then(r=>r||caches.match('./health-app.html')))
+      }).catch(()=>caches.match(e.request).then(r=>r||caches.match('./index.html')))
     );
     return;
   }

@@ -2,7 +2,7 @@
   "name": "健康管理",
   "short_name": "健康管理",
   "description": "個人健康追蹤：飲食、體重、運動、睡眠、飲水、AI 建議",
-  "start_url": "./health-app.html",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
