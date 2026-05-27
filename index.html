@@ -417,9 +417,13 @@ button{cursor:pointer;border:none;background:none}
     <div class="card-title"><i class="ti ti-ruler-2"></i>基本身體數據</div>
     <div class="field-row three">
       <div class="field"><label>身高 (cm)</label><input type="number" id="p1-height" value="170" min="100" max="250" step="0.1" oninput="p1Calc()"></div>
-      <div class="field"><label>體重 (kg)</label><input type="number" id="p1-weight" value="65" min="30" max="200" step="0.1" oninput="p1Calc()"></div>
+      <div class="field">
+        <label style="display:flex;align-items:center;gap:4px">目前體重 (kg)<span style="font-size:9px;background:var(--surface3);color:var(--text3);padding:1px 5px;border-radius:8px">同步 P3</span></label>
+        <input type="number" id="p1-weight" value="65" readonly style="background:var(--surface3);cursor:default;color:var(--text2)" tabindex="-1">
+      </div>
       <div class="field"><label>年齡 (歲)</label><input type="number" id="p1-age" value="28" min="10" max="100" oninput="p1Calc()"></div>
     </div>
+    <button onclick="goPage('p3',document.querySelectorAll('.nav-item')[2])" style="width:100%;padding:7px;margin:-4px 0 8px;border-radius:var(--radius-sm);border:1px dashed var(--border2);background:transparent;color:var(--text2);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px"><i class="ti ti-scale" style="font-size:13px"></i>更新體重 → 至「體重追蹤」記錄</button>
     <div class="field">
       <label>生理性別</label>
       <div class="seg">
@@ -430,7 +434,7 @@ button{cursor:pointer;border:none;background:none}
     <div class="result-row">
       <div class="result-card result-card-g"><div class="rl">BMI</div><div><span class="rv" id="p1-bmi">22.5</span></div><div class="rn" id="p1-bmi-n">正常</div></div>
       <div class="result-card result-card-a"><div class="rl">BMR</div><div><span class="rv" id="p1-bmr">1,612</span><span class="ru">kcal</span></div><div class="rn">靜止消耗</div></div>
-      <div class="result-card result-card-b"><div class="rl">理想體重</div><div><span class="rv" id="p1-ibw">57–75</span><span class="ru">kg</span></div><div class="rn">BMI 18.5–25</div></div>
+      <div class="result-card result-card-b"><div class="rl">理想體重</div><div><span class="rv" id="p1-ibw">57–72</span><span class="ru">kg</span></div><div class="rn">BMI 18.5–24（國健署）</div></div>
     </div>
     <div class="bmi-track" style="margin-top:12px"><div class="bmi-pointer" id="p1-bmi-ptr" style="left:30%"></div></div>
     <div class="bmi-labels"><span>過輕</span><span>正常</span><span>過重</span><span>肥胖</span></div>
@@ -486,16 +490,16 @@ button{cursor:pointer;border:none;background:none}
         </div>
         <div class="field-row two">
           <div class="field"><label>腰圍 (cm)</label><input type="number" id="p1-waist" placeholder="例：80" min="40" max="200" step="0.5" oninput="p1CalcAdv()"></div>
-          <div class="field"><label>體內水分率 (%)</label><input type="number" id="p1-water-rate" placeholder="例：55" min="30" max="80" step="0.1"></div>
+          <div class="field"><label>體內水分率 (%)</label><input type="number" id="p1-water-rate" placeholder="例：55" min="30" max="80" step="0.1" oninput="p1CalcAdv()"></div>
         </div>
         <div id="p1-derived"></div>
       </div>
     </div>
   </div>
 
-  <div style="display:flex;gap:8px;margin-bottom:8px">
-    <button class="btn btn-outline" onclick="p1Reset()" style="flex:1"><i class="ti ti-refresh" style="margin-right:4px"></i>重設</button>
-    <button class="btn btn-primary" onclick="p1Save()" style="flex:2"><i class="ti ti-device-floppy" style="margin-right:4px"></i>儲存資料</button>
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+    <div style="flex:1;font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px"><i class="ti ti-cloud-check" style="font-size:13px;color:var(--green)"></i>變更會自動儲存</div>
+    <button class="btn btn-outline" onclick="p1Reset()"><i class="ti ti-refresh" style="margin-right:4px"></i>重設預設值</button>
   </div>
 
   <div class="card" style="margin-top:4px">
@@ -524,8 +528,8 @@ button{cursor:pointer;border:none;background:none}
 
   <div class="card">
     <div class="card-title"><i class="ti ti-flame"></i>今日熱量收支</div>
-    <div class="stat-grid four" style="margin-bottom:10px">
-      <div class="stat-card"><div class="sl">目標</div><div><span class="sv" id="p2-target" style="color:var(--text)">—</span><span class="su">kcal</span></div><div class="sn c-muted">TDEE</div></div>
+    <div class="stat-grid" style="margin-bottom:10px">
+      <div class="stat-card"><div class="sl">目標 TDEE</div><div><span class="sv" id="p2-target" style="color:var(--text)">—</span><span class="su">kcal</span></div></div>
       <div class="stat-card"><div class="sl">已攝取</div><div><span class="sv c-green" id="p2-eaten">0</span><span class="su">kcal</span></div></div>
       <div class="stat-card"><div class="sl">剩餘</div><div><span class="sv" id="p2-remain">—</span><span class="su">kcal</span></div></div>
       <div class="stat-card"><div class="sl">完成度</div><div><span class="sv" id="p2-pct">0</span><span class="su">%</span></div></div>
@@ -1069,7 +1073,10 @@ let p1Sex='m', p1Act=1.375, p1Goal='keep';
 
 function p1Render(){
   document.getElementById('p1-height').value=STATE.profile.height;
-  document.getElementById('p1-weight').value=STATE.profile.weight;
+  // 體重從最新紀錄拉，回退至 profile
+  const latestW=STATE.weightRecords.length?STATE.weightRecords[STATE.weightRecords.length-1].weight:STATE.profile.weight;
+  STATE.profile.weight=latestW;
+  document.getElementById('p1-weight').value=latestW;
   document.getElementById('p1-age').value=STATE.profile.age;
   document.getElementById('p1-water-goal').value=STATE.profile.waterGoal;
   document.getElementById('p1-sleep-goal').value=STATE.profile.sleepGoal;
@@ -1092,6 +1099,7 @@ function p1Calc(){
   const w=parseFloat(document.getElementById('p1-weight').value)||65;
   const a=parseInt(document.getElementById('p1-age').value)||28;
   STATE.profile.height=h; STATE.profile.weight=w; STATE.profile.age=a;
+  saveState();
   const bmi=calcBMI(w);
   const bi=bmiInfo(bmi);
   const bmiEl=document.getElementById('p1-bmi');
@@ -1099,7 +1107,7 @@ function p1Calc(){
   document.getElementById('p1-bmi-n').textContent=bi.t;
   const bmr=p1Sex==='m'?(10*w)+(6.25*h)-(5*a)+5:(10*w)+(6.25*h)-(5*a)-161;
   animateNum(document.getElementById('p1-bmr'),Math.round(bmr));
-  const lo=(18.5*(h/100)**2), hi=(25*(h/100)**2);
+  const lo=(18.5*(h/100)**2), hi=(24*(h/100)**2);
   document.getElementById('p1-ibw').textContent=lo.toFixed(0)+'–'+hi.toFixed(0);
   document.getElementById('p1-bmi-ptr').style.left=bmiPct(bmi)+'%';
   const base=bmr*p1Act; let adj=base,label='維持體重';
@@ -1125,6 +1133,9 @@ function p1CalcAdv(){
   const bf=parseFloat(document.getElementById('p1-bf').value)||0;
   const mm=parseFloat(document.getElementById('p1-mm').value)||0;
   const waist=parseFloat(document.getElementById('p1-waist').value)||0;
+  STATE.profile.bf=bf||null; STATE.profile.mm=mm||null; STATE.profile.waist=waist||null;
+  STATE.profile.waterRate=parseFloat(document.getElementById('p1-water-rate').value)||null;
+  saveState();
   const rows=[];
   if(bf>0){ const fat=+(w*bf/100).toFixed(1); const ffm=+(w-fat).toFixed(1); rows.push(['脂肪重量',fat+' kg']); rows.push(['除脂體重 (FFM)',ffm+' kg']); const s=p1Sex==='m'?(bf<6?'過低':bf<=20?'正常':bf<=25?'偏高':'過高'):(bf<14?'過低':bf<=27?'正常':bf<=32?'偏高':'過高'); rows.push(['體脂評估',s]); }
   if(mm>0){ rows.push(['骨骼肌率',(mm/w*100).toFixed(1)+'%']); }
@@ -1133,19 +1144,6 @@ function p1CalcAdv(){
 }
 
 function toggleAdv(){ const btn=document.getElementById('adv-toggle'); const body=document.getElementById('adv-body'); btn.classList.toggle('open'); body.classList.toggle('open'); }
-
-function p1Save(){
-  STATE.profile.waterGoal=parseInt(document.getElementById('p1-water-goal').value)||2000;
-  STATE.profile.sleepGoal=parseFloat(document.getElementById('p1-sleep-goal').value)||7.5;
-  STATE.profile.bf=parseFloat(document.getElementById('p1-bf').value)||null;
-  STATE.profile.mm=parseFloat(document.getElementById('p1-mm').value)||null;
-  STATE.profile.waist=parseFloat(document.getElementById('p1-waist').value)||null;
-  STATE.profile.waterRate=parseFloat(document.getElementById('p1-water-rate').value)||null;
-  saveState();
-  const tdee=calcTDEE();
-  showToast('已儲存！TDEE '+tdee.toLocaleString()+' kcal 同步全頁','ok');
-  p2Refresh(); p6Render();
-}
 
 function p1Reset(){ STATE.profile={height:170,weight:65,age:28,sex:'m',actFactor:1.375,goal:'keep',waterGoal:2000,sleepGoal:7.5,bf:null,mm:null,waist:null,waterRate:null,lastWeightTime:'07:00',lastExDuration:30,lastExIntensity:'medium',lastSleepBed:'23:00',lastSleepWake:'07:00'}; ['p1-bf','p1-mm','p1-waist','p1-water-rate'].forEach(id=>document.getElementById(id).value=''); p1Render(); }
 
