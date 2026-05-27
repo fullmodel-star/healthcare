@@ -3,3 +3,9 @@
 Thumbs.db
 *.log
 node_modules/
+
+# TFDA 原始下載 + 處理中產物（食品庫已合併進 food-db.js）
+20_5.json
+tfda-raw.zip
+legacy-100.json
+legacy-100.txt
