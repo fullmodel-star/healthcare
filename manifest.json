@@ -1,0 +1,27 @@
+{
+  "name": "健康管理",
+  "short_name": "健康管理",
+  "description": "個人健康追蹤：飲食、體重、運動、睡眠、飲水、AI 建議",
+  "start_url": "./health-app.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F5F4F0",
+  "theme_color": "#534AB7",
+  "lang": "zh-TW",
+  "categories": ["health", "fitness", "lifestyle"],
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
