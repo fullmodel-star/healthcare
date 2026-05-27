@@ -1369,6 +1369,26 @@ function p2InitCatTabs(){
 
 function p2SetCat(cat){ p2ActiveCat=cat; p2InitCatTabs(); p2Search(true); }
 
+// 台灣常見搜尋同義詞（南北叫法、口語 ↔ TFDA 學名/正式名）
+const FOOD_ALIASES={
+  '滷肉':['肉燥'],'滷肉飯':['肉燥飯'],
+  '控肉':['東坡肉','五花肉'],
+  '芭樂':['番石榴'],'蕃茄':['番茄'],'番茄':['蕃茄'],
+  '飯糰':['御飯糰'],
+  '黑咖啡':['咖啡'],'美式咖啡':['咖啡'],'拿鐵':['咖啡','奶'],
+  '燕麥奶':['燕麥'],
+  '雞翅':['雞翼'],
+  '白米飯':['蓬萊米','在來米','白飯'],'白飯':['蓬萊米','米飯'],
+  '青菜':['菠菜','空心菜','地瓜葉','小白菜'],
+  '湯':['濃湯','清湯'],
+  '便當':['排骨飯','雞腿飯','燒肉飯'],
+  '蛋餅':['粉漿蛋餅'],
+  '吐司':['白吐司','全麥吐司'],
+  '麵包':['白麵包','土司','吐司'],
+  '大腸':['豬腸'],'雞胗':['雞腎','雞胗'],
+  '春捲':['潤餅']
+};
+
 function p2Search(catChange){
   const q=document.getElementById('p2-search-q').value.trim();
   if(!q&&!catChange)return;
@@ -1376,14 +1396,17 @@ function p2Search(catChange){
   document.getElementById('p2-add-panel').classList.remove('show');
   p2SelectedFood=null;
 
+  const aliases=FOOD_ALIASES[q]||[];
+  const terms=[q,...aliases].filter(Boolean);
   const fdaRes=FOOD_DB.filter(f=>{
-    const matchQ=!q||f.name.includes(q)||f.cat.includes(q);
+    const matchQ=!q||terms.some(t=>f.name.includes(t))||f.cat.includes(q);
     const matchCat=p2ActiveCat==='全部'||f.cat===p2ActiveCat;
     return matchQ&&matchCat;
   });
 
   if(fdaRes.length){
-    document.getElementById('p2-search-status').textContent=`找到 ${fdaRes.length} 筆（衛福部驗證）`;
+    const aliasNote=aliases.length?`（同義詞：${aliases.join('、')}）`:'';
+    document.getElementById('p2-search-status').textContent=`找到 ${fdaRes.length} 筆（衛福部驗證）${aliasNote}`;
     document.getElementById('p2-search-results').innerHTML=fdaRes.map(f=>`
       <div class="food-result" onclick="p2SelectFood(${f.id},'fda')">
         <div class="fr-icon"><i class="ti ti-leaf"></i></div>
