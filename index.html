@@ -513,6 +513,17 @@ button{cursor:pointer;border:none;background:none}
     </div>
     <div id="api-key-status" style="font-size:12px;margin-top:4px;display:flex;align-items:center;gap:5px"></div>
   </div>
+
+  <div class="card" style="margin-top:4px">
+    <div class="card-title"><i class="ti ti-database"></i>資料管理</div>
+    <div style="display:flex;gap:6px;margin-bottom:8px">
+      <button class="btn btn-outline" onclick="exportData()" style="flex:1"><i class="ti ti-download" style="margin-right:4px"></i>匯出備份</button>
+      <button class="btn btn-outline" onclick="document.getElementById('import-file').click()" style="flex:1"><i class="ti ti-upload" style="margin-right:4px"></i>匯入還原</button>
+    </div>
+    <input type="file" id="import-file" accept=".json,application/json" style="display:none" onchange="handleImportFile(this)">
+    <button onclick="clearAllData()" style="width:100%;padding:10px;border-radius:var(--radius-sm);border:1px solid var(--red);background:var(--red-bg);color:var(--red);font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px"><i class="ti ti-trash"></i>清除所有資料</button>
+    <div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.5"><i class="ti ti-info-circle" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>匯出 JSON 檔可作備份或換機。清除會回到初始狀態（API Key 仍保留）。</div>
+  </div>
 </div>
 
 <!-- ============ PAGE 2: 飲食記錄 ============ -->
@@ -1148,6 +1159,61 @@ function p1CalcAdv(){
 function toggleAdv(){ const btn=document.getElementById('adv-toggle'); const body=document.getElementById('adv-body'); btn.classList.toggle('open'); body.classList.toggle('open'); }
 
 function p1Reset(){ STATE.profile={height:170,weight:65,age:28,sex:'m',actFactor:1.375,goal:'keep',waterGoal:2000,sleepGoal:7.5,bf:null,mm:null,waist:null,waterRate:null,lastWeightTime:'07:00',lastExDuration:30,lastExIntensity:'medium',lastSleepBed:'23:00',lastSleepWake:'07:00'}; ['p1-bf','p1-mm','p1-waist','p1-water-rate'].forEach(id=>document.getElementById(id).value=''); p1Render(); }
+
+// ==================== 資料管理 ====================
+function exportData(){
+  const data={
+    _app:'健康管理',
+    _version:1,
+    _exportedAt:new Date().toISOString(),
+    profile:STATE.profile,
+    meals:STATE.meals,
+    weightRecords:STATE.weightRecords,
+    exerciseRecords:STATE.exerciseRecords,
+    sleepRecords:STATE.sleepRecords,
+    waterLogs:STATE.waterLogs
+  };
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download='健康管理_'+todayStr()+'.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  showToast('已下載 健康管理_'+todayStr()+'.json','ok',2800);
+}
+
+function handleImportFile(input){
+  const file=input.files[0]; if(!file) return;
+  const r=new FileReader();
+  r.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!data.profile||typeof data.meals==='undefined') throw new Error('不是有效的備份檔');
+      if(!confirm('匯入會「覆蓋」目前所有資料（建議先匯出備份），確定繼續？')){ input.value=''; return; }
+      STATE.profile=Object.assign({},STATE.profile,data.profile);
+      STATE.meals=data.meals||{};
+      STATE.weightRecords=data.weightRecords||[];
+      STATE.exerciseRecords=data.exerciseRecords||[];
+      STATE.sleepRecords=data.sleepRecords||[];
+      STATE.waterLogs=data.waterLogs||[];
+      saveState();
+      showToast('匯入成功，重新載入中…','ok',1500);
+      setTimeout(()=>location.reload(),800);
+    }catch(err){
+      showToast('匯入失敗：'+err.message,'warn',3000);
+    }
+    input.value='';
+  };
+  r.readAsText(file);
+}
+
+function clearAllData(){
+  const v=prompt('將清除「所有」飲食、體重、運動、睡眠、飲水紀錄及個人資料。\n（API Key 仍保留）\n\n請輸入「清除」二字確認：');
+  if(v!=='清除'){ if(v!==null) showToast('輸入不符，已取消','info'); return; }
+  localStorage.removeItem('healthAppState');
+  showToast('已清除所有資料，重新載入中…','ok',1500);
+  setTimeout(()=>location.reload(),800);
+}
 
 // ==================== PAGE 2 ====================
 let p2Meal='breakfast', p2Mode='scan', p2SelectedFood=null, p2ScanFoods=[], p2UploadB64=null, p2UploadMime='image/jpeg';
