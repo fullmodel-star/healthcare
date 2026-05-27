@@ -766,9 +766,14 @@ button{cursor:pointer;border:none;background:none}
 
   <div class="card">
     <div class="card-title"><i class="ti ti-dashboard"></i>今日概況</div>
-    <div class="stat-grid four">
+    <div style="font-size:11px;color:var(--text3);margin-bottom:5px;display:flex;align-items:center;gap:4px"><i class="ti ti-moon" style="font-size:12px;color:var(--blue)"></i>睡眠</div>
+    <div class="stat-grid" style="margin-bottom:10px">
       <div class="stat-card"><div class="sl">昨晚睡眠</div><div><span class="sv c-blue" id="p5-sv-sleep">—</span><span class="su">hr</span></div><div class="sn" id="p5-sn-sleep" style="color:var(--text3)">—</div></div>
       <div class="stat-card"><div class="sl">睡眠品質</div><div><span class="sv" id="p5-sv-quality">—</span></div><div class="sn" id="p5-sn-quality" style="color:var(--text3)">1–5分</div></div>
+    </div>
+    <div style="height:1px;background:var(--border);margin:0 -2px 10px"></div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:5px;display:flex;align-items:center;gap:4px"><i class="ti ti-droplet" style="font-size:12px;color:var(--blue)"></i>飲水</div>
+    <div class="stat-grid">
       <div class="stat-card"><div class="sl">今日飲水</div><div><span class="sv c-blue" id="p5-sv-water">0</span><span class="su">ml</span></div></div>
       <div class="stat-card"><div class="sl">飲水達成</div><div><span class="sv" id="p5-sv-wpct">0</span><span class="su">%</span></div><div class="sn" id="p5-sn-wpct" style="color:var(--text3)">—</div></div>
     </div>
