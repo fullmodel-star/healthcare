@@ -946,9 +946,15 @@ button{cursor:pointer;border:none;background:none}
   </div>
 
   <div class="card">
-    <div class="card-title"><i class="ti ti-calendar-week"></i>本週概況</div>
+    <div class="card-title"><i class="ti ti-calendar-week"></i>本週狀態 <span style="font-size:10px;font-weight:400;color:var(--text3);margin-left:4px">週一至今</span></div>
+    <div class="stat-grid" style="grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:12px">
+      <div class="stat-card"><div class="sl">累積熱量</div><div><span class="sv" id="p6-wk-net">—</span><span class="su">kcal</span></div><div class="sn" id="p6-wk-net-kg" style="color:var(--text3)">≈ — kg</div></div>
+      <div class="stat-card"><div class="sl">體重變化</div><div><span class="sv" id="p6-wk-weight">—</span><span class="su">kg</span></div><div class="sn" id="p6-wk-weight-n" style="color:var(--text3)">起末差</div></div>
+      <div class="stat-card"><div class="sl">運動時長</div><div><span class="sv c-purple" id="p6-wk-ex">0</span><span class="su">分</span></div><div class="sn" id="p6-wk-ex-n" style="color:var(--text3)">本週合計</div></div>
+    </div>
     <div class="week-grid" id="p6-week"></div>
-    <div class="chart-wrap sm"><canvas id="p6-chart"></canvas></div>
+    <div style="font-size:11px;color:var(--text3);margin:8px 0 4px;display:flex;align-items:center;gap:4px"><i class="ti ti-chart-line" style="font-size:12px"></i>每日淨熱量（柱）vs 體重（線）</div>
+    <div class="chart-wrap"><canvas id="p6-chart"></canvas></div>
   </div>
 
   <div class="card">
@@ -1876,21 +1882,85 @@ function p6Render(){
 }
 
 function p6RenderWeek(){
-  const days=['一','二','三','四','五','六','日']; const ws=new Date(); const dow=ws.getDay()===0?6:ws.getDay()-1; ws.setDate(ws.getDate()-dow);
-  let html='', scores=[];
+  const days=['一','二','三','四','五','六','日'];
+  const ws=new Date(); const dow=ws.getDay()===0?6:ws.getDay()-1; ws.setDate(ws.getDate()-dow); ws.setHours(0,0,0,0);
+  const today=todayStr();
+  const tdee=calcTDEE();
+  const sleepGoal=STATE.profile.sleepGoal;
+
+  let html='';
+  const dailyNet=[], dailyWeight=[], dailyExMin=[];
+
   for(let i=0;i<7;i++){
-    const d=new Date(ws); d.setDate(ws.getDate()+i); const ds=d.toISOString().slice(0,10); const isToday=ds===todayStr();
-    const ex=STATE.exerciseRecords.filter(r=>r.date===ds).reduce((s,r)=>s+r.cal,0);
+    const d=new Date(ws); d.setDate(ws.getDate()+i);
+    const ds=d.toISOString().slice(0,10);
+    const isToday=ds===today;
+    const isFuture=ds>today;
+
+    const exRecs=STATE.exerciseRecords.filter(r=>r.date===ds);
+    const exCal=exRecs.reduce((s,r)=>s+r.cal,0);
+    const exMin=exRecs.reduce((s,r)=>s+r.duration,0);
+    const meals=STATE.meals[ds];
+    const eaten=meals?Object.values(meals).reduce((s,m)=>s+m.reduce((ss,it)=>ss+it.cal,0),0):0;
+    const wRec=STATE.weightRecords.find(r=>r.date===ds);
     const sl=STATE.sleepRecords.find(r=>r.date===ds);
-    const score=isToday?null:Math.round((ex>=400?80:ex>0?60:40)*0.4+(sl&&sl.dur>=STATE.profile.sleepGoal?100:sl?60:30)*0.4+50*0.2);
-    scores.push(score||0);
-    const cls=isToday?'today':score>=75?'ok':score>=55?'done':'rest';
-    html+=`<div class="wd"><div class="wd-name">${days[i]}</div><div class="wd-ring ${cls}">${isToday?'今':score||'—'}</div><div class="wd-sub">${ex?ex+'':'—'}</div></div>`;
+
+    // 7 圈格子：依運動 + 睡眠評分
+    const score=isToday||isFuture?null:Math.round((exCal>=400?80:exCal>0?60:40)*0.5+(sl&&sl.dur>=sleepGoal?100:sl?60:30)*0.5);
+    const cls=isToday?'today':isFuture?'rest':score>=75?'ok':score>=55?'done':'rest';
+    html+=`<div class="wd"><div class="wd-name">${days[i]}</div><div class="wd-ring ${cls}">${isToday?'今':isFuture?'·':score||'—'}</div><div class="wd-sub">${exCal?exCal:'—'}</div></div>`;
+
+    // chart 資料：未來日期不算 net，避免拉低累積
+    dailyNet.push(isFuture?null:eaten-exCal-tdee);
+    dailyExMin.push(isFuture?0:exMin);
+    dailyWeight.push(wRec?wRec.weight:null);
   }
   document.getElementById('p6-week').innerHTML=html;
-  const isDark=window.matchMedia('(prefers-color-scheme:dark)').matches; const tc=isDark?'#888':'#999'; const gc=isDark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.05)';
+
+  // === 3 stat：累積熱量、體重變化、運動時長 ===
+  const totalNet=dailyNet.filter(v=>v!=null).reduce((s,v)=>s+v,0);
+  const kgEst=totalNet/7700;
+  const netEl=document.getElementById('p6-wk-net');
+  netEl.textContent=(totalNet>0?'+':'')+Math.round(totalNet).toLocaleString();
+  netEl.className='sv '+(totalNet>0?'c-amber':totalNet<0?'c-green':'');
+  const kgEl=document.getElementById('p6-wk-net-kg');
+  kgEl.textContent='≈ '+(kgEst>0?'+':'')+kgEst.toFixed(2)+' kg';
+  kgEl.className='sn '+(kgEst>0?'c-amber':kgEst<0?'c-green':'c-muted');
+
+  const firstW=dailyWeight.find(w=>w!=null);
+  const lastW=[...dailyWeight].reverse().find(w=>w!=null);
+  const wDelta=(firstW!=null&&lastW!=null)?+(lastW-firstW).toFixed(1):null;
+  const wEl=document.getElementById('p6-wk-weight');
+  const wnEl=document.getElementById('p6-wk-weight-n');
+  if(wDelta===null){ wEl.textContent='—'; wEl.className='sv'; wnEl.textContent='本週無紀錄'; wnEl.className='sn c-muted'; }
+  else { wEl.textContent=(wDelta>0?'+':'')+wDelta; wEl.className='sv '+(wDelta>0?'c-amber':wDelta<0?'c-green':''); wnEl.textContent=firstW+' → '+lastW+' kg'; wnEl.className='sn '+(wDelta>0?'c-amber':wDelta<0?'c-green':'c-muted'); }
+
+  const totalExMin=dailyExMin.reduce((s,v)=>s+v,0);
+  document.getElementById('p6-wk-ex').textContent=totalExMin;
+  document.getElementById('p6-wk-ex-n').textContent=totalExMin>=150?'達 WHO 每週 150 分':'本週合計';
+  document.getElementById('p6-wk-ex-n').className='sn '+(totalExMin>=150?'c-green':'c-muted');
+
+  // === 組合圖：bar(net kcal) + line(weight) ===
+  const isDark=window.matchMedia('(prefers-color-scheme:dark)').matches;
+  const tc=isDark?'#888':'#999';
+  const gc=isDark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.05)';
   if(p6Chart)p6Chart.destroy();
-  p6Chart=new Chart(document.getElementById('p6-chart').getContext('2d'),{type:'line',data:{labels:days,datasets:[{data:scores,borderColor:'#EF9F27',backgroundColor:'rgba(239,159,39,0.08)',tension:0.4,pointRadius:4,pointBackgroundColor:scores.map(s=>s>=75?'#1D9E75':s>=55?'#EF9F27':'#D85A30'),fill:true,spanGaps:false},{data:new Array(7).fill(75),borderColor:'#1D9E75',borderDash:[4,3],borderWidth:1.5,pointRadius:0,fill:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:tc,font:{size:11}}},y:{grid:{color:gc},ticks:{color:tc,font:{size:11}},suggestedMin:0,suggestedMax:100}}}});
+  const netColors=dailyNet.map(v=>v==null?'rgba(0,0,0,0)':v>0?'rgba(186,117,23,0.7)':'rgba(29,158,117,0.7)');
+  p6Chart=new Chart(document.getElementById('p6-chart').getContext('2d'),{
+    data:{labels:days,datasets:[
+      {type:'bar',label:'淨熱量',data:dailyNet,backgroundColor:netColors,borderRadius:4,yAxisID:'y',order:2},
+      {type:'line',label:'體重',data:dailyWeight,borderColor:'#1D9E75',backgroundColor:'#1D9E75',pointRadius:4,pointBackgroundColor:'#1D9E75',tension:0.3,spanGaps:true,yAxisID:'y1',order:1}
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,position:'bottom',labels:{font:{size:11},color:tc,boxWidth:12,padding:8}}},
+      scales:{
+        x:{grid:{display:false},ticks:{color:tc,font:{size:11}}},
+        y:{position:'left',grid:{color:gc},ticks:{color:tc,font:{size:10},callback:v=>v.toLocaleString()},title:{display:true,text:'kcal',color:tc,font:{size:10}}},
+        y1:{position:'right',grid:{drawOnChartArea:false},ticks:{color:tc,font:{size:10}},title:{display:true,text:'kg',color:tc,font:{size:10}}}
+      }
+    }
+  });
 }
 
 function p6RenderAIMock(){
