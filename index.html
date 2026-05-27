@@ -389,6 +389,11 @@ button{cursor:pointer;border:none;background:none}
 .wt-chip .wt-d{font-size:14px;font-weight:700;color:var(--green);font-variant-numeric:tabular-nums}
 .wt-chip .wt-v{font-size:10px;color:var(--text3);font-variant-numeric:tabular-nums}
 
+/* Duration chips (P4 運動時長) */
+.dur-chip{padding:8px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface2);color:var(--text2);font-size:13px;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:3px;font-variant-numeric:tabular-nums}
+.dur-chip:hover{background:var(--purple-bg);border-color:var(--purple);color:var(--purple)}
+.dur-chip.on{background:var(--purple-bg);border-color:var(--purple);color:var(--purple);font-weight:600}
+
 /* Toast */
 .toast-wrap{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:1000;display:flex;flex-direction:column;gap:6px;pointer-events:none;width:calc(100% - 32px);max-width:420px}
 .toast{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px 14px;display:flex;align-items:center;gap:8px;font-size:13px;box-shadow:0 4px 14px rgba(0,0,0,0.12);opacity:0;transform:translateY(-10px);transition:all .25s cubic-bezier(.2,.8,.2,1);pointer-events:auto}
@@ -741,10 +746,14 @@ button{cursor:pointer;border:none;background:none}
       <button class="int-tab on" id="p4-im" onclick="p4SetInt('medium')">中等</button>
       <button class="int-tab" id="p4-ih" onclick="p4SetInt('high')">激烈</button>
     </div>
-    <div class="field-row three" style="margin-bottom:10px">
-      <div class="field"><label>時長（分鐘）</label><input type="number" id="p4-dur-inp" value="30" min="1" max="600" oninput="p4UpdatePreview()"></div>
-      <div class="field"><label>日期</label><input type="date" id="p4-date-inp"></div>
-      <div class="field"><label>開始時間</label><input type="time" id="p4-time-inp" value="18:00"></div>
+    <div class="field" style="margin-bottom:10px">
+      <label>時長</label>
+      <div style="display:flex;gap:5px;flex-wrap:wrap" id="p4-dur-chips"></div>
+      <input type="hidden" id="p4-dur-inp" value="30">
+    </div>
+    <div class="field" style="margin-bottom:10px">
+      <label>日期</label>
+      <input type="date" id="p4-date-inp">
     </div>
     <div class="cal-preview">
       <div><div class="cp-label" id="p4-cp-lbl">請選擇運動項目</div><div style="font-size:11px;color:var(--purple);margin-top:2px" id="p4-cp-basis">體重 65kg · MET 計算</div></div>
@@ -1582,7 +1591,36 @@ function p4Render(){
   document.getElementById('p4-dur-inp').value=STATE.profile.lastExDuration||30;
   p4Int=STATE.profile.lastExIntensity||'medium';
   ['p4-il','p4-im','p4-ih'].forEach((el,i)=>document.getElementById(el).classList.toggle('on',['light','medium','high'][i]===p4Int));
+  p4RenderDurChips();
   p4RenderRecent(); p4RenderCats(); p4RenderGrid(); p4RenderStats(); p4RenderWeek(); p4RenderLog();
+}
+
+const P4_DUR_OPTIONS=[15,20,30,45,60,90];
+function p4RenderDurChips(){
+  const wrap=document.getElementById('p4-dur-chips'); if(!wrap) return;
+  const cur=parseInt(document.getElementById('p4-dur-inp').value)||30;
+  const isCustom=!P4_DUR_OPTIONS.includes(cur);
+  wrap.innerHTML=
+    P4_DUR_OPTIONS.map(d=>`<button type="button" onclick="p4SetDur(${d})" class="dur-chip${!isCustom&&cur===d?' on':''}">${d} 分</button>`).join('')+
+    `<button type="button" onclick="p4CustomDur()" class="dur-chip${isCustom?' on':''}"><i class="ti ti-pencil" style="font-size:11px;margin-right:2px"></i>${isCustom?cur+' 分':'自訂'}</button>`;
+}
+
+function p4SetDur(d){
+  document.getElementById('p4-dur-inp').value=d;
+  p4RenderDurChips();
+  p4UpdatePreview();
+}
+
+function p4CustomDur(){
+  const v=prompt('輸入時長（分鐘，1–600）：',document.getElementById('p4-dur-inp').value);
+  const n=parseInt(v);
+  if(!isNaN(n)&&n>0&&n<=600){
+    document.getElementById('p4-dur-inp').value=n;
+    p4RenderDurChips();
+    p4UpdatePreview();
+  } else if(v!==null){
+    showToast('時長須介於 1–600 分鐘','warn');
+  }
 }
 
 let _p4RecentCache=[];
@@ -1611,6 +1649,7 @@ function p4ApplyRecent(i){
   p4Int=r.intensity;
   ['p4-il','p4-im','p4-ih'].forEach((el,k)=>document.getElementById(el).classList.toggle('on',['light','medium','high'][k]===p4Int));
   document.getElementById('p4-dur-inp').value=r.duration;
+  p4RenderDurChips();
   p4RenderGrid();
   p4UpdatePreview();
   showToast('已套用 '+r.name+' '+r.duration+'分','info',1800);
@@ -1633,7 +1672,7 @@ function p4SetInt(v){ p4Int=v; ['p4-il','p4-im','p4-ih'].forEach((el,i)=>documen
 
 function p4UpdatePreview(){ if(!p4SelEx){ document.getElementById('p4-cp-val').textContent='—'; document.getElementById('p4-cp-lbl').textContent='請選擇運動項目'; return; } const dur=parseInt(document.getElementById('p4-dur-inp').value)||30; const met=p4SelEx.met[p4Int]||p4SelEx.met.medium; const cal=Math.round(met*STATE.profile.weight*0.0175*dur); document.getElementById('p4-cp-val').textContent=cal; document.getElementById('p4-cp-lbl').textContent=p4SelEx.name+' · '+dur+'分鐘'; document.getElementById('p4-cp-basis').textContent='體重 '+STATE.profile.weight+'kg · MET '+met; }
 
-function p4Log(){ if(!p4SelEx){showToast('請先選擇運動項目','warn');return;} const dur=parseInt(document.getElementById('p4-dur-inp').value)||30; const date=document.getElementById('p4-date-inp').value; const time=document.getElementById('p4-time-inp').value||'18:00'; const met=p4SelEx.met[p4Int]||p4SelEx.met.medium; const cal=Math.round(met*STATE.profile.weight*0.0175*dur); STATE.exerciseRecords.push({id:Date.now(),name:p4SelEx.name,icon:p4SelEx.icon,date,duration:dur,cal,intensity:p4Int,time}); STATE.profile.lastExDuration=dur; STATE.profile.lastExIntensity=p4Int; saveState(); p4Render(); showToast('已記錄 '+p4SelEx.name+' '+cal+' kcal','ok'); }
+function p4Log(){ if(!p4SelEx){showToast('請先選擇運動項目','warn');return;} const dur=parseInt(document.getElementById('p4-dur-inp').value)||30; const date=document.getElementById('p4-date-inp').value; const met=p4SelEx.met[p4Int]||p4SelEx.met.medium; const cal=Math.round(met*STATE.profile.weight*0.0175*dur); STATE.exerciseRecords.push({id:Date.now(),name:p4SelEx.name,icon:p4SelEx.icon,date,duration:dur,cal,intensity:p4Int}); STATE.profile.lastExDuration=dur; STATE.profile.lastExIntensity=p4Int; saveState(); p4Render(); showToast('已記錄 '+p4SelEx.name+' '+cal+' kcal','ok'); }
 
 function p4RenderStats(){
   const ts=todayStr(); const tr=STATE.exerciseRecords.filter(r=>r.date===ts); const burned=tr.reduce((s,r)=>s+r.cal,0); const dur=tr.reduce((s,r)=>s+r.duration,0);
@@ -1685,7 +1724,7 @@ function p4RenderLog(){
       const dayTotal=grouped[date].reduce((s,r)=>s+r.cal,0);
       html+=`<div style="font-size:11px;font-weight:500;color:var(--purple);display:flex;align-items:center;gap:4px;padding:5px 0;border-bottom:0.5px solid var(--border)"><i class="ti ti-calendar" style="font-size:11px"></i>${date}<span style="margin-left:auto">${dayTotal} kcal</span></div>`;
     }
-    grouped[date].forEach(r=>{ html+=`<div class="log-item"><div class="li-dot" style="background:var(--purple)"></div><div style="flex:1"><div class="li-name">${r.name}</div><div class="li-sub">${r.time} · ${r.duration}分 · ${intL[r.intensity]}</div></div><div class="li-cal c-purple">${r.cal} kcal</div><button class="li-del" onclick="p4Del(${r.id})" aria-label="刪除"><i class="ti ti-x"></i></button></div>`; });
+    grouped[date].forEach(r=>{ html+=`<div class="log-item"><div class="li-dot" style="background:var(--purple)"></div><div style="flex:1"><div class="li-name">${r.name}</div><div class="li-sub">${r.duration} 分 · ${intL[r.intensity]}</div></div><div class="li-cal c-purple">${r.cal} kcal</div><button class="li-del" onclick="p4Del(${r.id})" aria-label="刪除"><i class="ti ti-x"></i></button></div>`; });
   });
   document.getElementById('p4-log').innerHTML=html;
 }
