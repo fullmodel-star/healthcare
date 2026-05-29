@@ -186,7 +186,7 @@ button{cursor:pointer;border:none;background:none}
 .result-card-b .rv{color:var(--blue)}
 
 /* BMI bar */
-.bmi-track{height:10px;border-radius:5px;background:linear-gradient(to right,#378ADD 23%,#1D9E75 23%,#1D9E75 54%,#EF9F27 54%,#EF9F27 73%,#D85A30 73%);position:relative;margin-bottom:6px}
+.bmi-track{height:10px;border-radius:5px;background:linear-gradient(to right,#378ADD 21.4%,#1D9E75 21.4%,#1D9E75 47.6%,#EF9F27 47.6%,#EF9F27 61.9%,#D85A30 61.9%);position:relative;margin-bottom:6px}
 .bmi-pointer{position:absolute;top:-4px;width:4px;height:18px;background:var(--text);border-radius:2px;transform:translateX(-50%);transition:left .5s ease}
 .bmi-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--text3)}
 
@@ -610,6 +610,7 @@ button{cursor:pointer;border:none;background:none}
           <span style="font-size:13px;font-weight:600" id="p2-add-name"></span>
           <span id="p2-add-src-badge" style="font-size:10px;padding:1px 7px;border-radius:20px"></span>
         </div>
+        <div id="p2-portion-chips" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px"></div>
         <div class="add-row">
           <div class="field" style="flex:1"><label>份量</label><input type="number" id="p2-add-qty" value="100" min="1" step="1" oninput="p2UpdatePreview()"></div>
           <div class="field" style="flex:1"><label>單位</label><select id="p2-add-unit" onchange="p2UpdatePreview()"><option value="g">公克</option><option value="ml">毫升</option></select></div>
@@ -620,7 +621,7 @@ button{cursor:pointer;border:none;background:none}
       </div>
       <div style="font-size:11px;color:var(--text3);padding:6px 0;display:flex;align-items:center;gap:6px;border-top:0.5px solid var(--border);margin-top:4px">
         <span style="padding:1px 7px;border-radius:20px;background:#E1F5EE;color:#085041">衛福部食藥署</span>
-        <span style="color:var(--text3)">100 種台灣常見食品（2026/4 更新）</span>
+        <span style="color:var(--text3)">2,261 筆台灣食品（2026/4 更新）</span>
       </div>
     </div>
 
@@ -929,20 +930,26 @@ button{cursor:pointer;border:none;background:none}
   </div>
 
   <div class="card">
-    <div class="card-title"><i class="ti ti-flame"></i>今日熱量收支</div>
+    <div class="card-title"><i class="ti ti-flame"></i>今日熱量平衡</div>
     <div class="net-box">
       <div class="net-item"><div class="net-lbl">攝取</div><div class="net-val c-amber" id="p6-eaten">0</div><div style="font-size:11px;color:var(--text3)">kcal</div></div>
       <div class="net-div">−</div>
-      <div class="net-item"><div class="net-lbl">消耗</div><div class="net-val c-green" id="p6-burned">0</div><div style="font-size:11px;color:var(--text3)">kcal</div></div>
+      <div class="net-item"><div class="net-lbl">消耗</div><div class="net-val c-green" id="p6-burned">0</div><div style="font-size:11px;color:var(--text3)" id="p6-burned-sub">代謝+運動</div></div>
       <div class="net-div">=</div>
-      <div class="net-item"><div class="net-lbl">淨攝取</div><div class="net-val c-green" id="p6-net">0</div><div style="font-size:11px;color:var(--text3)">kcal</div></div>
-      <div class="net-div">vs</div>
-      <div class="net-item"><div class="net-lbl">TDEE</div><div class="net-val" id="p6-tdee" style="color:var(--text)">—</div><div style="font-size:11px;color:var(--text3)">kcal</div></div>
+      <div class="net-item"><div class="net-lbl" id="p6-net-lbl">結餘</div><div class="net-val c-green" id="p6-net">0</div><div style="font-size:11px;color:var(--text3)" id="p6-net-sub">kcal</div></div>
     </div>
-    <div class="prog-wrap"><div class="prog-label"><span>飲食熱量</span><span id="p6-l-cal">—</span></div><div class="prog-track"><div class="prog-fill" id="p6-b-cal" style="width:0%;background:var(--amber)"></div></div></div>
-    <div class="prog-wrap"><div class="prog-label"><span>飲水</span><span id="p6-l-water">—</span></div><div class="prog-track"><div class="prog-fill" id="p6-b-water" style="width:0%;background:var(--blue)"></div></div></div>
-    <div class="prog-wrap"><div class="prog-label"><span>運動消耗</span><span id="p6-l-ex">—</span></div><div class="prog-track"><div class="prog-fill" id="p6-b-ex" style="width:0%;background:var(--purple)"></div></div></div>
-    <div class="prog-wrap"><div class="prog-label"><span>睡眠</span><span id="p6-l-sleep">—</span></div><div class="prog-track"><div class="prog-fill" id="p6-b-sleep" style="width:0%;background:var(--blue)"></div></div></div>
+    <div id="p6-balance-hint" style="text-align:center;font-size:12px;padding:8px;border-radius:var(--radius-sm);margin-bottom:10px"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="ti ti-chart-line"></i>體重趨勢 <span style="font-size:10px;font-weight:400;color:var(--text3);margin-left:4px">近 14 天</span></div>
+    <div class="stat-grid" style="grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px">
+      <div class="stat-card"><div class="sl">目前</div><div><span class="sv c-green" id="p6-wt-cur">—</span><span class="su">kg</span></div></div>
+      <div class="stat-card"><div class="sl">14 天變化</div><div><span class="sv" id="p6-wt-delta">—</span><span class="su">kg</span></div></div>
+      <div class="stat-card"><div class="sl">距目標</div><div><span class="sv" id="p6-wt-goal">—</span><span class="su">kg</span></div></div>
+    </div>
+    <div class="chart-wrap"><canvas id="p6-weight-chart"></canvas></div>
+    <div id="p6-weight-empty" class="empty" style="display:none"><i class="ti ti-scale"></i>尚無體重紀錄，至「體重」頁開始記錄</div>
   </div>
 
   <div class="card">
@@ -1439,6 +1446,52 @@ function p2Search(catChange){
   }
 }
 
+// 常見份量參考（關鍵字 → [[標籤, 克/毫升]...]）。比對食物名稱含關鍵字即套用。
+const PORTION_REF=[
+  [['雞蛋','全蛋','水煮蛋','荷包蛋','蛋'],[['1顆',55],['2顆',110]]],
+  [['白飯','米飯','蓬萊米','在來米','糙米飯','飯'],[['半碗',100],['1碗',200],['大碗',300]]],
+  [['吐司','土司'],[['1片',30],['2片',60]]],
+  [['麵包','貝果','可頌'],[['1個',80]]],
+  [['饅頭'],[['1個',90]]],
+  [['香蕉'],[['1根',100]]],
+  [['蘋果'],[['1顆',150]]],
+  [['芭樂','番石榴'],[['1顆',160]]],
+  [['橘','柳橙','橙'],[['1顆',130]]],
+  [['雞胸','雞腿','里肌','排骨','豬排'],[['1份',100],['1大份',150]]],
+  [['牛奶','鮮乳','鮮奶','保久乳','豆漿','奶'],[['1杯',240],['1瓶',500]]],
+  [['茶','咖啡','拿鐵','果汁','飲料','奶茶'],[['中杯',360],['大杯',500]]],
+  [['麵','拉麵','烏龍','義大利麵','米粉','冬粉'],[['1碗',200]]],
+  [['水餃','餃'],[['5顆',125],['10顆',250]]],
+  [['便當','飯盒'],[['1個',500]]],
+  [['餅乾','洋芋片'],[['1片',10],['1包',30]]],
+  [['豆腐'],[['半盒',150],['1盒',300]]],
+  [['番茄','蕃茄'],[['1顆',100]]],
+  [['地瓜','馬鈴薯','芋頭'],[['1個',150]]],
+  [['花生','腰果','杏仁','核桃','堅果'],[['1把',30]]],
+];
+
+function p2PortionsFor(name){
+  for(const [kws,portions] of PORTION_REF){
+    if(kws.some(k=>name.includes(k))) return portions;
+  }
+  return null;
+}
+
+function p2RenderPortionChips(){
+  const wrap=document.getElementById('p2-portion-chips'); if(!wrap||!p2SelectedFood) return;
+  const unit=p2SelectedFood.unit==='ml'?'ml':'g';
+  const portions=p2PortionsFor(p2SelectedFood.name)||[['100'+unit,100],['200'+unit,200]];
+  const cur=parseFloat(document.getElementById('p2-add-qty').value)||100;
+  wrap.innerHTML='<span style="font-size:11px;color:var(--text3);align-self:center;margin-right:2px"><i class="ti ti-ruler-2" style="font-size:11px;vertical-align:-1px"></i> 份量</span>'+
+    portions.map(([label,g])=>`<button type="button" onclick="p2SetPortion(${g})" class="dur-chip" style="padding:5px 10px;font-size:12px${cur===g?';background:var(--amber-bg);border-color:var(--amber);color:var(--amber);font-weight:600':''}">${label}<span style="opacity:.6;font-size:10px;margin-left:3px">${g}${unit}</span></button>`).join('');
+}
+
+function p2SetPortion(g){
+  document.getElementById('p2-add-qty').value=g;
+  p2UpdatePreview();
+  p2RenderPortionChips();
+}
+
 function p2SelectFood(id,src){
   p2SelectedFood=FOOD_DB.find(f=>f.id===id);
   if(!p2SelectedFood)return;
@@ -1447,6 +1500,7 @@ function p2SelectFood(id,src){
   document.getElementById('p2-add-src-badge').style.cssText='font-size:10px;padding:1px 7px;border-radius:20px;background:#E1F5EE;color:#085041';
   document.getElementById('p2-add-qty').value=100;
   document.getElementById('p2-add-unit').value=p2SelectedFood.unit==='ml'?'ml':'g';
+  p2RenderPortionChips();
   p2UpdatePreview();
   document.getElementById('p2-add-panel').classList.add('show');
 }
@@ -1868,17 +1922,63 @@ function p6Render(){
   setMetric('p6-m-weight','p6-m-weight-n',weightScore,lastWeight?`BMI ${calcBMI(lastWeight.weight)}`:'尚無記錄');
   setMetric('p6-m-steps','p6-m-steps-n',actScore,`本週 ${wExDays} 天`);
 
-  // Net box
-  document.getElementById('p6-eaten').textContent=eaten.toLocaleString(); document.getElementById('p6-burned').textContent=burned.toLocaleString(); document.getElementById('p6-net').textContent=net.toLocaleString(); document.getElementById('p6-tdee').textContent=tdee.toLocaleString();
+  // 今日熱量平衡：攝取 −（TDEE 基礎代謝 + 運動）= 結餘
+  const totalBurn=tdee+burned;
+  const balance=eaten-totalBurn;  // 負=赤字（會瘦）、正=盈餘（會胖）
+  animateNum(document.getElementById('p6-eaten'),eaten);
+  animateNum(document.getElementById('p6-burned'),totalBurn);
+  document.getElementById('p6-burned-sub').textContent='代謝'+tdee.toLocaleString()+(burned?'+運動'+burned:'');
+  const netEl=document.getElementById('p6-net');
+  netEl.textContent=(balance>0?'+':'')+balance.toLocaleString();
+  netEl.className='net-val '+(balance>0?'c-amber':balance<0?'c-green':'');
+  const hint=document.getElementById('p6-balance-hint');
+  const absKg=(Math.abs(balance)/7700).toFixed(2);
+  if(balance<-50){ hint.innerHTML='<i class="ti ti-trending-down"></i> 熱量赤字 '+Math.abs(balance).toLocaleString()+' kcal · 趨向減重（單日 ≈ −'+absKg+' kg）'; hint.style.cssText='text-align:center;font-size:12px;padding:8px;border-radius:var(--radius-sm);margin-bottom:10px;background:var(--green-bg);color:var(--green)'; }
+  else if(balance>50){ hint.innerHTML='<i class="ti ti-trending-up"></i> 熱量盈餘 '+balance.toLocaleString()+' kcal · 趨向增重（單日 ≈ +'+absKg+' kg）'; hint.style.cssText='text-align:center;font-size:12px;padding:8px;border-radius:var(--radius-sm);margin-bottom:10px;background:var(--amber-bg);color:var(--amber)'; }
+  else { hint.innerHTML='<i class="ti ti-equal"></i> 熱量大致平衡 · 維持現狀'; hint.style.cssText='text-align:center;font-size:12px;padding:8px;border-radius:var(--radius-sm);margin-bottom:10px;background:var(--surface2);color:var(--text2)'; }
 
-  // Progress bars
-  const sl=(id,ll,val,max,label)=>{ document.getElementById(id).style.width=Math.min(val/max*100,100)+'%'; document.getElementById(ll).textContent=label; };
-  sl('p6-b-cal','p6-l-cal',eaten,tdee,`${eaten.toLocaleString()} / ${tdee.toLocaleString()} kcal`);
-  sl('p6-b-water','p6-l-water',tw,wg,`${tw} / ${wg} ml`);
-  sl('p6-b-ex','p6-l-ex',burned,400,`${burned} / 400 kcal`);
-  sl('p6-b-sleep','p6-l-sleep',lastSleep?lastSleep.dur:0,sg,lastSleep?`${lastSleep.dur.toFixed(1)} / ${sg} hr`:'尚無記錄');
-
+  p6RenderWeightTrend();
   p6RenderWeek(); p6RenderAIMock();
+}
+
+let p6WeightChart=null;
+function p6RenderWeightTrend(){
+  const canvas=document.getElementById('p6-weight-chart');
+  const empty=document.getElementById('p6-weight-empty');
+  const recs=STATE.weightRecords;
+  if(!recs.length){
+    empty.style.display='block'; if(canvas)canvas.style.display='none';
+    ['p6-wt-cur','p6-wt-delta','p6-wt-goal'].forEach(id=>{const e=document.getElementById(id);e.textContent='—';e.className='sv';});
+    if(p6WeightChart){p6WeightChart.destroy();p6WeightChart=null;}
+    return;
+  }
+  empty.style.display='none'; canvas.style.display='block';
+
+  const cutoff=dateOffset(-13);
+  let data=recs.filter(r=>r.date>=cutoff);
+  if(data.length<2) data=recs.slice(-14);  // 近 14 天資料太少時，退而顯示最後 14 筆
+
+  const cur=recs[recs.length-1].weight;
+  document.getElementById('p6-wt-cur').textContent=cur.toFixed(1);
+
+  const first=data[0].weight, last=data[data.length-1].weight;
+  const delta=+(last-first).toFixed(1);
+  const dEl=document.getElementById('p6-wt-delta');
+  dEl.textContent=(delta>0?'+':'')+delta; dEl.className='sv '+(delta>0?'c-amber':delta<0?'c-green':'');
+
+  const goal=parseFloat(document.getElementById('p3-goal-w').value);
+  const gEl=document.getElementById('p6-wt-goal');
+  if(goal){ const diff=+(cur-goal).toFixed(1); gEl.textContent=(diff>0?'+':'')+diff; gEl.className='sv '+(Math.abs(diff)<0.5?'c-green':'c-amber'); }
+  else { gEl.textContent='—'; gEl.className='sv'; }
+
+  const isDark=window.matchMedia('(prefers-color-scheme:dark)').matches;
+  const tc=isDark?'#888':'#999'; const gc=isDark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.05)';
+  const vals=data.map(r=>r.weight);
+  const minW=Math.min(...vals), maxW=Math.max(...vals);
+  if(p6WeightChart)p6WeightChart.destroy();
+  const ds=[{data:vals,borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.08)',tension:0.4,pointRadius:3,pointBackgroundColor:'#1D9E75',fill:true,spanGaps:true}];
+  if(goal) ds.push({data:new Array(vals.length).fill(goal),borderColor:'#BA7517',borderDash:[4,3],borderWidth:1.5,pointRadius:0,fill:false});
+  p6WeightChart=new Chart(canvas.getContext('2d'),{type:'line',data:{labels:data.map(r=>r.date.slice(5)),datasets:ds},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:tc,font:{size:10}}},y:{grid:{color:gc},ticks:{color:tc,font:{size:10},callback:v=>v.toFixed(1)},suggestedMin:Math.floor(minW-1),suggestedMax:Math.ceil(maxW+1)}}}});
 }
 
 function p6RenderWeek(){
@@ -1940,24 +2040,23 @@ function p6RenderWeek(){
   document.getElementById('p6-wk-ex-n').textContent=totalExMin>=150?'達 WHO 每週 150 分':'本週合計';
   document.getElementById('p6-wk-ex-n').className='sn '+(totalExMin>=150?'c-green':'c-muted');
 
-  // === 組合圖：bar(net kcal) + line(weight) ===
+  // === 每日淨熱量柱狀圖（負=綠 赤字、正=琥珀 盈餘）===
   const isDark=window.matchMedia('(prefers-color-scheme:dark)').matches;
   const tc=isDark?'#888':'#999';
   const gc=isDark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.05)';
   if(p6Chart)p6Chart.destroy();
-  const netColors=dailyNet.map(v=>v==null?'rgba(0,0,0,0)':v>0?'rgba(186,117,23,0.7)':'rgba(29,158,117,0.7)');
+  const netColors=dailyNet.map(v=>v==null?'rgba(0,0,0,0)':v>0?'rgba(186,117,23,0.75)':'rgba(29,158,117,0.75)');
   p6Chart=new Chart(document.getElementById('p6-chart').getContext('2d'),{
+    type:'bar',
     data:{labels:days,datasets:[
-      {type:'bar',label:'淨熱量',data:dailyNet,backgroundColor:netColors,borderRadius:4,yAxisID:'y',order:2},
-      {type:'line',label:'體重',data:dailyWeight,borderColor:'#1D9E75',backgroundColor:'#1D9E75',pointRadius:4,pointBackgroundColor:'#1D9E75',tension:0.3,spanGaps:true,yAxisID:'y1',order:1}
+      {label:'淨熱量',data:dailyNet,backgroundColor:netColors,borderRadius:4}
     ]},
     options:{
       responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:true,position:'bottom',labels:{font:{size:11},color:tc,boxWidth:12,padding:8}}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>(c.raw>0?'盈餘 +':'赤字 ')+c.raw.toLocaleString()+' kcal'}}},
       scales:{
         x:{grid:{display:false},ticks:{color:tc,font:{size:11}}},
-        y:{position:'left',grid:{color:gc},ticks:{color:tc,font:{size:10},callback:v=>v.toLocaleString()},title:{display:true,text:'kcal',color:tc,font:{size:10}}},
-        y1:{position:'right',grid:{drawOnChartArea:false},ticks:{color:tc,font:{size:10}},title:{display:true,text:'kg',color:tc,font:{size:10}}}
+        y:{grid:{color:gc},ticks:{color:tc,font:{size:10},callback:v=>v.toLocaleString()}}
       }
     }
   });
