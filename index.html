@@ -1480,10 +1480,18 @@ function p2PortionsFor(name){
 function p2RenderPortionChips(){
   const wrap=document.getElementById('p2-portion-chips'); if(!wrap||!p2SelectedFood) return;
   const unit=p2SelectedFood.unit==='ml'?'ml':'g';
-  const portions=p2PortionsFor(p2SelectedFood.name)||[['100'+unit,100],['200'+unit,200]];
+  // 優先序：關鍵字漂亮標籤 → 官方每份克數 → 100/200 預設
+  let portions=p2PortionsFor(p2SelectedFood.name);
+  let isOfficial=false;
+  if(!portions){
+    const u=p2SelectedFood.unitG;
+    if(u){ portions=[['1份',u],['2份',u*2],['半份',Math.round(u/2)]]; isOfficial=true; }
+    else portions=[['100'+unit,100],['200'+unit,200]];
+  }
   const cur=parseFloat(document.getElementById('p2-add-qty').value)||100;
+  const tag=isOfficial?'<span style="font-size:10px;color:var(--green);margin-left:auto">官方每份 '+p2SelectedFood.unitG+unit+'</span>':'';
   wrap.innerHTML='<span style="font-size:11px;color:var(--text3);align-self:center;margin-right:2px"><i class="ti ti-ruler-2" style="font-size:11px;vertical-align:-1px"></i> 份量</span>'+
-    portions.map(([label,g])=>`<button type="button" onclick="p2SetPortion(${g})" class="dur-chip" style="padding:5px 10px;font-size:12px${cur===g?';background:var(--amber-bg);border-color:var(--amber);color:var(--amber);font-weight:600':''}">${label}<span style="opacity:.6;font-size:10px;margin-left:3px">${g}${unit}</span></button>`).join('');
+    portions.map(([label,g])=>`<button type="button" onclick="p2SetPortion(${g})" class="dur-chip" style="padding:5px 10px;font-size:12px${cur===g?';background:var(--amber-bg);border-color:var(--amber);color:var(--amber);font-weight:600':''}">${label}<span style="opacity:.6;font-size:10px;margin-left:3px">${g}${unit}</span></button>`).join('')+tag;
 }
 
 function p2SetPortion(g){

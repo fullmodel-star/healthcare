@@ -85,6 +85,11 @@ def main():
                 'desc': (row.get('內容物描述') or '').strip(),
             }
         item = foods[fid]
+        # 每單位重（官方一份克數），取第一個非零值
+        if 'unitG' not in item:
+            uw = to_num(row.get('每單位重'))
+            if uw and uw > 0:
+                item['unitG'] = uw
         analysis = (row.get('分析項') or '').strip()
         key = NUTRIENT_EXACT.get(analysis)
         if not key:
@@ -123,7 +128,7 @@ def main():
         cat = CAT_MAP.get(cat_raw, cat_raw or '其他')
         # 判斷單位：飲料/液體類用 ml，其他用 g（簡化規則）
         unit = 'ml' if cat in ('飲料', '乳品類') else 'g'
-        out.append({
+        entry = {
             'id': next_id,
             'name': name,
             'cat': cat,
@@ -134,7 +139,11 @@ def main():
             'fiber100': round(fiber, 1),
             'unit': unit,
             'src': 'fda',
-        })
+        }
+        uw = item.get('unitG')
+        if uw and uw > 0:
+            entry['unitG'] = round(uw)  # 官方每份克數
+        out.append(entry)
         next_id += 1
 
     print(f'  跳過：無熱量 {skipped["no_cal"]}，無名稱 {skipped["no_name"]}，全零 {skipped["all_zero"]}', flush=True)
