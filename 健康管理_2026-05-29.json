@@ -1,0 +1,115 @@
+{
+  "_app": "健康管理",
+  "_version": 1,
+  "_exportedAt": "2026-05-29T09:37:19.404Z",
+  "profile": {
+    "height": 178,
+    "weight": 67.3,
+    "age": 28,
+    "sex": "m",
+    "actFactor": 1.375,
+    "goal": "keep",
+    "waterGoal": 2000,
+    "sleepGoal": 7.5,
+    "bf": 20,
+    "mm": null,
+    "waist": null,
+    "waterRate": null,
+    "lastWeightTime": "07:00",
+    "lastExDuration": 30,
+    "lastExIntensity": "medium",
+    "lastSleepBed": "23:00",
+    "lastSleepWake": "07:00"
+  },
+  "meals": {},
+  "weightRecords": [
+    {
+      "date": "2026-05-23",
+      "weight": 68.5,
+      "time": "07:00"
+    },
+    {
+      "date": "2026-05-25",
+      "weight": 68.1,
+      "time": "07:00"
+    },
+    {
+      "date": "2026-05-27",
+      "weight": 67.6,
+      "time": "07:00"
+    },
+    {
+      "date": "2026-05-28",
+      "weight": 67.3,
+      "time": "07:00"
+    }
+  ],
+  "exerciseRecords": [
+    {
+      "id": 1,
+      "name": "跑步",
+      "icon": "ti-run",
+      "date": "2026-05-28",
+      "duration": 35,
+      "cal": 298,
+      "intensity": "medium",
+      "time": "18:30"
+    },
+    {
+      "id": 2,
+      "name": "重訓",
+      "icon": "ti-barbell",
+      "date": "2026-05-27",
+      "duration": 50,
+      "cal": 290,
+      "intensity": "medium",
+      "time": "19:00"
+    }
+  ],
+  "sleepRecords": [
+    {
+      "date": "2026-05-27",
+      "bed": "23:00",
+      "wake": "07:00",
+      "dur": 8,
+      "quality": 5,
+      "note": ""
+    },
+    {
+      "date": "2026-05-28",
+      "bed": "23:30",
+      "wake": "07:15",
+      "dur": 7.75,
+      "quality": 4,
+      "note": ""
+    },
+    {
+      "date": "2026-05-29",
+      "bed": "23:00",
+      "wake": "07:00",
+      "dur": 8,
+      "quality": 5,
+      "note": ""
+    }
+  ],
+  "waterLogs": [
+    {
+      "id": 1,
+      "date": "2026-05-29",
+      "time": "08:00",
+      "amount": 250
+    },
+    {
+      "id": 2,
+      "date": "2026-05-29",
+      "time": "10:30",
+      "amount": 350
+    },
+    {
+      "id": 3,
+      "date": "2026-05-29",
+      "time": "12:45",
+      "amount": 250
+    }
+  ]
+}

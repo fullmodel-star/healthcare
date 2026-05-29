@@ -2,7 +2,7 @@ const CACHE='health-app-v4';
 const ASSETS=[
   './',
   './index.html',
-  './food-db.js',
+  './food-db.js?v=4',
   './manifest.json',
   './icon.svg',
   './icon-maskable.svg',
