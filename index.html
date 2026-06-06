@@ -537,16 +537,16 @@ button{cursor:pointer;border:none;background:none}
   </div>
 
   <div class="card" style="margin-top:4px">
-    <div class="card-title"><i class="ti ti-key"></i>Anthropic API Key
+    <div class="card-title"><i class="ti ti-key"></i>Google Gemini API Key
       <span class="badge badge-green" style="margin-left:auto">啟用 AI 功能</span>
     </div>
     <div class="field">
       <label>API Key（輸入後餐盤掃描與 AI 建議即時生效）</label>
       <div style="display:flex;gap:7px">
-        <input type="password" id="api-key-input" placeholder="sk-ant-api03-..." style="flex:1;font-family:monospace">
+        <input type="password" id="api-key-input" placeholder="AIzaSy..." style="flex:1;font-family:monospace">
         <button class="btn btn-primary" onclick="saveApiKey()" style="padding:0 14px;flex-shrink:0"><i class="ti ti-check"></i>儲存</button>
       </div>
-      <div class="hint" style="margin-top:4px">Key 僅儲存於本機 localStorage，不會上傳至任何伺服器。<strong>請勿在公用電腦使用。</strong></div>
+      <div class="hint" style="margin-top:4px">至 <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style="color:var(--blue)">Google AI Studio</a> 免費取得。Key 僅儲存於本機 localStorage。<strong>請勿在公用電腦使用。</strong></div>
     </div>
     <div id="api-key-status" style="font-size:12px;margin-top:4px;display:flex;align-items:center;gap:5px"></div>
   </div>
@@ -605,7 +605,7 @@ button{cursor:pointer;border:none;background:none}
       <div class="upload-zone" id="p2-upload" onclick="p2SimUpload()">
         <i class="ti ti-camera-plus"></i>
         <div style="font-size:13px;font-weight:600;margin-bottom:3px">拍照上傳餐盤</div>
-        <div style="font-size:11px;color:var(--text3)">Haiku 4.5 辨識 · ~NT$0.03/次 · 點擊示範</div>
+        <div style="font-size:11px;color:var(--text3)">Gemini 2.5 Flash 辨識 · 免費額度內 · 點擊示範</div>
       </div>
       <input type="file" id="p2-file" accept="image/*" style="display:none" onchange="p2HandleFile(this)">
       <div style="display:flex;gap:7px;margin-bottom:8px">
@@ -613,7 +613,7 @@ button{cursor:pointer;border:none;background:none}
         <button class="btn btn-outline btn-block" onclick="p2SimUpload()"><i class="ti ti-scan" style="margin-right:4px"></i>示範</button>
       </div>
       <div class="img-preview" id="p2-img-preview"><i class="ti ti-bowl-spoon" style="font-size:26px;color:var(--amber)"></i><span id="p2-img-label" style="font-size:12px;color:var(--text3)">照片已選擇</span></div>
-      <button class="btn btn-amber btn-block" id="p2-btn-analyze" style="display:none;margin-bottom:8px" onclick="p2RunScan()"><i class="ti ti-sparkles"></i>Haiku 4.5 分析熱量</button>
+      <button class="btn btn-amber btn-block" id="p2-btn-analyze" style="display:none;margin-bottom:8px" onclick="p2RunScan()"><i class="ti ti-sparkles"></i>Gemini 分析熱量</button>
       <div id="p2-analyzing" style="display:none;text-align:center;padding:12px 0;font-size:13px;color:var(--text3)"><i class="ti ti-loader-2 spin" style="font-size:16px;vertical-align:-3px;margin-right:5px"></i>辨識中...</div>
       <div class="err-box" id="p2-err"><i class="ti ti-alert-circle"></i><span id="p2-err-msg"></span></div>
       <div id="p2-scan-result" style="display:none">
@@ -1005,7 +1005,7 @@ button{cursor:pointer;border:none;background:none}
 
   <div class="card">
     <div class="card-title"><i class="ti ti-sparkles"></i>AI 個人化建議
-      <span class="badge badge-green" style="margin-left:auto"><i class="ti ti-cpu" style="font-size:11px"></i>Haiku 4.5</span>
+      <span class="badge badge-green" style="margin-left:auto"><i class="ti ti-cpu" style="font-size:11px"></i>Gemini 2.5</span>
     </div>
     <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:12px" id="p6-ai-wrap">
       <div id="p6-ai-content"></div>
@@ -1094,12 +1094,14 @@ function loadState(){
 }
 
 // ==================== API KEY ====================
-function getApiKey(){ return localStorage.getItem('anthropicApiKey')||''; }
+function getApiKey(){ return localStorage.getItem('googleApiKey')||''; }
 function saveApiKey(){
   const key=document.getElementById('api-key-input').value.trim();
   if(!key){showToast('請輸入 API Key','warn');return;}
-  if(!key.startsWith('sk-ant-')){showToast('格式不正確，應以 sk-ant- 開頭','warn');return;}
-  localStorage.setItem('anthropicApiKey',key);
+  if(!key.startsWith('AIza')){showToast('Google Gemini Key 應以 AIza 開頭','warn');return;}
+  localStorage.setItem('googleApiKey',key);
+  // 清掉舊版 Anthropic key 避免混淆
+  localStorage.removeItem('anthropicApiKey');
   document.getElementById('api-key-input').value='';
   updateApiKeyStatus();
   showToast('API Key 已儲存，AI 功能已啟用','ok');
@@ -1108,21 +1110,25 @@ function updateApiKeyStatus(){
   const el=document.getElementById('api-key-status');
   if(!el)return;
   const key=getApiKey();
-  if(key) el.innerHTML='<i class="ti ti-check" style="color:var(--green)"></i><span style="color:var(--green)">已設定 · sk-ant-...'+key.slice(-4)+'</span><button onclick="clearApiKey()" style="margin-left:auto;font-size:11px;color:var(--red);background:none;border:none;cursor:pointer">清除</button>';
+  if(key) el.innerHTML='<i class="ti ti-check" style="color:var(--green)"></i><span style="color:var(--green)">已設定 · ...'+key.slice(-4)+'</span><button onclick="clearApiKey()" style="margin-left:auto;font-size:11px;color:var(--red);background:none;border:none;cursor:pointer">清除</button>';
   else el.innerHTML='<i class="ti ti-alert-circle" style="color:var(--amber)"></i><span style="color:var(--amber)">尚未設定 · 掃描和 AI 建議將使用示範模式</span>';
 }
-function clearApiKey(){ if(!confirm('確定清除 API Key？'))return; localStorage.removeItem('anthropicApiKey'); updateApiKeyStatus(); }
+function clearApiKey(){ if(!confirm('確定清除 API Key？'))return; localStorage.removeItem('googleApiKey'); updateApiKeyStatus(); }
 
-async function callAI(messages, maxTokens=1000){
+// Google Gemini 2.5 Flash API. contents 為 Gemini 原生格式陣列。
+async function callAI(contents, maxTokens=1000){
   const key=getApiKey();
   if(!key) throw new Error('no_key');
-  const resp=await fetch('https://api.anthropic.com/v1/messages',{
+  const url='https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+encodeURIComponent(key);
+  const resp=await fetch(url,{
     method:'POST',
-    headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},
-    body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:maxTokens,messages})
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({contents,generationConfig:{maxOutputTokens:maxTokens,temperature:0.7}})
   });
   if(!resp.ok){ const e=await resp.json().catch(()=>({})); throw new Error(e.error?.message||'API '+resp.status); }
-  return resp.json();
+  const data=await resp.json();
+  const text=data.candidates?.[0]?.content?.parts?.find(p=>p.text)?.text||'';
+  return {text, _raw:data};
 }
 
 // ==================== NAV ====================
@@ -1388,13 +1394,12 @@ async function p2RunScan(){
   document.getElementById('p2-analyzing').style.display='block';
   if(p2UploadB64){
     try{
-      const data=await callAI([{role:'user',content:[
-        {type:'image',source:{type:'base64',media_type:p2UploadMime,data:p2UploadB64}},
-        {type:'text',text:'請辨識餐盤照片中所有食物，估算份量（公克），針對台灣常見食物辨識，只回傳JSON不含其他文字：{"foods":[{"name":"名稱","quantity_g":數字,"calories":數字,"protein_g":數字,"fat_g":數字,"carbs_g":數字}]}'}
+      const data=await callAI([{parts:[
+        {inlineData:{mimeType:p2UploadMime,data:p2UploadB64}},
+        {text:'請辨識餐盤照片中所有食物，估算份量（公克），針對台灣常見食物辨識，只回傳JSON不含其他文字：{"foods":[{"name":"名稱","quantity_g":數字,"calories":數字,"protein_g":數字,"fat_g":數字,"carbs_g":數字}]}'}
       ]}]);
       document.getElementById('p2-analyzing').style.display='none';
-      const text=data.content?.find(c=>c.type==='text')?.text||'';
-      const parsed=JSON.parse(text.replace(/```json|```/g,'').trim());
+      const parsed=JSON.parse(data.text.replace(/```json|```/g,'').trim());
       p2ScanFoods=parsed.foods.map((f,i)=>({...f,id:i}));
       p2RenderScan(); document.getElementById('p2-scan-result').style.display='block';
     }catch(e){
@@ -2158,7 +2163,7 @@ function p6RenderAIMock(){
 
 async function p6GetAI(){
   const btn=document.getElementById('p6-ai-btn'); btn.disabled=true;
-  document.getElementById('p6-ai-content').innerHTML='<div style="text-align:center;padding:10px 0;font-size:13px;color:var(--text3)"><i class="ti ti-loader-2 spin" style="font-size:16px;vertical-align:-3px;margin-right:5px"></i>Haiku 4.5 分析中...</div>';
+  document.getElementById('p6-ai-content').innerHTML='<div style="text-align:center;padding:10px 0;font-size:13px;color:var(--text3)"><i class="ti ti-loader-2 spin" style="font-size:16px;vertical-align:-3px;margin-right:5px"></i>Gemini 分析中...</div>';
   const tdee=calcTDEE(); const ts=todayStr();
   const eaten=Object.values(todayMeals()).reduce((s,m)=>s+m.reduce((ss,i)=>ss+i.cal,0),0);
   const burned=STATE.exerciseRecords.filter(r=>r.date===ts).reduce((s,r)=>s+r.cal,0);
@@ -2183,8 +2188,8 @@ async function p6GetAI(){
   const wkOlder=STATE.weightRecords.find(r=>r.date>=cutoff7);
   const wDelta=wkOlder&&lastW?+(lastW.weight-wkOlder.weight).toFixed(1):0;
   try{
-    const data=await callAI([{role:'user',content:`你是健康顧問，根據以下今日 + 本週 7 天數據用繁體中文給出 3–4 條具體個人化建議。注意觀察「趨勢」而非單日。只回傳JSON不含其他文字：{"advice":[{"type":"ok|warn|info","text":"建議內容","tag":"標籤"}]}\n\n[今日]\n- 熱量攝取：${eaten}/${tdee} kcal（${Math.round(eaten/tdee*100)}%）\n- 飲水：${tw}/${STATE.profile.waterGoal} ml\n- 運動消耗：${burned} kcal\n- 睡眠：${lastSleep?lastSleep.dur+'小時 品質'+lastSleep.quality+'/5':'無記錄'}\n- 體重：${lastW?lastW.weight+'kg BMI'+calcBMI(lastW.weight):'無記錄'}\n\n[近 7 天趨勢]\n- 累積淨熱量：${Math.round(wkNet)} kcal（換算約 ${(wkNet/7700).toFixed(2)} kg）\n- 體重變化：${wDelta>0?'+':''}${wDelta} kg\n- 運動總時數：${wkExMin} 分（${wkExCal} kcal）\n- 平均睡眠：${avgSleep} 小時\n- 平均飲水：${avgWater} ml/日\n\n- 健康目標：${STATE.profile.goal}`}],800);
-    const parsed=JSON.parse(data.content.find(c=>c.type==='text').text.replace(/```json|```/g,'').trim());
+    const data=await callAI([{parts:[{text:`你是健康顧問，根據以下今日 + 本週 7 天數據用繁體中文給出 3–4 條具體個人化建議。注意觀察「趨勢」而非單日。只回傳JSON不含其他文字：{"advice":[{"type":"ok|warn|info","text":"建議內容","tag":"標籤"}]}\n\n[今日]\n- 熱量攝取：${eaten}/${tdee} kcal（${Math.round(eaten/tdee*100)}%）\n- 飲水：${tw}/${STATE.profile.waterGoal} ml\n- 運動消耗：${burned} kcal\n- 睡眠：${lastSleep?lastSleep.dur+'小時 品質'+lastSleep.quality+'/5':'無記錄'}\n- 體重：${lastW?lastW.weight+'kg BMI'+calcBMI(lastW.weight):'無記錄'}\n\n[近 7 天趨勢]\n- 累積淨熱量：${Math.round(wkNet)} kcal（換算約 ${(wkNet/7700).toFixed(2)} kg）\n- 體重變化：${wDelta>0?'+':''}${wDelta} kg\n- 運動總時數：${wkExMin} 分（${wkExCal} kcal）\n- 平均睡眠：${avgSleep} 小時\n- 平均飲水：${avgWater} ml/日\n\n- 健康目標：${STATE.profile.goal}`}]}],800);
+    const parsed=JSON.parse(data.text.replace(/```json|```/g,'').trim());
     document.getElementById('p6-ai-content').innerHTML=parsed.advice.map(a=>`<div class="ai-item"><div class="ai-dot" style="background:${a.type==='ok'?'var(--green)':a.type==='warn'?'var(--amber)':'var(--blue)'}"></div><div><div class="ai-text">${a.text}</div><span class="badge ${a.type==='ok'?'badge-green':a.type==='warn'?'badge-amber':'badge-blue'}" style="margin-top:4px">${a.tag}</span></div></div>`).join('');
   }catch(e){
     p6RenderAIMock();

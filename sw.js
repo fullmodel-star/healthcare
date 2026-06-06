@@ -1,4 +1,4 @@
-const CACHE='health-app-v5';
+const CACHE='health-app-v6';
 const ASSETS=[
   './',
   './index.html',
@@ -35,7 +35,7 @@ self.addEventListener('fetch', e=>{
   if(e.request.method!=='GET') return;
   const url=new URL(e.request.url);
   // Anthropic API 永遠走網路，不快取
-  if(url.hostname==='api.anthropic.com') return;
+  if(url.hostname==='generativelanguage.googleapis.com') return;
   // HTML: network-first（取得最新版本），離線時 fallback 至快取
   if(e.request.mode==='navigate' || url.pathname.endsWith('.html')){
     e.respondWith(
