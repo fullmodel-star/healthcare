@@ -429,7 +429,7 @@ button{cursor:pointer;border:none;background:none}
 <div id="ios-install-tip" style="display:none;position:fixed;bottom:calc(var(--nav-h) + 8px);left:50%;transform:translateX(-50%);width:calc(100% - 24px);max-width:456px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px 14px;box-shadow:0 6px 20px rgba(0,0,0,.15);z-index:200;font-size:12.5px;display:flex;align-items:center;gap:8px">
   <i class="ti ti-device-mobile-share" style="font-size:18px;color:var(--blue)"></i>
   <div style="flex:1;line-height:1.4">把這個 App 安裝到主畫面<br><span style="font-size:11px;color:var(--text3)">點下方分享 <i class="ti ti-share-3" style="font-size:11px;vertical-align:-1px"></i> →「加入主畫面」</span></div>
-  <button onclick="document.getElementById('ios-install-tip').style.display='none';localStorage.setItem('ios-tip-dismissed','1')" style="width:26px;height:26px;border-radius:50%;border:none;background:var(--surface2);color:var(--text3);cursor:pointer;font-size:13px"><i class="ti ti-x"></i></button>
+  <button onclick="document.getElementById('ios-install-tip').style.display='none';localStorage.setItem('ios-tip-seen','1')" style="width:26px;height:26px;border-radius:50%;border:none;background:var(--surface2);color:var(--text3);cursor:pointer;font-size:13px"><i class="ti ti-x"></i></button>
 </div>
 <div class="app">
 
@@ -2293,15 +2293,18 @@ if('serviceWorker' in navigator){
   });
 }
 
-// iOS 加入主畫面引導：iPhone/iPad Safari 且非 standalone 模式才顯示
+// iOS 加入主畫面引導：每台裝置只跳一次（首次出現就標記，不再煩使用者）
 (function iosInstallTip(){
   const ua=navigator.userAgent;
   const isIOS=/iPad|iPhone|iPod/.test(ua) && !window.MSStream;
   const isSafari=/Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS/.test(ua);
   const isStandalone=window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
-  const dismissed=localStorage.getItem('ios-tip-dismissed')==='1';
-  if(isIOS && isSafari && !isStandalone && !dismissed){
-    setTimeout(()=>{ const el=document.getElementById('ios-install-tip'); if(el) el.style.display='flex'; }, 2000);
+  const seen=localStorage.getItem('ios-tip-seen')==='1';
+  if(isIOS && isSafari && !isStandalone && !seen){
+    setTimeout(()=>{
+      const el=document.getElementById('ios-install-tip');
+      if(el){ el.style.display='flex'; localStorage.setItem('ios-tip-seen','1'); }
+    }, 2000);
   }
 })();
 
