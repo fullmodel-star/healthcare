@@ -1,4 +1,4 @@
-const CACHE='health-app-v4';
+const CACHE='health-app-v5';
 const ASSETS=[
   './',
   './index.html',
@@ -17,7 +17,11 @@ self.addEventListener('install', e=>{
       console.warn('[SW] addAll partial fail', err);
     }))
   );
-  self.skipWaiting();
+  // 不自動 skipWaiting — 等使用者點擊更新提示
+});
+
+self.addEventListener('message', e=>{
+  if(e.data && e.data.type==='SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('activate', e=>{

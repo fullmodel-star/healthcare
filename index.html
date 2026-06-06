@@ -44,8 +44,9 @@
   --radius: 12px;
   --radius-sm: 8px;
 }
+/* 暗色變數 — 系統偏好（無手動設定時生效）+ 手動 data-theme=dark */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #141412;
     --surface: #1E1D1B;
     --surface2: #282724;
@@ -61,6 +62,22 @@
     --blue-bg: #0A1E35;
     --purple-bg: #1A1835;
   }
+}
+:root[data-theme="dark"] {
+  --bg: #141412;
+  --surface: #1E1D1B;
+  --surface2: #282724;
+  --surface3: #333230;
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.14);
+  --text: #F0EFE9;
+  --text2: #A8A7A3;
+  --text3: #6B6A67;
+  --green-bg: #0D2E22;
+  --amber-bg: #2D1F08;
+  --red-bg: #2D1210;
+  --blue-bg: #0A1E35;
+  --purple-bg: #1A1835;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Noto Sans TC','Microsoft JhengHei','Segoe UI',sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
@@ -409,6 +426,11 @@ button{cursor:pointer;border:none;background:none}
 </head>
 <body>
 <div class="toast-wrap" id="toast-wrap"></div>
+<div id="ios-install-tip" style="display:none;position:fixed;bottom:calc(var(--nav-h) + 8px);left:50%;transform:translateX(-50%);width:calc(100% - 24px);max-width:456px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px 14px;box-shadow:0 6px 20px rgba(0,0,0,.15);z-index:200;font-size:12.5px;display:flex;align-items:center;gap:8px">
+  <i class="ti ti-device-mobile-share" style="font-size:18px;color:var(--blue)"></i>
+  <div style="flex:1;line-height:1.4">把這個 App 安裝到主畫面<br><span style="font-size:11px;color:var(--text3)">點下方分享 <i class="ti ti-share-3" style="font-size:11px;vertical-align:-1px"></i> →「加入主畫面」</span></div>
+  <button onclick="document.getElementById('ios-install-tip').style.display='none';localStorage.setItem('ios-tip-dismissed','1')" style="width:26px;height:26px;border-radius:50%;border:none;background:var(--surface2);color:var(--text3);cursor:pointer;font-size:13px"><i class="ti ti-x"></i></button>
+</div>
 <div class="app">
 
 <!-- ============ PAGE 1: 個人資料 ============ -->
@@ -497,6 +519,15 @@ button{cursor:pointer;border:none;background:none}
         </div>
         <div id="p1-derived"></div>
       </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:8px">
+    <div class="card-title"><i class="ti ti-palette"></i>外觀</div>
+    <div class="seg" style="margin-bottom:0">
+      <button class="seg-btn" id="th-auto" onclick="setTheme('auto')"><i class="ti ti-device-desktop"></i> 跟隨系統</button>
+      <button class="seg-btn" id="th-light" onclick="setTheme('light')"><i class="ti ti-sun"></i> 亮色</button>
+      <button class="seg-btn" id="th-dark" onclick="setTheme('dark')"><i class="ti ti-moon"></i> 暗色</button>
     </div>
   </div>
 
@@ -905,7 +936,15 @@ button{cursor:pointer;border:none;background:none}
   </div>
 
   <div class="card">
-    <div class="card-title"><i class="ti ti-award"></i>今日健康分數</div>
+    <div class="card-title"><i class="ti ti-award"></i>今日健康分數
+      <button onclick="document.getElementById('p6-score-info').classList.toggle('show')" style="margin-left:auto;width:22px;height:22px;border-radius:50%;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center" aria-label="分數說明"><i class="ti ti-question-mark" style="font-size:13px"></i></button>
+    </div>
+    <div id="p6-score-info" style="display:none;font-size:12px;padding:10px 12px;background:var(--surface2);border-radius:var(--radius-sm);margin-bottom:10px;line-height:1.7">
+      <div style="font-weight:600;margin-bottom:4px;color:var(--text)">分數權重</div>
+      <div>飲食 <strong>25%</strong> · 運動 <strong>20%</strong> · 睡眠 <strong>20%</strong> · 飲水 <strong>15%</strong> · 體重 <strong>10%</strong> · 活動量 <strong>10%</strong></div>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px">飲食看當日 kcal/TDEE 比；運動看消耗（≥400 kcal 滿分）；睡眠看時長對目標；飲水看達標 %；體重看 BMI 是否在 18.5–24；活動量看本週運動天數。</div>
+    </div>
+    <style>#p6-score-info.show{display:block!important}</style>
     <div class="score-ring-wrap">
       <svg viewBox="0 0 160 160">
         <circle cx="80" cy="80" r="68" fill="none" stroke="var(--surface2)" stroke-width="12"/>
@@ -991,7 +1030,8 @@ const STATE = {
   profile: { height:170, weight:65, age:28, sex:'m', actFactor:1.375, goal:'keep',
     waterGoal:2000, sleepGoal:7.5, bf:null, mm:null, waist:null, waterRate:null,
     lastWeightTime:'07:00', lastExDuration:30, lastExIntensity:'medium',
-    lastSleepBed:'23:00', lastSleepWake:'07:00' },
+    lastSleepBed:'23:00', lastSleepWake:'07:00',
+    goalWeight:null, goalDate:null },
   meals: {},
   weightRecords: [],
   exerciseRecords: [],
@@ -1108,6 +1148,9 @@ function refreshPage(id){
 let p1Sex='m', p1Act=1.375, p1Goal='keep';
 
 function p1Render(){
+  // 套用主題切換高亮
+  const th=localStorage.getItem('theme')||'auto';
+  ['th-auto','th-light','th-dark'].forEach(id=>{const el=document.getElementById(id); if(el) el.classList.toggle('on',id==='th-'+th);});
   document.getElementById('p1-height').value=STATE.profile.height;
   // 體重從最新紀錄拉，回退至 profile
   const latestW=STATE.weightRecords.length?STATE.weightRecords[STATE.weightRecords.length-1].weight:STATE.profile.weight;
@@ -1420,11 +1463,28 @@ function p2Search(catChange){
 
   const aliases=FOOD_ALIASES[q]||[];
   const terms=[q,...aliases].filter(Boolean);
-  const fdaRes=FOOD_DB.filter(f=>{
-    const matchQ=!q||terms.some(t=>f.name.includes(t))||f.cat.includes(q);
-    const matchCat=p2ActiveCat==='全部'||f.cat===p2ActiveCat;
-    return matchQ&&matchCat;
+  const picks=STATE.profile.foodPicks||{};
+  // 計算每筆相關度：3=完全相符、2=開頭、1=包含、0=只 cat 相符
+  const scored=[];
+  FOOD_DB.forEach(f=>{
+    if(p2ActiveCat!=='全部' && f.cat!==p2ActiveCat) return;
+    if(!q){ scored.push({f,r:0}); return; }
+    let r=-1;
+    for(const t of terms){
+      if(f.name===t){ r=Math.max(r,3); break; }
+      if(f.name.startsWith(t)){ r=Math.max(r,2); }
+      else if(f.name.includes(t)){ r=Math.max(r,1); }
+    }
+    if(r<0 && f.cat.includes(q)) r=0;
+    if(r>=0) scored.push({f,r});
   });
+  scored.sort((a,b)=>{
+    if(b.r!==a.r) return b.r-a.r;
+    const pa=picks[a.f.id]||0, pb=picks[b.f.id]||0;
+    if(pb!==pa) return pb-pa;
+    return a.f.name.length-b.f.name.length;
+  });
+  const fdaRes=scored.map(x=>x.f);
 
   if(fdaRes.length){
     const aliasNote=aliases.length?`（同義詞：${aliases.join('、')}）`:'';
@@ -1503,6 +1563,10 @@ function p2SetPortion(g){
 function p2SelectFood(id,src){
   p2SelectedFood=FOOD_DB.find(f=>f.id===id);
   if(!p2SelectedFood)return;
+  // 記錄使用次數（排序用）
+  if(!STATE.profile.foodPicks) STATE.profile.foodPicks={};
+  STATE.profile.foodPicks[id]=(STATE.profile.foodPicks[id]||0)+1;
+  saveState();
   document.getElementById('p2-add-name').textContent=p2SelectedFood.name;
   document.getElementById('p2-add-src-badge').textContent='衛福部食藥署 驗證資料';
   document.getElementById('p2-add-src-badge').style.cssText='font-size:10px;padding:1px 7px;border-radius:20px;background:#E1F5EE;color:#085041';
@@ -1559,7 +1623,11 @@ let p3Range=7, p3Chart=null;
 function p3Render(){
   document.getElementById('p3-inp-date').value=todayStr();
   document.getElementById('p3-inp-time').value=STATE.profile.lastWeightTime||'07:00';
-  if(!document.getElementById('p3-goal-d').value){ const d=new Date(); d.setMonth(d.getMonth()+3); document.getElementById('p3-goal-d').value=d.toISOString().slice(0,10); }
+  // 目標體重 / 目標日期：從 profile 還原；首次則用預設
+  const gwEl=document.getElementById('p3-goal-w'); const gdEl=document.getElementById('p3-goal-d');
+  if(STATE.profile.goalWeight!=null) gwEl.value=STATE.profile.goalWeight;
+  if(STATE.profile.goalDate) gdEl.value=STATE.profile.goalDate;
+  else if(!gdEl.value){ const d=new Date(); d.setMonth(d.getMonth()+3); gdEl.value=d.toISOString().slice(0,10); }
   p3RenderQuick();
   p3PreviewBMI();
   p3RenderStats(); p3RenderChart(); p3RenderHistory(); p3UpdateGoal();
@@ -1607,7 +1675,7 @@ function p3PreviewBMI(){
   wrap.style.borderLeftColor=fg;
 }
 
-function p3Log(){ const d=document.getElementById('p3-inp-date').value; const w=parseFloat(document.getElementById('p3-inp-weight').value); const t=document.getElementById('p3-inp-time').value||'07:00'; if(!d||!w||w<30||w>200){showToast('請填入有效體重','warn');return;} const ex=STATE.weightRecords.findIndex(r=>r.date===d); if(ex>=0){if(!confirm('已有記錄，是否覆蓋？'))return; STATE.weightRecords.splice(ex,1);} STATE.weightRecords.push({date:d,weight:w,time:t}); STATE.weightRecords.sort((a,b)=>a.date.localeCompare(b.date)); STATE.profile.weight=w; STATE.profile.lastWeightTime=t; document.getElementById('p3-inp-weight').value=''; document.getElementById('p1-weight').value=w; saveState(); p3Render(); showToast('已記錄體重 '+w+' kg','ok'); }
+function p3Log(){ const d=document.getElementById('p3-inp-date').value; const w=parseFloat(document.getElementById('p3-inp-weight').value); const t=document.getElementById('p3-inp-time').value||'07:00'; if(!d||!w||w<30||w>200){showToast('請填入有效體重','warn');return;} const lastRec=STATE.weightRecords.length?STATE.weightRecords[STATE.weightRecords.length-1]:null; if(lastRec){ const diff=Math.abs(w-lastRec.weight); const daysGap=Math.max(1,Math.round((new Date(d)-new Date(lastRec.date))/86400000)); if(diff/daysGap>2 && !confirm('體重變化異常：較上次 ('+lastRec.weight+' kg) 變化 '+diff.toFixed(1)+' kg，平均每天 '+(diff/daysGap).toFixed(1)+' kg。\n\n是否確定輸入正確？')) return; } const ex=STATE.weightRecords.findIndex(r=>r.date===d); if(ex>=0){if(!confirm('已有記錄，是否覆蓋？'))return; STATE.weightRecords.splice(ex,1);} STATE.weightRecords.push({date:d,weight:w,time:t}); STATE.weightRecords.sort((a,b)=>a.date.localeCompare(b.date)); STATE.profile.weight=w; STATE.profile.lastWeightTime=t; document.getElementById('p3-inp-weight').value=''; document.getElementById('p1-weight').value=w; saveState(); p3Render(); showToast('已記錄體重 '+w+' kg','ok'); }
 
 function p3RenderStats(){
   if(!STATE.weightRecords.length){ ['p3-sv-w','p3-sv-bmi','p3-sv-goal','p3-sv-week'].forEach(id=>document.getElementById(id).textContent='—'); document.getElementById('p3-tdee-note').style.display='none'; return; }
@@ -1641,7 +1709,7 @@ function p3RenderHistory(){
 
 function p3Del(date){ if(!confirm('確定刪除？'))return; STATE.weightRecords=STATE.weightRecords.filter(r=>r.date!==date); saveState(); p3Render(); }
 
-function p3UpdateGoal(){ const gw=parseFloat(document.getElementById('p3-goal-w').value); const gd=document.getElementById('p3-goal-d').value; if(!STATE.weightRecords.length||!gw)return; const cw=STATE.weightRecords[STATE.weightRecords.length-1].weight; const diff=+(cw-gw).toFixed(1); const el=document.getElementById('p3-sv-goal'); el.textContent=Math.abs(diff).toFixed(1); const sn=document.getElementById('p3-sn-goal'); if(diff>0){sn.textContent='還需減 '+diff+' kg';sn.className='sn c-amber';}else if(diff<0){sn.textContent='超出目標';sn.className='sn c-green';}else{sn.textContent='已達目標！';sn.className='sn c-green';} if(gd){ const days=Math.max(0,Math.round((new Date(gd)-new Date())/(86400000))); const plan=document.getElementById('p3-goal-plan'); if(days>0&&Math.abs(diff)>0){ plan.style.display='block'; const wr=+(diff/(days/7)).toFixed(2); plan.innerHTML=`每週需${diff>0?'減':'增'} <strong>${Math.abs(wr)} kg</strong> · ${Math.abs(wr)<=0.5?'<span class="c-green">速率安全</span>':'<span class="c-red">速率偏快，建議延長期限</span>'}`; }else plan.style.display='none'; }}
+function p3UpdateGoal(){ const gw=parseFloat(document.getElementById('p3-goal-w').value); const gd=document.getElementById('p3-goal-d').value; STATE.profile.goalWeight=gw||null; STATE.profile.goalDate=gd||null; saveState(); if(!STATE.weightRecords.length||!gw)return; const cw=STATE.weightRecords[STATE.weightRecords.length-1].weight; const diff=+(cw-gw).toFixed(1); const el=document.getElementById('p3-sv-goal'); el.textContent=Math.abs(diff).toFixed(1); const sn=document.getElementById('p3-sn-goal'); if(diff>0){sn.textContent='還需減 '+diff+' kg';sn.className='sn c-amber';}else if(diff<0){sn.textContent='超出目標';sn.className='sn c-green';}else{sn.textContent='已達目標！';sn.className='sn c-green';} if(gd){ const days=Math.max(0,Math.round((new Date(gd)-new Date())/(86400000))); const plan=document.getElementById('p3-goal-plan'); if(days>0&&Math.abs(diff)>0){ plan.style.display='block'; const wr=+(diff/(days/7)).toFixed(2); plan.innerHTML=`每週需${diff>0?'減':'增'} <strong>${Math.abs(wr)} kg</strong> · ${Math.abs(wr)<=0.5?'<span class="c-green">速率安全</span>':'<span class="c-red">速率偏快，建議延長期限</span>'}`; }else plan.style.display='none'; }}
 
 // ==================== PAGE 4 ====================
 const EXERCISES={
@@ -2097,8 +2165,25 @@ async function p6GetAI(){
   const tw=STATE.waterLogs.filter(w=>w.date===ts||!w.date).reduce((s,w)=>s+w.amount,0);
   const lastSleep=STATE.sleepRecords.length?STATE.sleepRecords[STATE.sleepRecords.length-1]:null;
   const lastW=STATE.weightRecords.length?STATE.weightRecords[STATE.weightRecords.length-1]:null;
+  // 7 天滾動統計
+  const cutoff7=dateOffset(-6);
+  let wkNet=0, wkExMin=0, wkExCal=0, sleepSum=0, sleepN=0, waterSum=0, waterN=0;
+  for(let i=6;i>=0;i--){
+    const d=dateOffset(-i);
+    const m=STATE.meals[d]; const e=m?Object.values(m).reduce((s,a)=>s+a.reduce((ss,it)=>ss+it.cal,0),0):0;
+    const exR=STATE.exerciseRecords.filter(r=>r.date===d);
+    const exC=exR.reduce((s,r)=>s+r.cal,0); wkExCal+=exC;
+    wkExMin+=exR.reduce((s,r)=>s+r.duration,0);
+    if(d<=ts) wkNet+=(e-exC-tdee);
+    const sl=STATE.sleepRecords.find(r=>r.date===d); if(sl){sleepSum+=sl.dur;sleepN++;}
+    const w=STATE.waterLogs.filter(w=>w.date===d).reduce((s,w)=>s+w.amount,0); if(w>0){waterSum+=w;waterN++;}
+  }
+  const avgSleep=sleepN?+(sleepSum/sleepN).toFixed(1):0;
+  const avgWater=waterN?Math.round(waterSum/waterN):0;
+  const wkOlder=STATE.weightRecords.find(r=>r.date>=cutoff7);
+  const wDelta=wkOlder&&lastW?+(lastW.weight-wkOlder.weight).toFixed(1):0;
   try{
-    const data=await callAI([{role:'user',content:`你是健康顧問，根據以下今日數據用繁體中文給出3–4條具體個人化建議。只回傳JSON不含其他文字：{"advice":[{"type":"ok|warn|info","text":"建議內容","tag":"標籤"}]}\n\n今日數據：\n- 熱量攝取：${eaten}/${tdee} kcal（${Math.round(eaten/tdee*100)}%）\n- 飲水：${tw}/${STATE.profile.waterGoal} ml\n- 運動消耗：${burned} kcal\n- 睡眠：${lastSleep?lastSleep.dur+'小時 品質'+lastSleep.quality+'/5':'無記錄'}\n- 體重：${lastW?lastW.weight+'kg BMI'+calcBMI(lastW.weight):'無記錄'}\n- 健康目標：${STATE.profile.goal}`}],800);
+    const data=await callAI([{role:'user',content:`你是健康顧問，根據以下今日 + 本週 7 天數據用繁體中文給出 3–4 條具體個人化建議。注意觀察「趨勢」而非單日。只回傳JSON不含其他文字：{"advice":[{"type":"ok|warn|info","text":"建議內容","tag":"標籤"}]}\n\n[今日]\n- 熱量攝取：${eaten}/${tdee} kcal（${Math.round(eaten/tdee*100)}%）\n- 飲水：${tw}/${STATE.profile.waterGoal} ml\n- 運動消耗：${burned} kcal\n- 睡眠：${lastSleep?lastSleep.dur+'小時 品質'+lastSleep.quality+'/5':'無記錄'}\n- 體重：${lastW?lastW.weight+'kg BMI'+calcBMI(lastW.weight):'無記錄'}\n\n[近 7 天趨勢]\n- 累積淨熱量：${Math.round(wkNet)} kcal（換算約 ${(wkNet/7700).toFixed(2)} kg）\n- 體重變化：${wDelta>0?'+':''}${wDelta} kg\n- 運動總時數：${wkExMin} 分（${wkExCal} kcal）\n- 平均睡眠：${avgSleep} 小時\n- 平均飲水：${avgWater} ml/日\n\n- 健康目標：${STATE.profile.goal}`}],800);
     const parsed=JSON.parse(data.content.find(c=>c.type==='text').text.replace(/```json|```/g,'').trim());
     document.getElementById('p6-ai-content').innerHTML=parsed.advice.map(a=>`<div class="ai-item"><div class="ai-dot" style="background:${a.type==='ok'?'var(--green)':a.type==='warn'?'var(--amber)':'var(--blue)'}"></div><div><div class="ai-text">${a.text}</div><span class="badge ${a.type==='ok'?'badge-green':a.type==='warn'?'badge-amber':'badge-blue'}" style="margin-top:4px">${a.tag}</span></div></div>`).join('');
   }catch(e){
@@ -2181,15 +2266,63 @@ setInterval(()=>{
   }
 },60000);
 
-// PWA: 註冊 service worker（需 HTTPS 或 localhost）
+// PWA: 註冊 service worker + 新版本提示
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
     navigator.serviceWorker.register('./sw.js').then(reg=>{
       console.log('[PWA] SW registered:',reg.scope);
-    }).catch(err=>{
-      console.warn('[PWA] SW register failed:',err);
+      // 偵測新版本
+      reg.addEventListener('updatefound',()=>{
+        const sw=reg.installing; if(!sw) return;
+        sw.addEventListener('statechange',()=>{
+          if(sw.state==='installed' && navigator.serviceWorker.controller){
+            showUpdatePrompt(()=>sw.postMessage({type:'SKIP_WAITING'}));
+          }
+        });
+      });
+    }).catch(err=>console.warn('[PWA] SW register failed:',err));
+    let _reloading=false;
+    navigator.serviceWorker.addEventListener('controllerchange',()=>{
+      if(!_reloading){ _reloading=true; location.reload(); }
     });
   });
+}
+
+// iOS 加入主畫面引導：iPhone/iPad Safari 且非 standalone 模式才顯示
+(function iosInstallTip(){
+  const ua=navigator.userAgent;
+  const isIOS=/iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+  const isSafari=/Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS/.test(ua);
+  const isStandalone=window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+  const dismissed=localStorage.getItem('ios-tip-dismissed')==='1';
+  if(isIOS && isSafari && !isStandalone && !dismissed){
+    setTimeout(()=>{ const el=document.getElementById('ios-install-tip'); if(el) el.style.display='flex'; }, 2000);
+  }
+})();
+
+// 主題切換
+function setTheme(mode){
+  if(mode==='auto'){ document.documentElement.removeAttribute('data-theme'); localStorage.removeItem('theme'); }
+  else { document.documentElement.setAttribute('data-theme',mode); localStorage.setItem('theme',mode); }
+  ['th-auto','th-light','th-dark'].forEach(id=>{const el=document.getElementById(id); if(el) el.classList.remove('on');});
+  const cur=document.getElementById('th-'+(mode==='auto'?'auto':mode)); if(cur) cur.classList.add('on');
+}
+// 初始套用（DOM 就緒前，避免閃爍）
+(function applyInitTheme(){
+  const t=localStorage.getItem('theme');
+  if(t==='dark'||t==='light') document.documentElement.setAttribute('data-theme',t);
+})();
+
+function showUpdatePrompt(onAccept){
+  const wrap=document.getElementById('toast-wrap'); if(!wrap) return;
+  const t=document.createElement('div');
+  t.className='toast toast-info';
+  t.style.cursor='pointer';
+  t.innerHTML='<i class="ti ti-refresh-alert"></i><span>有新版本可用 · 點此更新 →</span>';
+  t.onclick=()=>{ t.classList.remove('show'); onAccept(); setTimeout(()=>t.remove(),300); };
+  wrap.appendChild(t);
+  setTimeout(()=>t.classList.add('show'),20);
+  // 不自動消失：等使用者決定
 }
 </script>
 </body>
