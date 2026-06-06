@@ -448,7 +448,7 @@ button{cursor:pointer;border:none;background:none}
       <div class="field"><label>目前體重 (kg)</label><input type="number" id="p1-weight" value="65" readonly style="background:var(--surface3);cursor:default;color:var(--text2)" tabindex="-1"></div>
       <div class="field"><label>年齡 (歲)</label><input type="number" id="p1-age" value="28" min="10" max="100" oninput="p1Calc()"></div>
     </div>
-    <button onclick="goPage('p3',document.querySelectorAll('.nav-item')[2])" style="width:100%;padding:7px;margin:-4px 0 8px;border-radius:var(--radius-sm);border:1px dashed var(--border2);background:transparent;color:var(--text2);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px"><i class="ti ti-scale" style="font-size:13px"></i>更新體重 → 至「體重追蹤」記錄</button>
+    <button onclick="goPage('p3',document.querySelectorAll('.nav-item')[1])" style="width:100%;padding:10px;margin:-4px 0 10px;border-radius:var(--radius-sm);border:1px solid var(--green);background:var(--green);color:#fff;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 2px 6px rgba(29,158,117,0.25)"><i class="ti ti-hand-finger" style="font-size:15px"></i>請按我　更新體重 →「體重追蹤」記錄</button>
     <div class="field">
       <label>生理性別</label>
       <div class="seg">
@@ -1017,8 +1017,8 @@ button{cursor:pointer;border:none;background:none}
 <!-- Bottom Navigation -->
 <nav class="nav">
   <button class="nav-item active" onclick="goPage('p1',this)"><i class="ti ti-user-circle"></i><span>資料</span><div class="nav-dot"></div></button>
-  <button class="nav-item" onclick="goPage('p2',this)"><i class="ti ti-salad"></i><span>飲食</span><div class="nav-dot"></div></button>
   <button class="nav-item" onclick="goPage('p3',this)"><i class="ti ti-scale"></i><span>體重</span><div class="nav-dot"></div></button>
+  <button class="nav-item" onclick="goPage('p2',this)"><i class="ti ti-salad"></i><span>飲食</span><div class="nav-dot"></div></button>
   <button class="nav-item" onclick="goPage('p4',this)"><i class="ti ti-barbell"></i><span>運動</span><div class="nav-dot"></div></button>
   <button class="nav-item" onclick="goPage('p5',this)"><i class="ti ti-moon"></i><span>睡眠</span><div class="nav-dot"></div></button>
   <button class="nav-item" onclick="goPage('p6',this)"><i class="ti ti-layout-dashboard"></i><span>總覽</span><div class="nav-dot"></div></button>
