@@ -40,7 +40,7 @@
   --blue-bg: #E6F1FB;
   --purple: #534AB7;
   --purple-bg: #EEEDFE;
-  --nav-h: 64px;
+  --nav-h: 70px;
   --radius: 12px;
   --radius-sm: 8px;
 }
@@ -97,8 +97,8 @@ button{cursor:pointer;border:none;background:none}
 .nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:var(--nav-h);background:var(--surface);border-top:1px solid var(--border);display:flex;align-items:center;z-index:100}
 .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0;cursor:pointer;color:var(--text3);transition:color .15s;border:none;background:none}
 .nav-item.active{color:var(--purple)}
-.nav-item i{font-size:22px}
-.nav-item span{font-size:10px;font-weight:500}
+.nav-item i{font-size:26px}
+.nav-item span{font-size:12px;font-weight:600}
 .nav-dot{width:4px;height:4px;border-radius:50%;background:var(--purple);opacity:0;transition:opacity .2s;margin-top:-2px}
 .nav-item.active .nav-dot{opacity:1}
 
@@ -436,14 +436,22 @@ button{cursor:pointer;border:none;background:none}
     <div class="page-date" id="p1-date"></div>
   </div>
 
+  <div id="demo-banner" style="display:none;background:var(--amber-bg);border:1px solid var(--amber);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--amber);line-height:1.5">
+    <div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:8px"><i class="ti ti-info-circle" style="font-size:15px;flex-shrink:0;margin-top:1px"></i><span>目前畫面上的體重、睡眠、運動、飲水是<strong>示範資料</strong>，方便你先看看長相。開始記錄後就會換成你自己的，也可以現在一鍵清掉，從零開始。</span></div>
+    <div style="display:flex;gap:6px">
+      <button onclick="clearDemoData()" style="flex:1;padding:7px;border-radius:var(--radius-sm);border:1px solid var(--amber);background:var(--amber);color:#fff;font-size:12px;font-weight:600;cursor:pointer">清掉示範，從頭開始</button>
+      <button onclick="dismissDemoBanner()" style="padding:7px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-size:12px;cursor:pointer">先留著看</button>
+    </div>
+  </div>
+
   <div class="card">
     <div class="card-title"><i class="ti ti-ruler-2"></i>基本身體數據</div>
     <div class="field-row three">
       <div class="field"><label>身高 (cm)</label><input type="number" id="p1-height" value="170" min="100" max="250" step="0.1" oninput="p1Calc()"></div>
-      <div class="field"><label>目前體重 (kg)</label><input type="number" id="p1-weight" value="65" readonly style="background:var(--surface3);cursor:default;color:var(--text2)" tabindex="-1"></div>
+      <div class="field"><label>目前體重 (kg)</label><input type="number" id="p1-weight" value="65" min="20" max="300" step="0.1" onchange="p1SaveWeight()"></div>
       <div class="field"><label>年齡 (歲)</label><input type="number" id="p1-age" value="28" min="10" max="100" oninput="p1Calc()"></div>
     </div>
-    <button onclick="goPage('p3',document.querySelectorAll('.nav-item')[1])" style="width:100%;padding:10px;margin:-4px 0 10px;border-radius:var(--radius-sm);border:1px solid var(--green);background:var(--green);color:#fff;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 2px 6px rgba(29,158,117,0.25)"><i class="ti ti-hand-finger" style="font-size:15px"></i>請按我　更新體重 →「體重追蹤」記錄</button>
+    <div style="font-size:11px;color:var(--text3);margin:-4px 0 10px;display:flex;align-items:center;gap:5px"><i class="ti ti-info-circle" style="font-size:13px;color:var(--green)"></i>直接改體重就會自動記錄一筆；要看趨勢圖請到下方「體重」分頁。</div>
     <div class="field">
       <label>生理性別</label>
       <div class="seg">
@@ -452,8 +460,8 @@ button{cursor:pointer;border:none;background:none}
       </div>
     </div>
     <div class="result-row">
-      <div class="result-card result-card-g"><div class="rl">BMI</div><div><span class="rv" id="p1-bmi">22.5</span></div><div class="rn" id="p1-bmi-n">正常</div></div>
-      <div class="result-card result-card-a"><div class="rl">BMR</div><div><span class="rv" id="p1-bmr">1,612</span><span class="ru">kcal</span></div><div class="rn">靜止消耗</div></div>
+      <div class="result-card result-card-g"><div class="rl">BMI 身體質量</div><div><span class="rv" id="p1-bmi">22.5</span></div><div class="rn" id="p1-bmi-n">正常</div></div>
+      <div class="result-card result-card-a"><div class="rl">BMR 基礎代謝</div><div><span class="rv" id="p1-bmr">1,612</span><span class="ru">大卡</span></div><div class="rn">不動也會燒的熱量</div></div>
       <div class="result-card result-card-b"><div class="rl">理想體重</div><div><span class="rv" id="p1-ibw">57–72</span><span class="ru">kg</span></div><div class="rn">BMI 18.5–24（國健署）</div></div>
     </div>
     <div class="bmi-track" style="margin-top:12px"><div class="bmi-pointer" id="p1-bmi-ptr" style="left:30%"></div></div>
@@ -492,6 +500,7 @@ button{cursor:pointer;border:none;background:none}
       <div class="field"><label>飲水目標 (ml)</label><input type="number" id="p1-water-goal" value="2000" min="500" max="5000" step="100" oninput="saveState()"><div class="hint">建議體重 ×30–35 ml</div></div>
       <div class="field"><label>睡眠目標 (hr)</label><input type="number" id="p1-sleep-goal" value="7.5" min="4" max="12" step="0.5" oninput="saveState()"><div class="hint">成人建議 7–9 小時</div></div>
     </div>
+    <div class="field" style="margin-bottom:0"><label>蛋白質目標 (每公斤體重 g)</label><input type="number" id="p1-protein" value="1.8" min="0.8" max="3" step="0.1" oninput="p1SaveProtein()"><div class="hint">一般 1.2–1.6、增肌/減脂 1.6–2.2、運動員可到 2.4。飲食頁目標蛋白質依此計算。</div></div>
   </div>
 
   <div class="card">
@@ -532,8 +541,23 @@ button{cursor:pointer;border:none;background:none}
   </div>
 
   <div class="card" style="margin-top:4px">
+    <div class="card-title"><i class="ti ti-shield-lock"></i>隱私與雲端 AI</div>
+    <div class="rem-row" style="border-bottom:1px solid var(--border)">
+      <div class="rem-info" style="flex:1"><div class="rn">離線模式</div><div class="rs">開啟後完全不連網、不啟用任何雲端 AI（拍照辨識與 AI 建議停用）</div></div>
+      <label class="toggle"><input type="checkbox" id="offline-toggle" onchange="setOfflineMode(this.checked)"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.6;padding:8px 10px;background:var(--surface2);border-radius:var(--radius-sm)">
+      <i class="ti ti-info-circle" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i><strong>資料會送到哪裡？</strong><br>
+      • 所有健康紀錄只存在「你這台裝置的瀏覽器」，預設不上傳任何地方。<br>
+      • <strong>只有當你主動按「拍照辨識」</strong>時，那張餐盤照片會傳到 Google Gemini 辨識。<br>
+      • <strong>只有當你主動按「AI 建議」</strong>時，會把當天的體重/BMI/睡眠/飲水等摘要傳到 Google。<br>
+      • 不按這兩個功能、或開啟上面的「離線模式」，就完全不會連網外傳。
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:4px" id="apikey-card">
     <div class="card-title"><i class="ti ti-key"></i>Google Gemini API Key
-      <span class="badge badge-green" style="margin-left:auto">啟用 AI 功能</span>
+      <span class="badge badge-green" style="margin-left:auto">啟用 AI 功能（選填）</span>
     </div>
     <div class="field">
       <label>API Key（輸入後餐盤掃描與 AI 建議即時生效）</label>
@@ -541,7 +565,7 @@ button{cursor:pointer;border:none;background:none}
         <input type="password" id="api-key-input" placeholder="AIzaSy..." style="flex:1;font-family:monospace">
         <button class="btn btn-primary" onclick="saveApiKey()" style="padding:0 14px;flex-shrink:0"><i class="ti ti-check"></i>儲存</button>
       </div>
-      <div class="hint" style="margin-top:4px">至 <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style="color:var(--blue)">Google AI Studio</a> 免費取得。Key 僅儲存於本機 localStorage。<strong>請勿在公用電腦使用。</strong></div>
+      <div class="hint" style="margin-top:4px">至 <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" style="color:var(--blue)">Google AI Studio</a> 免費取得。Key 僅儲存於本機 localStorage。<strong>請勿在公用電腦使用。</strong>不填也能用搜尋／手動記錄。</div>
     </div>
     <div id="api-key-status" style="font-size:12px;margin-top:4px;display:flex;align-items:center;gap:5px"></div>
   </div>
@@ -554,7 +578,7 @@ button{cursor:pointer;border:none;background:none}
     </div>
     <input type="file" id="import-file" accept=".json,application/json" style="display:none" onchange="handleImportFile(this)">
     <button onclick="clearAllData()" style="width:100%;padding:10px;border-radius:var(--radius-sm);border:1px solid var(--red);background:var(--red-bg);color:var(--red);font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px"><i class="ti ti-trash"></i>清除所有資料</button>
-    <div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.5"><i class="ti ti-info-circle" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>匯出 JSON 檔可作備份或換機。清除會回到初始狀態（API Key 仍保留）。</div>
+    <div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.5"><i class="ti ti-info-circle" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>資料只存在本機瀏覽器；清除瀏覽器網站資料會一起刪掉，<strong>請定期「匯出備份」</strong>。清除時會詢問是否一併清掉 API Key。</div>
   </div>
 </div>
 
@@ -569,7 +593,7 @@ button{cursor:pointer;border:none;background:none}
   <div class="card">
     <div class="card-title"><i class="ti ti-flame"></i>今日熱量收支</div>
     <div class="stat-grid" style="margin-bottom:10px">
-      <div class="stat-card"><div class="sl">目標 TDEE</div><div><span class="sv" id="p2-target" style="color:var(--text)">—</span><span class="su">kcal</span></div></div>
+      <div class="stat-card"><div class="sl">每日目標</div><div><span class="sv" id="p2-target" style="color:var(--text)">—</span><span class="su">大卡</span></div></div>
       <div class="stat-card"><div class="sl">已攝取</div><div><span class="sv c-green" id="p2-eaten">0</span><span class="su">kcal</span></div></div>
       <div class="stat-card"><div class="sl">剩餘</div><div><span class="sv" id="p2-remain">—</span><span class="su">kcal</span></div></div>
       <div class="stat-card"><div class="sl">完成度</div><div><span class="sv" id="p2-pct">0</span><span class="su">%</span></div></div>
@@ -1026,7 +1050,7 @@ const STATE = {
     waterGoal:2000, sleepGoal:7.5, bf:null, mm:null, waist:null, waterRate:null,
     lastWeightTime:'07:00', lastExDuration:30, lastExIntensity:'medium',
     lastSleepBed:'23:00', lastSleepWake:'07:00',
-    goalWeight:null, goalDate:null },
+    goalWeight:null, goalDate:null, proteinPerKg:1.8 },
   meals: {},
   weightRecords: [],
   exerciseRecords: [],
@@ -1117,8 +1141,18 @@ function updateApiKeyStatus(){
 }
 function clearApiKey(){ if(!confirm('確定清除 API Key？'))return; localStorage.removeItem('googleApiKey'); updateApiKeyStatus(); }
 
+// 離線模式：使用者主動關閉所有雲端 AI
+function isOfflineMode(){ return localStorage.getItem('offlineMode')==='1'; }
+function setOfflineMode(on){
+  localStorage.setItem('offlineMode', on?'1':'0');
+  const card=document.getElementById('apikey-card');
+  if(card){ card.style.opacity=on?'0.45':''; card.style.pointerEvents=on?'none':''; }
+  showToast(on?'已開啟離線模式，雲端 AI 已停用':'已關閉離線模式','info',1800);
+}
+
 // Google Gemini 2.5 Flash API. contents 為 Gemini 原生格式陣列。
 async function callAI(contents, maxTokens=1000){
+  if(isOfflineMode()) throw new Error('offline');
   const key=getApiKey();
   if(!key) throw new Error('no_key');
   // API Key 改放請求標頭（x-goog-api-key），不放在網址，避免在瀏覽紀錄/轉介/快取中外洩
@@ -1168,6 +1202,7 @@ function p1Render(){
   document.getElementById('p1-age').value=STATE.profile.age;
   document.getElementById('p1-water-goal').value=STATE.profile.waterGoal;
   document.getElementById('p1-sleep-goal').value=STATE.profile.sleepGoal;
+  document.getElementById('p1-protein').value=STATE.profile.proteinPerKg||1.8;
   if(STATE.profile.bf!=null) document.getElementById('p1-bf').value=STATE.profile.bf;
   if(STATE.profile.mm!=null) document.getElementById('p1-mm').value=STATE.profile.mm;
   if(STATE.profile.waist!=null) document.getElementById('p1-waist').value=STATE.profile.waist;
@@ -1206,6 +1241,22 @@ function p1Calc(){
   p1CalcAdv();
 }
 
+// 直接在個人資料頁改體重 → 自動記錄一筆今天的體重（已有今天紀錄則覆蓋），並同步各頁
+function p1SaveWeight(){
+  const w=parseFloat(document.getElementById('p1-weight').value);
+  if(!w||w<20||w>300){ showToast('請輸入有效體重','warn'); return; }
+  const d=todayStr();
+  const ex=STATE.weightRecords.findIndex(r=>r.date===d);
+  if(ex>=0) STATE.weightRecords[ex].weight=w;
+  else STATE.weightRecords.push({date:d,weight:w,time:STATE.profile.lastWeightTime||'07:00'});
+  STATE.weightRecords.sort((a,b)=>a.date.localeCompare(b.date));
+  STATE.profile.weight=w;
+  saveState();
+  p1Calc();
+  showToast('已記錄今日體重 '+w+' kg','ok');
+}
+// 自訂蛋白質目標係數（g/kg）
+function p1SaveProtein(){ const v=parseFloat(document.getElementById('p1-protein').value); if(v>=0.8&&v<=3){ STATE.profile.proteinPerKg=v; saveState(); if(document.getElementById('p2').classList.contains('active')) p2Refresh(); } }
 function p1SetSex(s){ p1Sex=s; STATE.profile.sex=s; document.getElementById('p1-sm').classList.toggle('on',s==='m'); document.getElementById('p1-sf').classList.toggle('on',s==='f'); p1Calc(); }
 function p1SetAct(f,id){ p1Act=f; STATE.profile.actFactor=f; ['a1','a2','a3','a4','a5'].forEach(i=>document.getElementById(i).classList.remove('on')); document.getElementById(id).classList.add('on'); p1Calc(); }
 function p1SetGoal(g,silent){
@@ -1233,7 +1284,7 @@ function p1CalcAdv(){
 
 function toggleAdv(){ const btn=document.getElementById('adv-toggle'); const body=document.getElementById('adv-body'); btn.classList.toggle('open'); body.classList.toggle('open'); }
 
-function p1Reset(){ STATE.profile={height:170,weight:65,age:28,sex:'m',actFactor:1.375,goal:'keep',waterGoal:2000,sleepGoal:7.5,bf:null,mm:null,waist:null,waterRate:null,lastWeightTime:'07:00',lastExDuration:30,lastExIntensity:'medium',lastSleepBed:'23:00',lastSleepWake:'07:00'}; ['p1-bf','p1-mm','p1-waist','p1-water-rate'].forEach(id=>document.getElementById(id).value=''); p1Render(); }
+function p1Reset(){ STATE.profile={height:170,weight:65,age:28,sex:'m',actFactor:1.375,goal:'keep',waterGoal:2000,sleepGoal:7.5,bf:null,mm:null,waist:null,waterRate:null,lastWeightTime:'07:00',lastExDuration:30,lastExIntensity:'medium',lastSleepBed:'23:00',lastSleepWake:'07:00',proteinPerKg:1.8}; ['p1-bf','p1-mm','p1-waist','p1-water-rate'].forEach(id=>document.getElementById(id).value=''); p1Render(); }
 
 // ==================== 資料管理 ====================
 function exportData(){
@@ -1283,9 +1334,13 @@ function handleImportFile(input){
 }
 
 function clearAllData(){
-  const v=prompt('將清除「所有」飲食、體重、運動、睡眠、飲水紀錄及個人資料。\n（API Key 仍保留）\n\n請輸入「清除」二字確認：');
+  const v=prompt('將清除「所有」飲食、體重、運動、睡眠、飲水紀錄及個人資料。\n\n請輸入「清除」二字確認：');
   if(v!=='清除'){ if(v!==null) showToast('輸入不符，已取消','info'); return; }
   localStorage.removeItem('healthAppState');
+  // 詢問是否一併清掉 API Key（共用裝置/換機時建議清）
+  if(getApiKey() && confirm('要一併清除已儲存的 API Key 嗎？\n（共用裝置或要把手機給別人時建議清除）')){
+    localStorage.removeItem('googleApiKey');
+  }
   showToast('已清除所有資料，重新載入中…','ok',1500);
   setTimeout(()=>location.reload(),800);
 }
@@ -1299,9 +1354,11 @@ const MOCK_SCAN=[{name:'白飯',quantity_g:200,calories:260,protein_g:5.4,fat_g:
 
 function p2SetMeal(m){ p2Meal=m; ['b','l','d','s'].forEach((t,i)=>document.getElementById('mt-'+t).classList.toggle('on',['breakfast','lunch','dinner','snack'][i]===m)); const lbl=document.getElementById('p2-recent-meal'); if(lbl)lbl.textContent=MEAL_NAMES[m]; }
 function p2SetMode(m){ p2Mode=m; ['scan','search','manual'].forEach(id=>{ document.getElementById('p2-m-'+id).classList.toggle('on',id===m); document.getElementById('p2-panel-'+id).style.display=id===m?'block':'none'; }); }
+// 依目前時間自動挑餐別：早餐(<11)、午餐(<15)、晚餐(<21)、其餘點心
+function mealByTime(){ const h=new Date().getHours(); return h<11?'breakfast':h<15?'lunch':h<21?'dinner':'snack'; }
 
 function p2Refresh(){
-  const tdee=calcTDEE(); const pro=Math.round(STATE.profile.weight*1.8); const fat=Math.round(tdee*0.25/9); const carb=Math.round((tdee-pro*4-fat*9)/4);
+  const tdee=calcTDEE(); const pro=Math.round(STATE.profile.weight*(STATE.profile.proteinPerKg||1.8)); const fat=Math.round(tdee*0.25/9); const carb=Math.round((tdee-pro*4-fat*9)/4);
   document.getElementById('p2-target').textContent=tdee.toLocaleString();
   let tCal=0,tPro=0,tFat=0,tCarb=0;
   Object.values(todayMeals()).forEach(m=>m.forEach(i=>{tCal+=i.cal;tPro+=i.pro;tFat+=i.fat;tCarb+=i.carb;}));
@@ -1407,9 +1464,12 @@ async function p2RunScan(){
       p2RenderScan(); document.getElementById('p2-scan-result').style.display='block';
     }catch(e){
       document.getElementById('p2-analyzing').style.display='none';
-      const isNoKey=e.message==='no_key';
       // 辨識失敗時「不」自動塞入示範假資料，避免使用者誤把無關熱量加入記錄
-      document.getElementById('p2-err-msg').textContent=isNoKey?'尚未設定 API Key，無法辨識。請至「個人資料」頁設定，或改用「搜尋／手動」輸入。':'辨識失敗（'+e.message+'）。請改用「搜尋／手動」輸入，或稍後再試。';
+      let msg;
+      if(e.message==='offline') msg='目前是「離線模式」，已停用雲端辨識。請改用「搜尋／手動」輸入，或到個人資料頁關閉離線模式。';
+      else if(e.message==='no_key') msg='尚未設定 API Key，無法辨識。請至「個人資料」頁設定，或改用「搜尋／手動」輸入。';
+      else msg='辨識失敗（'+e.message+'）。請改用「搜尋／手動」輸入，或稍後再試。';
+      document.getElementById('p2-err-msg').textContent=msg;
       document.getElementById('p2-err').classList.add('show');
       p2ScanFoods=[];
       document.getElementById('p2-scan-result').style.display='none';
@@ -1934,7 +1994,7 @@ function p5SetQ(q){ p5SleepQ=q; for(let i=1;i<=5;i++)document.getElementById('p5
 
 function p5LogSleep(){ const dur=p5CalcDur(); if(!dur){showToast('請填入就寢與起床時間','warn');return;} const date=document.getElementById('p5-sleep-date').value||todayStr(); const bed=document.getElementById('p5-bed').value; const wake=document.getElementById('p5-wake').value; const note=document.getElementById('p5-sleep-note').value; const ex=STATE.sleepRecords.findIndex(r=>r.date===date); if(ex>=0){if(!confirm('已有記錄，是否覆蓋？'))return; STATE.sleepRecords.splice(ex,1);} STATE.sleepRecords.push({date,bed,wake,dur,quality:p5SleepQ,note}); STATE.sleepRecords.sort((a,b)=>a.date.localeCompare(b.date)); STATE.profile.lastSleepBed=bed; STATE.profile.lastSleepWake=wake; document.getElementById('p5-sleep-note').value=''; saveState(); p5Render(); showToast('已記錄睡眠 '+dur+' 小時','ok'); }
 
-function p5AddWater(amount){ const now=new Date(); const time=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0'); STATE.waterLogs.push({id:Date.now(),date:todayStr(),time,amount}); saveState(); p5Render(); }
+function p5AddWater(amount){ const now=new Date(); const time=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0'); STATE.waterLogs.push({id:Date.now(),date:todayStr(),time,amount}); saveState(); p5Render(); showToast('已記錄 +'+amount+' ml','ok',1600); }
 function p5CustomWater(){ const v=prompt('輸入飲水量 (ml)：','300'); if(v&&!isNaN(v))p5AddWater(parseInt(v)); }
 function p5FillRemaining(){
   const wg=STATE.profile.waterGoal||2000;
@@ -2201,7 +2261,7 @@ async function p6GetAI(){
     document.getElementById('p6-ai-content').innerHTML=parsed.advice.map(a=>`<div class="ai-item"><div class="ai-dot" style="background:${a.type==='ok'?'var(--green)':a.type==='warn'?'var(--amber)':'var(--blue)'}"></div><div><div class="ai-text">${a.text}</div><span class="badge ${a.type==='ok'?'badge-green':a.type==='warn'?'badge-amber':'badge-blue'}" style="margin-top:4px">${a.tag}</span></div></div>`).join('');
   }catch(e){
     p6RenderAIMock();
-    const note=e.message==='no_key'?'請至「個人資料」頁設定 API Key 啟用真實 AI 建議':'API 連線失敗，顯示規則型建議';
+    const note=e.message==='offline'?'目前是離線模式，顯示的是本機規則型建議（未連網）':e.message==='no_key'?'請至「個人資料」頁設定 API Key 啟用真實 AI 建議':'API 連線失敗，顯示規則型建議';
     document.getElementById('p6-ai-content').innerHTML+=`<div style="font-size:11px;color:var(--text3);margin-top:8px;padding-top:6px;border-top:1px solid var(--border)"><i class="ti ti-info-circle" style="font-size:12px;vertical-align:-1px;margin-right:3px"></i>${note}</div>`;
   }
   btn.disabled=false;
@@ -2212,8 +2272,10 @@ document.querySelectorAll('#p5-panel-water,#p5-panel-remind').forEach(el=>el.sty
 document.getElementById('p5-sleep-date').value=todayStr();
 
 // 只在首次使用（localStorage 無資料）時載入示範資料
+let _isDemoData=false;
 const _existingData=localStorage.getItem('healthAppState');
 if(!_existingData){
+  _isDemoData=true;
   STATE.weightRecords=[{date:dateOffset(-6),weight:68.5,time:'07:00'},{date:dateOffset(-4),weight:68.1,time:'07:00'},{date:dateOffset(-2),weight:67.6,time:'07:00'},{date:dateOffset(-1),weight:67.3,time:'07:00'}];
   STATE.sleepRecords=[{date:dateOffset(-2),bed:'23:00',wake:'07:00',dur:8.0,quality:5,note:''},{date:dateOffset(-1),bed:'23:30',wake:'07:15',dur:7.75,quality:4,note:''},{date:todayStr(),bed:'23:00',wake:'07:00',dur:8.0,quality:5,note:''}];
   STATE.exerciseRecords=[{id:1,name:'跑步',icon:'ti-run',date:dateOffset(-1),duration:35,cal:298,intensity:'medium',time:'18:30'},{id:2,name:'重訓',icon:'ti-barbell',date:dateOffset(-2),duration:50,cal:290,intensity:'medium',time:'19:00'}];
@@ -2225,6 +2287,23 @@ refreshPage('p1');
 document.getElementById('p1-date').textContent=fmtDate();
 updateApiKeyStatus();
 p2InitCatTabs();
+// 飲食頁預設停在「搜尋」（不需金鑰即可用），餐別依目前時間自動選
+p2SetMode('search');
+p2SetMeal(mealByTime());
+
+// 還原離線模式開關狀態
+(function initOffline(){ const on=isOfflineMode(); const t=document.getElementById('offline-toggle'); if(t) t.checked=on; const card=document.getElementById('apikey-card'); if(card&&on){ card.style.opacity='0.45'; card.style.pointerEvents='none'; } })();
+
+// 首次使用：顯示「這是示範資料」橫幅
+if(_isDemoData){ const b=document.getElementById('demo-banner'); if(b) b.style.display='block'; }
+function dismissDemoBanner(){ const b=document.getElementById('demo-banner'); if(b) b.style.display='none'; }
+function clearDemoData(){
+  if(!confirm('將清掉目前的示範資料，從零開始記錄。確定嗎？')) return;
+  STATE.meals={}; STATE.weightRecords=[]; STATE.exerciseRecords=[]; STATE.sleepRecords=[]; STATE.waterLogs=[];
+  saveState();
+  showToast('已清除示範資料，開始記錄你自己的吧！','ok',2000);
+  setTimeout(()=>location.reload(),700);
+}
 
 // #13 P3 目標體重預設為最新體重 - 5kg
 if(STATE.weightRecords.length&&!document.getElementById('p3-goal-w').value){
