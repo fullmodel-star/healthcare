@@ -1,4 +1,4 @@
-const CACHE='health-app-v10';
+const CACHE='health-app-v11';
 const ASSETS=[
   './',
   './index.html',
@@ -6,6 +6,10 @@ const ASSETS=[
   './manifest.json',
   './icon.svg',
   './icon-maskable.svg',
+  './icon-192.png',
+  './icon-512.png',
+  './icon-maskable-192.png',
+  './icon-maskable-512.png',
   'https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css',
   'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'
 ];

@@ -14,3 +14,7 @@ uw-check.txt
 food-db-full.js
 健康管理_*.json
 idcheck.py
+素材封存_TFDA原始資料/
+play-store/android.keystore
+play-store/*.aab
+play-store/.bubblewrap/

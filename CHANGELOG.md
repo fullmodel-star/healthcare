@@ -1,6 +1,23 @@
 # 更新記錄 CHANGELOG
 
-## v1.6.0 — 多人物 UX 試用改版（最新）
+## v1.7.0 — Google Play 上架準備（最新）
+
+> 將 PWA 整備為可送上 Google Play 商店的規格（透過 TWA 打包）。詳細上架步驟見 `DEPLOY.md`。
+
+### 新增
+- **PNG 圖示**：由向量重建 `icon-192/512.png`、`icon-maskable-192/512.png` 與商店用 `icon-1024.png`（Play / TWA 需要 PNG）。
+- **隱私權政策**：`privacy-policy.html`（涵蓋本機儲存、相機、Google Gemini API、無追蹤、醫療免責）— Play 上架必備。
+- **打包設定** `play-store/`：Bubblewrap `twa-manifest.json`、`assetlinks.json` 範本、`build-aab.ps1` 一鍵建置腳本。
+- **上架指南** `DEPLOY.md`：PWABuilder 與 Bubblewrap 兩種路線 + Play Console 完整步驟。
+
+### 變更
+- `manifest.json` 升級為 Play 規格：加上 `id`、改用 PNG 圖示（含 maskable）、`dir`。
+- `index.html` 補上 PNG `icon`/`apple-touch-icon` 連結。
+- Service Worker 快取版本 v10 → v11，納入新 PNG 圖示。
+
+---
+
+## v1.6.0 — 多人物 UX 試用改版
 
 > 派出 5 種不同性格的假使用者（長輩、忙碌上班族、健身狂、焦慮新手、隱私控）試用後，針對「開場門檻」與「各族群習慣」做的體驗改版。
 
