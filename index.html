@@ -252,7 +252,7 @@ button{cursor:pointer;border:none;background:none}
 .li-name{flex:1;font-size:13px;font-weight:500;color:var(--text)}
 .li-sub{font-size:11px;color:var(--text3)}
 .li-cal{font-size:13px;font-weight:700;min-width:60px;text-align:right}
-.li-del{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--text3);transition:all .15s}
+.li-del{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--text3);transition:all .15s;flex-shrink:0}
 .li-del:hover{background:var(--red-bg);color:var(--red)}
 
 /* Chart */
@@ -360,7 +360,7 @@ button{cursor:pointer;border:none;background:none}
 .hi-date{font-size:12px;color:var(--text3);min-width:68px}
 .hi-weight{font-size:14px;font-weight:700;min-width:55px}
 .hi-diff{font-size:12px;margin-left:auto}
-.hi-del{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text3)}
+.hi-del{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text3);flex-shrink:0}
 .hi-del:hover{color:var(--red)}
 
 
@@ -1035,13 +1035,20 @@ const STATE = {
 };
 
 function calcBMR(){ const p=STATE.profile; return p.sex==='m'?(10*p.weight)+(6.25*p.height)-(5*p.age)+5:(10*p.weight)+(6.25*p.height)-(5*p.age)-161; }
-function calcTDEE(){ const bmr=calcBMR(); const base=bmr*STATE.profile.actFactor; const g=STATE.profile.goal; if(g==='lose')return Math.round(base-500); if(g==='gain'||g==='muscle')return Math.round(base+300); return Math.round(base); }
-function calcBMI(w){ return +(w/((STATE.profile.height/100)**2)).toFixed(1); }
-function bmiInfo(b){ if(b<18.5)return{t:'過輕',c:'c-amber'}; if(b<24)return{t:'正常',c:'c-green'}; if(b<27)return{t:'過重',c:'c-amber'}; return{t:'肥胖',c:'c-red'}; }
+// 身體真實每日維持消耗（不含減重/增重目標調整）— 判斷「會瘦/會胖」要用這個
+function maintenanceTDEE(){ return Math.round(calcBMR()*STATE.profile.actFactor); }
+// 安全熱量下限：避免嬌小體型被算出過低、危險的減重目標
+function calorieFloor(){ return STATE.profile.sex==='m'?1500:1200; }
+// 每日「目標」熱量（含減重 −500 / 增重 +300 調整，且減重不低於安全下限）
+function calcTDEE(){ const base=maintenanceTDEE(); const g=STATE.profile.goal; if(g==='lose')return Math.max(Math.round(base-500),calorieFloor()); if(g==='gain'||g==='muscle')return Math.round(base+300); return base; }
+function calcBMI(w){ const h=STATE.profile.height; if(!h||!w)return 0; return +(w/((h/100)**2)).toFixed(1); }
+function bmiInfo(b){ if(b<=0)return{t:'—',c:'c-muted'}; if(b<18.5)return{t:'過輕',c:'c-amber'}; if(b<24)return{t:'正常',c:'c-green'}; if(b<27)return{t:'過重',c:'c-amber'}; return{t:'肥胖',c:'c-red'}; }
 function bmiPct(b){ return Math.min(Math.max((b-14)/(35-14)*100,0),100); }
-function todayStr(){ return new Date().toISOString().slice(0,10); }
-function fmtDate(d){ return new Date().toLocaleDateString('zh-TW',{month:'long',day:'numeric',weekday:'short'}); }
-function dateOffset(n){ const d=new Date(); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
+// 一律使用「本機時區」的日期字串，避免 UTC 在台灣清晨把今天算成昨天
+function ymd(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function todayStr(){ return ymd(new Date()); }
+function fmtDate(d){ const dt=d?new Date(d):new Date(); return dt.toLocaleDateString('zh-TW',{month:'long',day:'numeric',weekday:'short'}); }
+function dateOffset(n){ const d=new Date(); d.setDate(d.getDate()+n); return ymd(d); }
 function mealsOn(date){ if(!STATE.meals[date]) STATE.meals[date]={breakfast:[],lunch:[],dinner:[],snack:[]}; return STATE.meals[date]; }
 function todayMeals(){ return mealsOn(todayStr()); }
 
@@ -1114,10 +1121,11 @@ function clearApiKey(){ if(!confirm('確定清除 API Key？'))return; localStor
 async function callAI(contents, maxTokens=1000){
   const key=getApiKey();
   if(!key) throw new Error('no_key');
-  const url='https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+encodeURIComponent(key);
+  // API Key 改放請求標頭（x-goog-api-key），不放在網址，避免在瀏覽紀錄/轉介/快取中外洩
+  const url='https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
   const resp=await fetch(url,{
     method:'POST',
-    headers:{'Content-Type':'application/json'},
+    headers:{'Content-Type':'application/json','x-goog-api-key':key},
     body:JSON.stringify({contents,generationConfig:{maxOutputTokens:maxTokens,temperature:0.7}})
   });
   if(!resp.ok){ const e=await resp.json().catch(()=>({})); throw new Error(e.error?.message||'API '+resp.status); }
@@ -1190,10 +1198,10 @@ function p1Calc(){
   const lo=(18.5*(h/100)**2), hi=(24*(h/100)**2);
   document.getElementById('p1-ibw').textContent=lo.toFixed(0)+'–'+hi.toFixed(0);
   document.getElementById('p1-bmi-ptr').style.left=bmiPct(bmi)+'%';
-  const base=bmr*p1Act; let adj=base,label='維持體重';
-  if(p1Goal==='lose'){adj=base-500;label='減重 (−500 kcal)';}
-  else if(p1Goal==='gain'||p1Goal==='muscle'){adj=base+300;label='增肌/增重 (+300 kcal)';}
-  animateNum(document.getElementById('p1-tdee'),Math.round(adj));
+  const base=bmr*p1Act; let adj=Math.round(base),label='維持體重';
+  if(p1Goal==='lose'){ const floor=p1Sex==='m'?1500:1200; adj=Math.round(base-500); if(adj<floor){adj=floor;label='減重（已達安全下限，不再往下扣）';}else{label='減重 (−500 kcal)';} }
+  else if(p1Goal==='gain'||p1Goal==='muscle'){adj=Math.round(base+300);label='增肌/增重 (+300 kcal)';}
+  animateNum(document.getElementById('p1-tdee'),adj);
   document.getElementById('p1-tdee-sub').textContent='目標：'+label+' · 自動同步至各頁';
   p1CalcAdv();
 }
@@ -1336,7 +1344,7 @@ function p2RenderLog(){
   document.getElementById('p2-log').innerHTML=html;
 }
 
-function p2DelItem(meal,id){ const t=todayMeals(); t[meal]=t[meal].filter(i=>i.id!==id); saveState(); p2Refresh(); }
+function p2DelItem(meal,id){ if(!confirm('確定刪除這筆飲食紀錄？刪除後無法復原。')) return; const t=todayMeals(); t[meal]=t[meal].filter(i=>i.id!==id); saveState(); p2Refresh(); }
 
 function p2CopyYesterday(meal){
   const yest=STATE.meals[dateOffset(-1)];
@@ -1400,10 +1408,13 @@ async function p2RunScan(){
     }catch(e){
       document.getElementById('p2-analyzing').style.display='none';
       const isNoKey=e.message==='no_key';
-      document.getElementById('p2-err-msg').textContent=isNoKey?'請先在「個人資料」頁設定 API Key':'辨識失敗（'+e.message+'），改用示範資料';
+      // 辨識失敗時「不」自動塞入示範假資料，避免使用者誤把無關熱量加入記錄
+      document.getElementById('p2-err-msg').textContent=isNoKey?'尚未設定 API Key，無法辨識。請至「個人資料」頁設定，或改用「搜尋／手動」輸入。':'辨識失敗（'+e.message+'）。請改用「搜尋／手動」輸入，或稍後再試。';
       document.getElementById('p2-err').classList.add('show');
-      p2ScanFoods=MOCK_SCAN.map((f,i)=>({...f,id:i}));
-      p2RenderScan(); document.getElementById('p2-scan-result').style.display='block';
+      p2ScanFoods=[];
+      document.getElementById('p2-scan-result').style.display='none';
+      // 還原上傳區，方便重試
+      document.getElementById('p2-upload').style.display='block';
     }
   }else{
     setTimeout(()=>{ document.getElementById('p2-analyzing').style.display='none'; p2ScanFoods=MOCK_SCAN.map((f,i)=>({...f,id:i})); p2RenderScan(); document.getElementById('p2-scan-result').style.display='block'; },2000);
@@ -1413,7 +1424,7 @@ async function p2RunScan(){
 function p2RenderScan(){
   let html='',tCal=0,tPro=0,tFat=0,tCarb=0;
   p2ScanFoods.forEach(f=>{ tCal+=f.calories||0;tPro+=f.protein_g||0;tFat+=f.fat_g||0;tCarb+=f.carbs_g||0;
-    html+=`<div class="scan-item"><div class="si-icon"><i class="ti ti-salad"></i></div><div style="flex:1"><div class="si-name">${f.name}</div><div class="si-sub">約 ${f.quantity_g}g · 蛋白 ${(+f.protein_g).toFixed(1)}g</div></div><div class="si-cal">${Math.round(f.calories)} kcal</div><button class="si-edit" onclick="p2EditScan(${f.id})"><i class="ti ti-pencil"></i></button></div>`;
+    html+=`<div class="scan-item"><div class="si-icon"><i class="ti ti-salad"></i></div><div style="flex:1"><div class="si-name">${f.name}</div><div class="si-sub">約 ${f.quantity_g||0}g · 蛋白 ${(+f.protein_g||0).toFixed(1)}g</div></div><div class="si-cal">${Math.round(f.calories||0)} kcal</div><button class="si-edit" onclick="p2EditScan(${f.id})"><i class="ti ti-pencil"></i></button></div>`;
   });
   document.getElementById('p2-scan-items').innerHTML=html;
   document.getElementById('p2-scan-total').textContent=Math.round(tCal).toLocaleString()+' kcal';
@@ -1627,7 +1638,7 @@ function p3Render(){
   const gwEl=document.getElementById('p3-goal-w'); const gdEl=document.getElementById('p3-goal-d');
   if(STATE.profile.goalWeight!=null) gwEl.value=STATE.profile.goalWeight;
   if(STATE.profile.goalDate) gdEl.value=STATE.profile.goalDate;
-  else if(!gdEl.value){ const d=new Date(); d.setMonth(d.getMonth()+3); gdEl.value=d.toISOString().slice(0,10); }
+  else if(!gdEl.value){ const d=new Date(); d.setMonth(d.getMonth()+3); gdEl.value=ymd(d); }
   p3RenderQuick();
   p3PreviewBMI();
   p3RenderStats(); p3RenderChart(); p3RenderHistory(); p3UpdateGoal();
@@ -1684,13 +1695,13 @@ function p3RenderStats(){
   document.getElementById('p3-bmi-ptr').style.left=bmiPct(bmi)+'%';
   const prev=STATE.weightRecords.length>=2?STATE.weightRecords[STATE.weightRecords.length-2]:null;
   if(prev){ const diff=+(w-prev.weight).toFixed(1); const sn=document.getElementById('p3-sn-w'); sn.textContent=(diff>0?'+':'')+diff+' kg 較上次'; sn.className='sn '+(diff<0?'c-green':diff>0?'c-amber':'c-muted'); }
-  const ago7=new Date(); ago7.setDate(ago7.getDate()-7); const old=STATE.weightRecords.filter(r=>new Date(r.date)<=ago7); if(old.length){ const wdiff=+(w-old[old.length-1].weight).toFixed(1); document.getElementById('p3-sv-week').textContent=(wdiff>0?'+':'')+wdiff; document.getElementById('p3-sv-week').className='sv '+(wdiff<0?'c-green':wdiff>0?'c-amber':'c-muted'); document.getElementById('p3-sn-week').textContent=wdiff<0?'持續下降':wdiff>0?'略有上升':'持平'; }
+  const ago7=new Date(); ago7.setDate(ago7.getDate()-7); const ago7Str=ymd(ago7); const old=STATE.weightRecords.filter(r=>r.date<=ago7Str); if(old.length){ const wdiff=+(w-old[old.length-1].weight).toFixed(1); document.getElementById('p3-sv-week').textContent=(wdiff>0?'+':'')+wdiff; document.getElementById('p3-sv-week').className='sv '+(wdiff<0?'c-green':wdiff>0?'c-amber':'c-muted'); document.getElementById('p3-sn-week').textContent=wdiff<0?'持續下降':wdiff>0?'略有上升':'持平'; }
   const newBMR=Math.round((10*w)+(6.25*STATE.profile.height)-(5*STATE.profile.age)+(STATE.profile.sex==='m'?5:-161)); const newTDEE=Math.round(newBMR*STATE.profile.actFactor); const oldTDEE=calcTDEE(); if(Math.abs(newTDEE-oldTDEE)>30){ document.getElementById('p3-tdee-note').style.display='flex'; document.getElementById('p3-tdee-msg').textContent=`體重更新為 ${w} kg，TDEE 重算為 ${newTDEE.toLocaleString()} kcal`; }
 }
 
 function p3RenderChart(){
-  const cutoff=new Date(); cutoff.setDate(cutoff.getDate()-(p3Range-1));
-  const filtered=STATE.weightRecords.filter(r=>new Date(r.date)>=cutoff);
+  const cutoff=new Date(); cutoff.setDate(cutoff.getDate()-(p3Range-1)); const cutoffStr=ymd(cutoff);
+  const filtered=STATE.weightRecords.filter(r=>r.date>=cutoffStr);
   if(p3Chart)p3Chart.destroy();
   if(!filtered.length){ document.getElementById('p3-chart-note').textContent='此區間暫無數據'; return; }
   const isDark=window.matchMedia('(prefers-color-scheme:dark)').matches; const tc=isDark?'#888':'#999'; const gc=isDark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.05)';
@@ -1812,7 +1823,7 @@ function p4Log(){ if(!p4SelEx){showToast('請先選擇運動項目','warn');retu
 
 function p4RenderStats(){
   const ts=todayStr(); const tr=STATE.exerciseRecords.filter(r=>r.date===ts); const burned=tr.reduce((s,r)=>s+r.cal,0); const dur=tr.reduce((s,r)=>s+r.duration,0);
-  const ws=new Date(); const dow=ws.getDay()===0?6:ws.getDay()-1; ws.setDate(ws.getDate()-dow); ws.setHours(0,0,0,0); const wdays=new Set(STATE.exerciseRecords.filter(r=>new Date(r.date)>=ws).map(r=>r.date)).size;
+  const ws=new Date(); const dow=ws.getDay()===0?6:ws.getDay()-1; ws.setDate(ws.getDate()-dow); ws.setHours(0,0,0,0); const wsStr=ymd(ws); const wdays=new Set(STATE.exerciseRecords.filter(r=>r.date>=wsStr).map(r=>r.date)).size;
   const tCal=Object.values(todayMeals()).reduce((s,m)=>s+m.reduce((ss,i)=>ss+i.cal,0),0); const net=tCal-burned;
   document.getElementById('p4-burned').textContent=burned.toLocaleString(); document.getElementById('p4-dur').textContent=dur; document.getElementById('p4-wdays').textContent=wdays; document.getElementById('p4-net').textContent=net.toLocaleString();
   document.getElementById('p4-burned-n').textContent=burned>=400?'已達目標':'目標 400 kcal'; document.getElementById('p4-burned-n').className='sn '+(burned>=400?'c-green':'c-amber');
@@ -1823,10 +1834,10 @@ function p4RenderStats(){
 
 function p4RenderWeek(){
   const days=['一','二','三','四','五','六','日']; const ws=new Date(); const dow=ws.getDay()===0?6:ws.getDay()-1; ws.setDate(ws.getDate()-dow);
-  let html=''; for(let i=0;i<7;i++){ const d=new Date(ws); d.setDate(ws.getDate()+i); const ds=d.toISOString().slice(0,10); const dr=STATE.exerciseRecords.filter(r=>r.date===ds); const cal=dr.reduce((s,r)=>s+r.cal,0); const isToday=ds===todayStr(); const cls=isToday?'today':cal>=400?'done':dr.length?'done':'rest'; html+=`<div class="wd"><div class="wd-name">${days[i]}</div><div class="wd-ring ${cls}">${dr.length?'✓':'·'}</div><div class="wd-sub">${cal||'—'}</div></div>`; }
+  let html=''; for(let i=0;i<7;i++){ const d=new Date(ws); d.setDate(ws.getDate()+i); const ds=ymd(d); const dr=STATE.exerciseRecords.filter(r=>r.date===ds); const cal=dr.reduce((s,r)=>s+r.cal,0); const isToday=ds===todayStr(); const cls=isToday?'today':cal>=400?'done':dr.length?'done':'rest'; html+=`<div class="wd"><div class="wd-name">${days[i]}</div><div class="wd-ring ${cls}">${dr.length?'✓':'·'}</div><div class="wd-sub">${cal||'—'}</div></div>`; }
   document.getElementById('p4-week').innerHTML=html;
   const isDark=window.matchMedia('(prefers-color-scheme:dark)').matches; const tc=isDark?'#888':'#999'; const gc=isDark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.05)';
-  const data=[]; for(let i=0;i<7;i++){ const d=new Date(ws); d.setDate(ws.getDate()+i); data.push(STATE.exerciseRecords.filter(r=>r.date===d.toISOString().slice(0,10)).reduce((s,r)=>s+r.cal,0)); }
+  const data=[]; for(let i=0;i<7;i++){ const d=new Date(ws); d.setDate(ws.getDate()+i); data.push(STATE.exerciseRecords.filter(r=>r.date===ymd(d)).reduce((s,r)=>s+r.cal,0)); }
   if(p4Chart)p4Chart.destroy();
   p4Chart=new Chart(document.getElementById('p4-chart').getContext('2d'),{type:'bar',data:{labels:days,datasets:[{data,backgroundColor:data.map(v=>v>=400?'#534AB7':'#AFA9EC'),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:tc,font:{size:11}}},y:{grid:{color:gc},ticks:{color:tc,font:{size:11}},suggestedMin:0,suggestedMax:500}}}});
 }
@@ -1848,8 +1859,8 @@ function p4RenderLog(){
   if(p4LogRange==='today'){
     recs=STATE.exerciseRecords.filter(r=>r.date===todayStr());
   } else {
-    const cutoff=new Date(); cutoff.setDate(cutoff.getDate()-6);
-    recs=[...STATE.exerciseRecords].filter(r=>new Date(r.date)>=cutoff).reverse();
+    const cutoff=new Date(); cutoff.setDate(cutoff.getDate()-6); const cutoffStr=ymd(cutoff);
+    recs=[...STATE.exerciseRecords].filter(r=>r.date>=cutoffStr).reverse();
   }
   if(!recs.length){document.getElementById('p4-log').innerHTML=`<div class="empty"><i class="ti ti-leaf"></i>${p4LogRange==='today'?'尚未記錄今日運動':'近 7 天無運動記錄'}</div>`;return;}
   const grouped={};
@@ -1864,7 +1875,7 @@ function p4RenderLog(){
   });
   document.getElementById('p4-log').innerHTML=html;
 }
-function p4Del(id){ STATE.exerciseRecords=STATE.exerciseRecords.filter(r=>r.id!==id); saveState(); p4Render(); }
+function p4Del(id){ if(!confirm('確定刪除這筆運動紀錄？刪除後無法復原。')) return; STATE.exerciseRecords=STATE.exerciseRecords.filter(r=>r.id!==id); saveState(); p4Render(); }
 
 // ==================== PAGE 5 ====================
 let p5Tab='sleep', p5SleepQ=4, p5SleepChart=null;
@@ -1933,7 +1944,7 @@ function p5FillRemaining(){
   p5AddWater(remain);
   showToast('已補滿 '+remain+' ml，今日達標','ok');
 }
-function p5DelWater(id){ STATE.waterLogs=STATE.waterLogs.filter(w=>w.id!==id); saveState(); p5Render(); }
+function p5DelWater(id){ if(!confirm('確定刪除這筆飲水紀錄？')) return; STATE.waterLogs=STATE.waterLogs.filter(w=>w.id!==id); saveState(); p5Render(); }
 
 function p5RenderStats(){
   const last=STATE.sleepRecords.length?STATE.sleepRecords[STATE.sleepRecords.length-1]:null;
@@ -1982,8 +1993,8 @@ function p6Render(){
   const sleepScore=lastSleep?(lastSleep.dur>=sg?100:Math.round(lastSleep.dur/sg*80)):0;
   const waterScore=Math.min(Math.round(tw/wg*100),100);
   const weightScore=lastWeight?(()=>{ const b=calcBMI(lastWeight.weight); return b>=18.5&&b<24?100:b>=17&&b<27?70:50; })():50;
-  const ws=new Date(ts); const dow=ws.getDay()===0?6:ws.getDay()-1; ws.setDate(ws.getDate()-dow); ws.setHours(0,0,0,0);
-  const wExDays=new Set(STATE.exerciseRecords.filter(r=>new Date(r.date)>=ws).map(r=>r.date)).size;
+  const ws=new Date(); const dow=ws.getDay()===0?6:ws.getDay()-1; ws.setDate(ws.getDate()-dow); ws.setHours(0,0,0,0); const wsStr=ymd(ws);
+  const wExDays=new Set(STATE.exerciseRecords.filter(r=>r.date>=wsStr).map(r=>r.date)).size;
   const actScore=wExDays>=5?100:wExDays>=3?80:wExDays>=1?55:20;
   const totalScore=Math.round((eatScore*0.25+exScore*0.2+sleepScore*0.2+waterScore*0.15+weightScore*0.1+actScore*0.1));
 
@@ -1998,19 +2009,21 @@ function p6Render(){
   setMetric('p6-m-weight','p6-m-weight-n',weightScore,lastWeight?`BMI ${calcBMI(lastWeight.weight)}`:'尚無記錄');
   setMetric('p6-m-steps','p6-m-steps-n',actScore,`本週 ${wExDays} 天`);
 
-  // 今日熱量平衡：攝取 −（TDEE 基礎代謝 + 運動）= 結餘
-  const totalBurn=tdee+burned;
+  // 今日熱量平衡：攝取 −（身體真實維持消耗 + 運動）= 結餘
+  // 判斷「會瘦/會胖」必須用真實維持消耗，不能用打折後的減重/增重目標，否則折扣會被算兩次
+  const maint=maintenanceTDEE();
+  const totalBurn=maint+burned;
   const balance=eaten-totalBurn;  // 負=赤字（會瘦）、正=盈餘（會胖）
   animateNum(document.getElementById('p6-eaten'),eaten);
   animateNum(document.getElementById('p6-burned'),totalBurn);
-  document.getElementById('p6-burned-sub').textContent='代謝'+tdee.toLocaleString()+(burned?'+運動'+burned:'');
+  document.getElementById('p6-burned-sub').textContent='維持消耗'+maint.toLocaleString()+(burned?'+運動'+burned:'');
   const netEl=document.getElementById('p6-net');
   netEl.textContent=(balance>0?'+':'')+balance.toLocaleString();
   netEl.className='net-val '+(balance>0?'c-amber':balance<0?'c-green':'');
   const hint=document.getElementById('p6-balance-hint');
   const absKg=(Math.abs(balance)/7700).toFixed(2);
-  if(balance<-50){ hint.innerHTML='<i class="ti ti-trending-down"></i> 熱量赤字 '+Math.abs(balance).toLocaleString()+' kcal · 趨向減重（單日 ≈ −'+absKg+' kg）'; hint.style.cssText='text-align:center;font-size:12px;padding:8px;border-radius:var(--radius-sm);margin-bottom:10px;background:var(--green-bg);color:var(--green)'; }
-  else if(balance>50){ hint.innerHTML='<i class="ti ti-trending-up"></i> 熱量盈餘 '+balance.toLocaleString()+' kcal · 趨向增重（單日 ≈ +'+absKg+' kg）'; hint.style.cssText='text-align:center;font-size:12px;padding:8px;border-radius:var(--radius-sm);margin-bottom:10px;background:var(--amber-bg);color:var(--amber)'; }
+  if(balance<-50){ hint.innerHTML='<i class="ti ti-trending-down"></i> 熱量赤字 '+Math.abs(balance).toLocaleString()+' kcal · 趨向減重（脂肪約 −'+absKg+' kg，長期估算）'; hint.style.cssText='text-align:center;font-size:12px;padding:8px;border-radius:var(--radius-sm);margin-bottom:10px;background:var(--green-bg);color:var(--green)'; }
+  else if(balance>50){ hint.innerHTML='<i class="ti ti-trending-up"></i> 熱量盈餘 '+balance.toLocaleString()+' kcal · 趨向增重（脂肪約 +'+absKg+' kg，長期估算）'; hint.style.cssText='text-align:center;font-size:12px;padding:8px;border-radius:var(--radius-sm);margin-bottom:10px;background:var(--amber-bg);color:var(--amber)'; }
   else { hint.innerHTML='<i class="ti ti-equal"></i> 熱量大致平衡 · 維持現狀'; hint.style.cssText='text-align:center;font-size:12px;padding:8px;border-radius:var(--radius-sm);margin-bottom:10px;background:var(--surface2);color:var(--text2)'; }
 
   p6RenderWeightTrend();
@@ -2061,7 +2074,7 @@ function p6RenderWeek(){
   const days=['一','二','三','四','五','六','日'];
   const ws=new Date(); const dow=ws.getDay()===0?6:ws.getDay()-1; ws.setDate(ws.getDate()-dow); ws.setHours(0,0,0,0);
   const today=todayStr();
-  const tdee=calcTDEE();
+  const maint=maintenanceTDEE();
   const sleepGoal=STATE.profile.sleepGoal;
 
   let html='';
@@ -2069,7 +2082,7 @@ function p6RenderWeek(){
 
   for(let i=0;i<7;i++){
     const d=new Date(ws); d.setDate(ws.getDate()+i);
-    const ds=d.toISOString().slice(0,10);
+    const ds=ymd(d);
     const isToday=ds===today;
     const isFuture=ds>today;
 
@@ -2086,8 +2099,8 @@ function p6RenderWeek(){
     const cls=isToday?'today':isFuture?'rest':score>=75?'ok':score>=55?'done':'rest';
     html+=`<div class="wd"><div class="wd-name">${days[i]}</div><div class="wd-ring ${cls}">${isToday?'今':isFuture?'·':score||'—'}</div><div class="wd-sub">${exCal?exCal:'—'}</div></div>`;
 
-    // chart 資料：未來日期不算 net，避免拉低累積
-    dailyNet.push(isFuture?null:eaten-exCal-tdee);
+    // chart 資料：未來日期不算 net，避免拉低累積（用真實維持消耗判斷盈虧）
+    dailyNet.push(isFuture?null:eaten-exCal-maint);
     dailyExMin.push(isFuture?0:exMin);
     dailyWeight.push(wRec?wRec.weight:null);
   }
@@ -2159,7 +2172,7 @@ function p6RenderAIMock(){
 async function p6GetAI(){
   const btn=document.getElementById('p6-ai-btn'); btn.disabled=true;
   document.getElementById('p6-ai-content').innerHTML='<div style="text-align:center;padding:10px 0;font-size:13px;color:var(--text3)"><i class="ti ti-loader-2 spin" style="font-size:16px;vertical-align:-3px;margin-right:5px"></i>Gemini 分析中...</div>';
-  const tdee=calcTDEE(); const ts=todayStr();
+  const tdee=calcTDEE(); const maint=maintenanceTDEE(); const ts=todayStr();
   const eaten=Object.values(todayMeals()).reduce((s,m)=>s+m.reduce((ss,i)=>ss+i.cal,0),0);
   const burned=STATE.exerciseRecords.filter(r=>r.date===ts).reduce((s,r)=>s+r.cal,0);
   const tw=STATE.waterLogs.filter(w=>w.date===ts||!w.date).reduce((s,w)=>s+w.amount,0);
@@ -2174,7 +2187,7 @@ async function p6GetAI(){
     const exR=STATE.exerciseRecords.filter(r=>r.date===d);
     const exC=exR.reduce((s,r)=>s+r.cal,0); wkExCal+=exC;
     wkExMin+=exR.reduce((s,r)=>s+r.duration,0);
-    if(d<=ts) wkNet+=(e-exC-tdee);
+    if(d<=ts) wkNet+=(e-exC-maint);
     const sl=STATE.sleepRecords.find(r=>r.date===d); if(sl){sleepSum+=sl.dur;sleepN++;}
     const w=STATE.waterLogs.filter(w=>w.date===d).reduce((s,w)=>s+w.amount,0); if(w>0){waterSum+=w;waterN++;}
   }

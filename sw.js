@@ -1,4 +1,4 @@
-const CACHE='health-app-v8';
+const CACHE='health-app-v9';
 const ASSETS=[
   './',
   './index.html',
@@ -34,7 +34,7 @@ self.addEventListener('activate', e=>{
 self.addEventListener('fetch', e=>{
   if(e.request.method!=='GET') return;
   const url=new URL(e.request.url);
-  // Anthropic API 永遠走網路，不快取
+  // Google Gemini API 永遠走網路，不快取（避免把含金鑰的請求存進快取）
   if(url.hostname==='generativelanguage.googleapis.com') return;
   // HTML: network-first（取得最新版本），離線時 fallback 至快取
   if(e.request.mode==='navigate' || url.pathname.endsWith('.html')){
