@@ -18,3 +18,4 @@ idcheck.py
 play-store/android.keystore
 play-store/*.aab
 play-store/.bubblewrap/
+play-store/SIGNING-KEY-INFO.txt

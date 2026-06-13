@@ -3,10 +3,13 @@
 本 App 已是符合上架資格的 PWA，並已部署在
 **https://fullmodel-star.github.io/healthcare/** （GitHub Pages，已上線）。
 
-要把它送上 Google Play，需要把 PWA 包成 Android App（TWA, Trusted Web Activity）。
-以下兩條路任選其一。**路線 A（PWABuilder）最簡單，建議非工程師使用。**
+> ✅ **已簽署的安裝檔已經幫你建好了！**
+> 檔案：`play-store/healthcare-1.0.0-release.aab`（已用 `play-store/android.keystore` 簽署）
+> 簽署密碼與 SHA-256：見 `play-store/SIGNING-KEY-INFO.txt`（機密，已列入 .gitignore，請務必備份）
+> 你可以**直接跳到下方「共同步驟：上傳與發佈」第 2 步**上傳這個 .aab。
+> （路線 A / B 是「想重新建置」時才需要，例如改版出新版本。）
 
-程式碼端（圖示、manifest、隱私權政策、打包設定）我已全部準備好，
+要把 PWA 包成 Android App（TWA, Trusted Web Activity）的工具設定我已全部準備好，
 剩下的步驟都需要「你的 Google 帳號 / 付款 / 線上操作」，無法由程式自動完成。
 
 ---
@@ -88,18 +91,20 @@ powershell -ExecutionPolicy Bypass -File .\build-aab.ps1
 
 ---
 
-## 已完成（程式碼端）
+## 已完成（程式碼端 + 建置）
 
 - ✅ PNG 圖示：`icon-192/512.png`、`icon-maskable-192/512.png`、`icon-1024.png`
 - ✅ `manifest.json` 升級為 Play 規格（加上 `id`、PNG 圖示、maskable）
 - ✅ `index.html` 圖示連結、`sw.js` 快取清單更新（v11）
 - ✅ `privacy-policy.html` 隱私權政策（含 Gemini API 與健康資料說明）
 - ✅ `play-store/twa-manifest.json`、`assetlinks.json`、`build-aab.ps1` 打包設定
+- ✅ **已建置並簽署 `play-store/healthcare-1.0.0-release.aab`（可直接上傳）**
+- ✅ **簽署金鑰 `play-store/android.keystore` + 密碼資訊（SIGNING-KEY-INFO.txt）**
 
 ## 仍需你本人操作（無法自動化）
 
 - ⬜ 註冊 Google Play 開發者帳號（US$25）
-- ⬜ 產生 / 保管簽署金鑰（PWABuilder 或 build-aab.ps1 會產生，務必備份）
+- ⬜ 上傳 AAB，並**備份 android.keystore 與密碼**（遺失將無法更新 App）
 - ⬜ 把帶有 Play 簽署 SHA-256 的 `assetlinks.json` 發佈到網域根目錄
 - ⬜ 手機螢幕截圖（≥2 張）上傳商店頁
 - ⬜ 填寫資料安全表單與內容分級、送審
