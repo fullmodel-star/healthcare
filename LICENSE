@@ -1,26 +1,26 @@
-MIT License
+健康家族 — 版權與使用條款
+Copyright © 2026 Lucas · 版權所有，保留一切權利（All Rights Reserved）
 
-Copyright (c) 2026 稜線工作室 Ridgeline Studio · Lucas (fullmodel-star)
+本軟體（「健康家族」系列 App，包含其程式碼、設計、圖示與內容）之著作權由作者 Lucas 保留。
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+【你可以】
+  • 免費使用本 App。
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+【未經作者事前書面同意，不得】
+  • 複製、重製本軟體之程式碼或設計；
+  • 修改、改作或建立衍生作品；
+  • 散布、再散布、轉售，或以任何形式提供予第三人；
+  • 進行還原工程（reverse engineering）；
+  • 作任何商業用途。
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+本軟體所使用之第三方元件（如 Tabler Icons、Chart.js 等）各自依其原授權條款釋出，
+詳見「致謝與授權.md」。
 
----
-註：本 MIT 授權適用於「健康家族」原創程式碼。程式所使用的第三方元件與資料
-（Tabler Icons、Chart.js、WHO 兒童生長標準、衛福部/疾管署資料、Open Food Facts 等）
-各自保有其原始授權，詳見「致謝與授權.md」。
+本軟體依「現狀」提供，不附任何明示或默示之擔保；作者不對因使用本軟體所生之任何
+損害負責。本 App 之健康數據、百分位、預測與提醒僅供參考，不能取代醫師診斷與醫囑。
+
+────────────────────────────────────────
+Copyright © 2026 Lucas. All Rights Reserved.
+Free to use for personal purposes only. No permission is granted to copy,
+modify, distribute, reverse-engineer, or use this software for commercial
+purposes without the author's prior written consent.

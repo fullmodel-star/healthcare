@@ -12,7 +12,7 @@
   --border2: rgba(0,0,0,0.14);
   --text: #1A1917;
   --text2: #6B6A67;
-  --text3: #9B9A97;
+  --text3: #6A6965;
   --green: #1D9E75;
   --green-bg: #E1F5EE;
   --amber: #BA7517;
@@ -36,7 +36,7 @@
   :root:not([data-theme="light"]) {
     --bg: #141412; --surface: #1E1D1B; --surface2: #282724; --surface3: #333230;
     --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.14);
-    --text: #F0EFE9; --text2: #A8A7A3; --text3: #6B6A67;
+    --text: #F0EFE9; --text2: #A8A7A3; --text3: #8E8D88;
     --green-bg: #0D2E22; --amber-bg: #2D1F08; --red-bg: #2D1210;
     --blue-bg: #0A1E35; --purple-bg: #1A1835; --pink-bg: #2E0F20;
   }
@@ -44,7 +44,7 @@
 :root[data-theme="dark"] {
   --bg: #141412; --surface: #1E1D1B; --surface2: #282724; --surface3: #333230;
   --border: rgba(255,255,255,0.08); --border2: rgba(255,255,255,0.14);
-  --text: #F0EFE9; --text2: #A8A7A3; --text3: #6B6A67;
+  --text: #F0EFE9; --text2: #A8A7A3; --text3: #8E8D88;
   --green-bg: #0D2E22; --amber-bg: #2D1F08; --red-bg: #2D1210;
   --blue-bg: #0A1E35; --purple-bg: #1A1835; --pink-bg: #2E0F20;
 }
@@ -249,3 +249,7 @@ html.bigfont .stepper input{height:50px;font-size:23px}
 .toast.toast-info{border-color:var(--blue);color:var(--blue)} .toast.toast-info i{color:var(--blue)}
 .spin{display:inline-block;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* a11y：鍵盤焦點可見 + 尊重減少動態偏好 */
+:focus-visible{outline:2px solid var(--brand,#534AB7);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}
