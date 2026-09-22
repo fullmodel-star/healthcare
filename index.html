@@ -83,6 +83,17 @@
   --blue-bg: #0A1E35;
   --purple-bg: #1A1835;
 }
+html.bigfont, html.senior{font-size:18px}
+html.bigfont body, html.senior body{font-size:18px;line-height:1.6}
+html.bigfont .page-title, html.senior .page-title{font-size:26px}
+html.bigfont .card-title, html.senior .card-title{font-size:15px}
+html.bigfont .btn, html.senior .btn{height:50px;font-size:16px;font-weight:700}
+html.bigfont input, html.bigfont select, html.senior input, html.senior select{height:46px;font-size:17px}
+html.bigfont .stat-card .sv, html.senior .stat-card .sv{font-size:24px}
+html.bigfont .stat-card .sl, html.senior .stat-card .sl{font-size:13px}
+html.bigfont .hint, html.senior .hint{font-size:13px}
+html.bigfont .nav-item span, html.senior .nav-item span{font-size:13px}
+html.bigfont .score-num, html.senior .score-num{font-size:48px}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'PingFang TC','Noto Sans TC','Microsoft JhengHei','Segoe UI',sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 input,select,button{font-family:inherit;font-size:inherit;color:inherit}
@@ -485,6 +496,12 @@ button{cursor:pointer;border:none;background:none}
     </div>
   </div>
 
+  <div class="card" id="p1-daily-feed" style="--accent:var(--purple);background:linear-gradient(135deg,var(--surface),var(--surface2));border-left:4px solid var(--purple)">
+    <div class="card-title" id="p1-feed-title" style="margin-bottom:6px"><i class="ti ti-sun"></i>今日即時導航</div>
+    <div id="p1-feed-text" style="font-size:13px;color:var(--text);line-height:1.6;margin-bottom:10px"></div>
+    <div id="p1-feed-btns" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+  </div>
+
   <div class="card">
     <div class="card-title"><i class="ti ti-ruler-2"></i>基本身體數據</div>
     <div class="field-row three">
@@ -568,7 +585,11 @@ button{cursor:pointer;border:none;background:none}
   </div>
 
   <div class="card" style="margin-bottom:8px">
-    <div class="card-title"><i class="ti ti-palette"></i>外觀</div>
+    <div class="card-title"><i class="ti ti-palette"></i>外觀與字體</div>
+    <div class="rem-row" style="margin-bottom:8px;border-bottom:1px solid var(--border);padding-bottom:8px">
+      <div class="rem-info" style="flex:1"><div class="rn">大字體 / 長輩好讀模式</div><div class="rs">字體放大、按鈕好點選（跨家族 App 自動同步）</div></div>
+      <label class="toggle"><input type="checkbox" id="th-bigfont" onchange="toggleBigFont(this.checked)"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+    </div>
     <div class="seg" style="margin-bottom:0">
       <button class="seg-btn" id="th-auto" onclick="setTheme('auto')"><i class="ti ti-device-desktop"></i> 跟隨系統</button>
       <button class="seg-btn" id="th-light" onclick="setTheme('light')"><i class="ti ti-sun"></i> 亮色</button>
@@ -675,7 +696,10 @@ button{cursor:pointer;border:none;background:none}
         <button class="btn btn-outline btn-block" onclick="p2SimUpload()"><i class="ti ti-scan" style="margin-right:4px"></i>示範</button>
       </div>
       <div class="img-preview" id="p2-img-preview"><i class="ti ti-bowl-spoon" style="font-size:26px;color:var(--amber)"></i><span id="p2-img-label" style="font-size:12px;color:var(--text3)">照片已選擇</span></div>
-      <button class="btn btn-amber btn-block" id="p2-btn-analyze" style="display:none;margin-bottom:8px" onclick="p2RunScan()"><i class="ti ti-sparkles"></i>Gemini 分析熱量</button>
+      <div style="display:flex;gap:7px;margin-bottom:8px">
+        <button class="btn btn-amber" id="p2-btn-analyze" style="display:none;flex:1" onclick="p2RunScan()"><i class="ti ti-sparkles"></i>Gemini 分析熱量</button>
+        <button class="btn btn-outline" id="p2-btn-quick-photo" style="display:none;flex:1" onclick="p2SavePhotoOnly()"><i class="ti ti-camera"></i>直接記錄（免 Key）</button>
+      </div>
       <div id="p2-analyzing" style="display:none;text-align:center;padding:12px 0;font-size:13px;color:var(--text3)"><i class="ti ti-loader-2 spin" style="font-size:16px;vertical-align:-3px;margin-right:5px"></i>辨識中...</div>
       <div class="err-box" id="p2-err"><i class="ti ti-alert-circle"></i><span id="p2-err-msg"></span></div>
       <div id="p2-scan-result" style="display:none">
@@ -1232,6 +1256,74 @@ function refreshPage(id){
   if(id==='p6'){ document.getElementById('p6-date').textContent=today; p6Render(); }
 }
 
+// ==================== 大字體 / 長輩好讀模式 ====================
+function isBigFont(){ return localStorage.getItem('bigfont')==='1' || localStorage.getItem('senior_mode')==='1'; }
+function toggleBigFont(on){
+  localStorage.setItem('bigfont', on?'1':'0');
+  localStorage.setItem('senior_mode', on?'1':'0');
+  document.documentElement.classList.toggle('bigfont', on);
+  document.documentElement.classList.toggle('senior', on);
+  showToast(on?'已開啟大字體好讀模式':'已恢復標準字體','ok',1400);
+}
+if(isBigFont()){
+  document.documentElement.classList.add('bigfont');
+  document.documentElement.classList.add('senior');
+}
+
+// ==================== 今日即時導航 (Daily Feed) ====================
+function renderDailyFeed(){
+  const titleEl=document.getElementById('p1-feed-title');
+  const textEl=document.getElementById('p1-feed-text');
+  const btnsEl=document.getElementById('p1-feed-btns');
+  if(!titleEl || !textEl || !btnsEl) return;
+  const h=new Date().getHours();
+  let title='', text='', btns=[];
+  if(h>=5 && h<11){
+    title='<i class="ti ti-sun" style="color:var(--amber)"></i>早安導航 · 喚醒身心';
+    text='早晨好！先喝杯溫水，量測晨間空腹體重，並享用高蛋白早餐為整天注滿活力。';
+    btns=[
+      {label:'🍽️ 記早餐', page:'p2', action:()=>p2SetMeal('breakfast')},
+      {label:'⚖️ 晨間體重', page:'p3'}
+    ];
+  } else if(h>=11 && h<17){
+    title='<i class="ti ti-sun-high" style="color:var(--green)"></i>午間導航 · 活力續航';
+    text='午間忙碌之餘，別忘了補充水分（建議 300ml），記錄午餐熱量並活動筋骨。';
+    btns=[
+      {label:'🍱 記午餐', page:'p2', action:()=>p2SetMeal('lunch')},
+      {label:'📊 今日總覽', page:'p6'}
+    ];
+  } else if(h>=17 && h<22){
+    title='<i class="ti ti-sunset" style="color:var(--purple)"></i>傍晚導航 · 減壓收尾';
+    text='今日即將步入尾聲，記得記錄晚餐與運動鍛鍊，檢視今日熱量收支與步數是否達標。';
+    btns=[
+      {label:'🍲 記晚餐', page:'p2', action:()=>p2SetMeal('dinner')},
+      {label:'🏃 記運動', page:'p4'},
+      {label:'🏆 健康分數', page:'p6'}
+    ];
+  } else {
+    title='<i class="ti ti-moon-stars" style="color:var(--blue)"></i>夜間導航 · 靜心修復';
+    text='夜深了，讓眼睛和大腦好好休息。提早就寢、確保充足睡眠，是代謝修復的最佳良藥。';
+    btns=[
+      {label:'🌙 記錄睡眠', page:'p5'},
+      {label:'🍪 記宵夜點心', page:'p2', action:()=>p2SetMeal('snack')}
+    ];
+  }
+  titleEl.innerHTML=title;
+  textEl.textContent=text;
+  btnsEl.innerHTML=btns.map((b,i)=>`<button onclick="jumpFeed(${i})" class="btn btn-outline" style="height:32px;font-size:12px;padding:0 10px;border-radius:20px;background:var(--surface);border-color:var(--border2);cursor:pointer">${b.label}</button>`).join('');
+  window._feedBtns=btns;
+}
+
+function jumpFeed(i){
+  const b=window._feedBtns && window._feedBtns[i];
+  if(!b) return;
+  const navBtns=document.querySelectorAll('.nav-item');
+  const pageIdx={p1:0,p3:1,p2:2,p4:3,p5:4,p6:5};
+  const targetBtn=navBtns[pageIdx[b.page]||0];
+  goPage(b.page, targetBtn);
+  if(typeof b.action==='function') setTimeout(b.action, 80);
+}
+
 // ==================== PAGE 1 ====================
 let p1Sex='m', p1Act=1.375, p1Goal='keep';
 
@@ -1239,6 +1331,9 @@ function p1Render(){
   // 套用主題切換高亮
   const th=localStorage.getItem('theme')||'auto';
   ['th-auto','th-light','th-dark'].forEach(id=>{const el=document.getElementById(id); if(el) el.classList.toggle('on',id==='th-'+th);});
+  const bfEl=document.getElementById('th-bigfont');
+  if(bfEl) bfEl.checked=isBigFont();
+  renderDailyFeed();
   document.getElementById('p1-height').value=STATE.profile.height;
   // 體重從最新紀錄拉，回退至 profile
   const latestW=STATE.weightRecords.length?STATE.weightRecords[STATE.weightRecords.length-1].weight:STATE.profile.weight;
@@ -1488,11 +1583,53 @@ function p2AddRecent(i){
   showToast('已加入「'+f.name+'」至'+MEAL_NAMES[p2Meal],'ok');
 }
 
-function p2SimUpload(){ document.getElementById('p2-upload').style.display='none'; document.getElementById('p2-img-preview').classList.add('show'); document.getElementById('p2-img-label').textContent='雞腿便當照片（示範）'; document.getElementById('p2-btn-analyze').style.display='flex'; p2UploadB64=null; }
-function p2HandleFile(input){ const file=input.files[0]; if(!file)return; p2UploadMime=file.type||'image/jpeg'; const r=new FileReader(); r.onload=e=>{ p2UploadB64=e.target.result.split(',')[1]; document.getElementById('p2-upload').style.display='none'; document.getElementById('p2-img-preview').classList.add('show'); document.getElementById('p2-img-label').textContent=file.name; document.getElementById('p2-btn-analyze').style.display='flex'; }; r.readAsDataURL(file); }
+function p2SimUpload(){
+  document.getElementById('p2-upload').style.display='none';
+  document.getElementById('p2-img-preview').classList.add('show');
+  document.getElementById('p2-img-label').textContent='雞腿便當照片（示範）';
+  document.getElementById('p2-btn-analyze').style.display='flex';
+  const qBtn=document.getElementById('p2-btn-quick-photo'); if(qBtn) qBtn.style.display='flex';
+  p2UploadB64=null;
+}
+function p2HandleFile(input){
+  const file=input.files[0]; if(!file)return;
+  p2UploadMime=file.type||'image/jpeg';
+  const r=new FileReader();
+  r.onload=e=>{
+    p2UploadB64=e.target.result.split(',')[1];
+    document.getElementById('p2-upload').style.display='none';
+    document.getElementById('p2-img-preview').classList.add('show');
+    document.getElementById('p2-img-label').textContent=file.name;
+    document.getElementById('p2-btn-analyze').style.display='flex';
+    const qBtn=document.getElementById('p2-btn-quick-photo'); if(qBtn) qBtn.style.display='flex';
+  };
+  r.readAsDataURL(file);
+}
+
+function p2SavePhotoOnly(){
+  const defaultName=(p2UploadB64?'照片餐點':'雞腿便當')+' ('+MEAL_NAMES[p2Meal]+')';
+  const name=prompt('請輸入餐點名稱：',defaultName);
+  if(!name) return;
+  const calStr=prompt('估算熱量（大卡，可留空預設 500）：','500');
+  const cal=parseInt(calStr)||500;
+  todayMeals()[p2Meal].push({
+    name:name,
+    qty:'1 份',
+    cal:cal,
+    pro:+(cal*0.05).toFixed(1),
+    fat:+(cal*0.03).toFixed(1),
+    carb:+(cal*0.1).toFixed(1),
+    id:Date.now()+Math.random()
+  });
+  saveState();
+  p2ResetScan();
+  p2Refresh();
+  showToast('已加入照片餐點：'+name,'ok');
+}
 
 async function p2RunScan(){
   document.getElementById('p2-btn-analyze').style.display='none';
+  const qBtn=document.getElementById('p2-btn-quick-photo'); if(qBtn) qBtn.style.display='none';
   document.getElementById('p2-img-preview').classList.remove('show');
   document.getElementById('p2-scan-result').style.display='none';
   document.getElementById('p2-err').classList.remove('show');
@@ -1509,16 +1646,14 @@ async function p2RunScan(){
       p2RenderScan(); document.getElementById('p2-scan-result').style.display='block';
     }catch(e){
       document.getElementById('p2-analyzing').style.display='none';
-      // 辨識失敗時「不」自動塞入示範假資料，避免使用者誤把無關熱量加入記錄
       let msg;
-      if(e.message==='offline') msg='目前是「離線模式」，已停用雲端辨識。請改用「搜尋／手動」輸入，或到個人資料頁關閉離線模式。';
-      else if(e.message==='no_key') msg='尚未設定 API Key，無法辨識。請至「個人資料」頁設定，或改用「搜尋／手動」輸入。';
-      else msg='辨識失敗（'+e.message+'）。請改用「搜尋／手動」輸入，或稍後再試。';
-      document.getElementById('p2-err-msg').textContent=msg;
+      if(e.message==='offline') msg='目前是「離線模式」，已停用雲端辨識。';
+      else if(e.message==='no_key') msg='尚未設定 API Key，無法進行雲端辨識。';
+      else msg='辨識失敗（'+e.message+'）。';
+      document.getElementById('p2-err-msg').innerHTML=msg+'<div style="margin-top:6px"><button type="button" class="btn btn-outline" style="font-size:11px;height:28px;padding:0 10px;background:var(--surface);cursor:pointer" onclick="p2SavePhotoOnly()"><i class="ti ti-camera"></i>改為直接記錄照片餐點（免 Key）</button></div>';
       document.getElementById('p2-err').classList.add('show');
       p2ScanFoods=[];
       document.getElementById('p2-scan-result').style.display='none';
-      // 還原上傳區，方便重試
       document.getElementById('p2-upload').style.display='block';
     }
   }else{
@@ -1539,7 +1674,7 @@ function p2RenderScan(){
 function p2EditScan(id){ const f=p2ScanFoods.find(x=>x.id===id); if(!f)return; const nq=prompt('調整「'+f.name+'」份量（g）：',f.quantity_g); if(!nq||isNaN(nq))return; const r=+nq/f.quantity_g; Object.assign(f,{quantity_g:+parseFloat(nq).toFixed(0),calories:Math.round((f.calories||0)*r),protein_g:+((f.protein_g||0)*r).toFixed(1),fat_g:+((f.fat_g||0)*r).toFixed(1),carbs_g:+((f.carbs_g||0)*r).toFixed(1)}); p2RenderScan(); }
 
 function p2ConfirmScan(){ const t=todayMeals(); const n=p2ScanFoods.length; p2ScanFoods.forEach(f=>{ t[p2Meal].push({name:f.name,qty:f.quantity_g+'g',cal:Math.round(f.calories||0),pro:+(f.protein_g||0).toFixed(1),fat:+(f.fat_g||0).toFixed(1),carb:+(f.carbs_g||0).toFixed(1),id:Date.now()+Math.random()}); }); saveState(); p2ResetScan(); p2Refresh(); showToast('已加入 '+n+' 項至'+MEAL_NAMES[p2Meal],'ok'); }
-function p2ResetScan(){ p2ScanFoods=[];p2UploadB64=null; document.getElementById('p2-upload').style.display='block'; document.getElementById('p2-img-preview').classList.remove('show'); document.getElementById('p2-btn-analyze').style.display='none'; document.getElementById('p2-scan-result').style.display='none'; document.getElementById('p2-err').classList.remove('show'); document.getElementById('p2-file').value=''; }
+function p2ResetScan(){ p2ScanFoods=[];p2UploadB64=null; document.getElementById('p2-upload').style.display='block'; document.getElementById('p2-img-preview').classList.remove('show'); document.getElementById('p2-btn-analyze').style.display='none'; const qBtn=document.getElementById('p2-btn-quick-photo'); if(qBtn) qBtn.style.display='none'; document.getElementById('p2-scan-result').style.display='none'; document.getElementById('p2-err').classList.remove('show'); document.getElementById('p2-file').value=''; }
 
 let p2ActiveCat='全部';
 const FOOD_CATS=['全部',...new Set(FOOD_DB.map(f=>f.cat))];
