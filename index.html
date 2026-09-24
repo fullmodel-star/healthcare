@@ -23,6 +23,9 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" integrity="sha384-hs5SINUk7GPohxRis+rS7grpSWEbtOIJ3sRoseBKg3CDPIKpG55RfSenbvA6ALOt" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" integrity="sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD" crossorigin="anonymous"></script>
 <script src="food-db.js?v=4"></script>
+<!-- 健康家族共用核心（主題／長輩大字／家族基本資料／家族選單）。只載 core.js，不載 core.css（會與自帶樣式相撞）。
+     放在 head 而非 body 結尾：主程式 inline script 在 body 內就會呼叫 HC.*，且 HC 會在載入時先套用手動主題避免閃爍。 -->
+<script src="core.js"></script>
 <style>
 :root {
   --bg: #F5F4F0;
@@ -33,7 +36,9 @@
   --border2: rgba(0,0,0,0.14);
   --text: #1A1917;
   --text2: #6B6A67;
-  --text3: #9B9A97;
+  --text3: #6A6965;
+  --brand: #534AB7;
+  --brand-bg: #EEEDFE;
   --green: #1D9E75;
   --green-bg: #E1F5EE;
   --amber: #BA7517;
@@ -138,7 +143,7 @@ button{cursor:pointer;border:none;background:none}
 
 /* Stat Grid */
 .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
-.stat-grid.four{grid-template-columns:repeat(4,1fr)}
+.stat-grid.four{grid-template-columns:repeat(auto-fit,minmax(72px,1fr))}
 .stat-card{background:var(--surface2);border-radius:var(--radius-sm);padding:10px 12px}
 .stat-card .sl{font-size:11px;color:var(--text3);margin-bottom:2px}
 .stat-card .sv{font-size:20px;font-weight:700}
@@ -153,7 +158,7 @@ button{cursor:pointer;border:none;background:none}
 
 /* Segment control */
 .seg{display:flex;background:var(--surface2);border-radius:var(--radius-sm);padding:3px;gap:2px;margin-bottom:12px}
-.seg-btn{flex:1;height:32px;border-radius:6px;font-size:13px;font-weight:500;color:var(--text2);transition:all .15s;background:none;border:none}
+.seg-btn{flex:1;height:40px;border-radius:6px;font-size:13px;font-weight:500;color:var(--text2);transition:all .15s;background:none;border:none}
 .seg-btn.on{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.1)}
 
 /* Buttons */
@@ -168,6 +173,7 @@ button{cursor:pointer;border:none;background:none}
 .btn-amber{background:var(--amber);color:#fff;border:none}
 .btn-amber:hover{background:#854F0B}
 .btn-block{width:100%}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border2)}
 
 /* Colors */
 .c-green{color:var(--green)}.c-amber{color:var(--amber)}.c-red{color:var(--red)}.c-blue{color:var(--blue)}.c-purple{color:var(--purple)}.c-muted{color:var(--text3)}
@@ -188,6 +194,17 @@ button{cursor:pointer;border:none;background:none}
 .field-row{display:grid;gap:8px}
 .field-row.two{grid-template-columns:1fr 1fr}
 .field-row.three{grid-template-columns:1fr 1fr 1fr}
+.field-row>*{min-width:0} /* 讓 date/time 輸入框能縮，避免撐爆 grid 造成水平溢出 */
+.field-row .span-all{grid-column:1/-1}
+
+/* Info / warn note（與 core.css 同步）*/
+.note{border-radius:var(--radius-sm);padding:9px 12px;font-size:12px;display:flex;gap:6px;align-items:flex-start;margin-top:10px;line-height:1.5}
+.note i{font-size:14px;flex-shrink:0;margin-top:1px}
+.note-green{background:var(--green-bg);color:var(--green)}
+.note-amber{background:var(--amber-bg);color:var(--amber)}
+.note-red{background:var(--red-bg);color:var(--red)}
+.note-blue{background:var(--blue-bg);color:var(--blue)}
+.note-brand{background:var(--brand-bg);color:var(--brand)}
 
 /* Activity buttons */
 .act-btn{width:100%;display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface2);font-size:13px;color:var(--text2);margin-bottom:6px;transition:all .15s}
@@ -346,12 +363,12 @@ button{cursor:pointer;border:none;background:none}
 .derived-val{font-weight:700;color:var(--text);margin-left:auto;font-size:13px}
 
 /* Toggle */
-.toggle{position:relative;width:36px;height:20px;flex-shrink:0}
+.toggle{position:relative;width:44px;height:24px;flex-shrink:0}
 .toggle input{opacity:0;width:100%;height:100%;position:absolute;cursor:pointer;margin:0;z-index:1}
-.toggle-track{width:100%;height:100%;background:var(--surface3);border-radius:10px;transition:background .2s;position:absolute}
+.toggle-track{width:100%;height:100%;background:var(--surface3);border-radius:12px;transition:background .2s;position:absolute}
 .toggle input:checked~.toggle-track{background:var(--blue)}
-.toggle-thumb{width:16px;height:16px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:transform .2s;pointer-events:none}
-.toggle input:checked~.toggle-thumb{transform:translateX(16px)}
+.toggle-thumb{width:20px;height:20px;background:#fff;border-radius:50%;position:absolute;top:2px;left:2px;transition:transform .2s;pointer-events:none}
+.toggle input:checked~.toggle-thumb{transform:translateX(20px)}
 
 /* Reminder row */
 .rem-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
@@ -361,7 +378,7 @@ button{cursor:pointer;border:none;background:none}
 
 /* Intensity tabs */
 .int-tabs{display:flex;gap:0;border:1px solid var(--border2);border-radius:var(--radius-sm);overflow:hidden;margin-bottom:10px}
-.int-tab{flex:1;height:32px;font-size:12px;font-weight:500;border:none;background:transparent;color:var(--text2);transition:all .15s}
+.int-tab{flex:1;height:40px;font-size:12px;font-weight:500;border:none;background:transparent;color:var(--text2);transition:all .15s}
 .int-tab.on{background:var(--purple-bg);color:var(--purple)}
 
 /* Cal preview */
@@ -391,7 +408,7 @@ button{cursor:pointer;border:none;background:none}
 .si-name{flex:1;font-size:13px;font-weight:500}
 .si-sub{font-size:11px;color:var(--text3)}
 .si-cal{font-size:13px;font-weight:700;color:var(--amber)}
-.si-edit{width:26px;height:26px;border-radius:50%;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text3)}
+.si-edit{width:40px;height:40px;border-radius:50%;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text3);flex-shrink:0}
 .si-edit:hover{background:var(--surface2)}
 .scan-total{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface2);border-radius:var(--radius-sm);margin:8px 0}
 .spin{display:inline-block;animation:spin 1s linear infinite}
@@ -451,6 +468,61 @@ button{cursor:pointer;border:none;background:none}
 .rl-appbar .rl-title{font-family:'Noto Serif TC','Songti TC',serif;font-weight:600;font-size:18px;line-height:1.15}
 .rl-appbar .rl-sub{font-size:11.5px;opacity:.85;letter-spacing:1px;margin-top:1px}
 
+/* ===== 以下自 core.css 抄入：家族切換浮鈕／底部選單／安裝橫幅／更新橫幅（01 不載入 core.css，避免與自帶樣式相撞）===== */
+.pick-grid{display:grid;gap:6px;margin-bottom:10px}
+.pick-grid.two{grid-template-columns:1fr 1fr}
+.pick-btn{padding:10px 6px;min-height:44px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface2);text-align:center;font-size:12px;color:var(--text2);transition:all .15s}
+.pick-btn.on{border-color:var(--brand);background:var(--brand-bg);color:var(--brand);font-weight:600}
+.fam-fab{position:fixed;right:14px;bottom:calc(var(--nav-h) + 14px);width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#14B8A6,#0EA5E9);color:#fff;box-shadow:0 4px 16px rgba(0,0,0,.24);display:flex;align-items:center;justify-content:center;font-size:23px;z-index:200;border:none}
+.fam-fab:active{transform:scale(.93)}
+.fam-overlay{position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:450;display:none;align-items:flex-end;justify-content:center;overflow-x:hidden}
+.fam-overlay.show{display:flex}
+.fam-sheet{background:var(--surface);width:100%;max-width:480px;border-radius:18px 18px 0 0;padding:16px 14px calc(18px + env(safe-area-inset-bottom));max-height:86vh;overflow-y:auto;overflow-x:hidden;box-sizing:border-box}
+.fam-title{font-size:17px;font-weight:800;text-align:center;margin-bottom:4px;color:var(--text)}
+.fam-sub{font-size:12px;color:var(--text3);text-align:center;margin-bottom:12px}
+.fam-basic{background:var(--surface2);border-radius:12px;padding:12px;margin-bottom:14px}
+.fam-divider{font-size:12px;color:var(--text3);font-weight:600;margin:2px 0 8px;letter-spacing:1px}
+.fam-row{display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;text-decoration:none;color:var(--text);border:1px solid var(--border);margin-bottom:8px;background:var(--surface2)}
+.fam-row.cur{border-color:var(--brand);background:var(--brand-bg)}
+.fam-emo{font-size:22px}
+.fam-name{flex:1;font-weight:600;font-size:15px}
+.fam-here{font-size:12px;color:var(--brand);font-weight:700}
+.fam-row i{color:var(--text3)}
+.fam-close{text-align:center;padding:12px;color:var(--text2);font-weight:700;cursor:pointer}
+.fam-swatches{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.fam-swatch{width:38px;height:38px;border-radius:50%;border:2px solid var(--border2);cursor:pointer;background:var(--surface2);font-size:11px;color:var(--text3);display:flex;align-items:center;justify-content:center;transition:transform .1s}
+.fam-swatch:active{transform:scale(.9)}
+.fam-swatch.on{outline:3px solid var(--brand);outline-offset:2px;border-color:#fff}
+.fam-copyright{font-size:10.5px;color:var(--text3);text-align:center;line-height:1.7;padding:12px 6px 2px;border-top:1px solid var(--border);margin-top:6px}
+.hc-ib{position:fixed;left:0;right:0;bottom:var(--nav-h,0px);z-index:400;display:flex;align-items:center;gap:10px;
+  padding:11px 12px calc(11px + env(safe-area-inset-bottom));
+  background:var(--brand,#14B8A6);color:#fff;font-size:13.5px;line-height:1.35;
+  box-shadow:0 -4px 18px rgba(0,0,0,.2);animation:hcIbUp .28s ease}
+@keyframes hcIbUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.hc-ib .hc-ib-t{flex:1;display:flex;align-items:center;gap:6px}
+.hc-ib .hc-ib-t i{font-size:19px;flex:none}
+.hc-ib .hc-ib-t b{font-weight:700}
+.hc-ib .hc-ib-go{flex:none;background:#fff;color:var(--brand,#0f766e);border:none;border-radius:9px;
+  padding:8px 18px;font-weight:800;font-size:14px}
+.hc-ib .hc-ib-go:active{transform:scale(.95)}
+.hc-ib .hc-ib-x{flex:none;background:transparent;border:none;color:#fff;font-size:22px;line-height:1;padding:2px 4px;opacity:.9}
+body:has(#hc-ib) .fam-fab{bottom:calc(var(--nav-h,0px) + 60px)}
+.hc-upd{position:fixed;left:0;right:0;top:0;z-index:500;display:flex;align-items:center;justify-content:center;gap:12px;
+  padding:calc(9px + env(safe-area-inset-top)) 12px 9px;background:#0f766e;color:#fff;font-size:13.5px;
+  box-shadow:0 3px 14px rgba(0,0,0,.22);animation:hcUpdDown .28s ease}
+@keyframes hcUpdDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
+.hc-upd .hc-upd-t{display:flex;align-items:center;gap:6px}
+.hc-upd .hc-upd-t i{font-size:18px}
+.hc-upd .hc-upd-go{flex:none;background:#fff;color:#0f766e;border:none;border-radius:8px;padding:6px 15px;font-weight:800;font-size:13px}
+.hc-upd .hc-upd-go:active{transform:scale(.95)}
+.hc-ib.urge{box-shadow:0 -4px 22px rgba(0,0,0,.3),inset 0 0 0 2px rgba(255,255,255,.55)}
+.hc-ib.urge .hc-ib-go{animation:hcBtnPulse 1.05s ease-in-out infinite}
+@keyframes hcBtnPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(255,255,255,.65)}50%{transform:scale(1.05);box-shadow:0 0 0 7px rgba(255,255,255,0)}}
+/* 個人資料驗證錯誤提示 */
+.field-err{font-size:12px;color:var(--red);margin:-4px 0 10px;display:none;align-items:center;gap:4px}
+.field-err.show{display:flex}
+input.is-invalid{border-color:var(--red)}
+
 </style>
 
 <!-- ── 分享預覽（稜線 App 分享卡系統 · 方案A 暖米白）─────────────────────
@@ -481,19 +553,11 @@ button{cursor:pointer;border:none;background:none}
 <div class="app">
 
 <!-- ============ PAGE 1: 個人資料 ============ -->
-<div class="page active" id="p1">
+<div class="page" id="p1">
   <div class="page-header">
     <div class="page-icon" style="background:var(--purple-bg)"><i class="ti ti-user-circle" style="color:var(--purple)"></i></div>
     <h1 class="page-title">個人資料</h1>
     <div class="page-date" id="p1-date"></div>
-  </div>
-
-  <div id="demo-banner" style="display:none;background:var(--amber-bg);border:1px solid var(--amber);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--amber);line-height:1.5">
-    <div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:8px"><i class="ti ti-info-circle" style="font-size:15px;flex-shrink:0;margin-top:1px"></i><span>目前畫面上的體重、睡眠、運動、飲水是<strong>示範資料</strong>，方便你先看看長相。開始記錄後就會換成你自己的，也可以現在一鍵清掉，從零開始。</span></div>
-    <div style="display:flex;gap:6px">
-      <button onclick="clearDemoData()" style="flex:1;padding:7px;border-radius:var(--radius-sm);border:1px solid var(--amber);background:var(--amber);color:#fff;font-size:12px;font-weight:600;cursor:pointer">清掉示範，從頭開始</button>
-      <button onclick="dismissDemoBanner()" style="padding:7px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-size:12px;cursor:pointer">先留著看</button>
-    </div>
   </div>
 
   <div class="card" id="p1-daily-feed" style="--accent:var(--purple);background:linear-gradient(135deg,var(--surface),var(--surface2));border-left:4px solid var(--purple)">
@@ -509,7 +573,8 @@ button{cursor:pointer;border:none;background:none}
       <div class="field"><label for="p1-weight">目前體重 (kg)</label><input type="number" id="p1-weight" value="65" min="20" max="300" step="0.1" onchange="p1SaveWeight()"></div>
       <div class="field"><label for="p1-age">年齡 (歲)</label><input type="number" id="p1-age" value="28" min="10" max="100" oninput="p1Calc()"></div>
     </div>
-    <div style="font-size:11px;color:var(--text3);margin:-4px 0 10px;display:flex;align-items:center;gap:5px"><i class="ti ti-info-circle" style="font-size:13px;color:var(--green)"></i>直接改體重就會自動記錄一筆；要看趨勢圖請到下方「體重」分頁。</div>
+    <div class="field-err" id="p1-basic-err" role="alert"><i class="ti ti-alert-circle"></i><span id="p1-basic-err-msg"></span></div>
+    <div style="font-size:11px;color:var(--text3);margin:-4px 0 10px;display:flex;align-items:center;gap:5px"><i class="ti ti-info-circle" style="font-size:13px;color:var(--green)"></i>直接改體重就會自動記錄一筆；要看趨勢圖請到「體重」分頁。身高／性別／體重會同步到家族共用基本資料，其他健康 App 不用再填。</div>
     <div class="field">
       <label>生理性別</label>
       <div class="seg">
@@ -685,16 +750,17 @@ button{cursor:pointer;border:none;background:none}
 
     <!-- Scan panel -->
     <div id="p2-panel-scan">
-      <div class="upload-zone" id="p2-upload" onclick="p2SimUpload()">
+      <div class="upload-zone" id="p2-upload" onclick="document.getElementById('p2-camera').click()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('p2-camera').click()}">
         <i class="ti ti-camera-plus"></i>
         <div style="font-size:13px;font-weight:600;margin-bottom:3px">拍照上傳餐盤</div>
-        <div style="font-size:11px;color:var(--text3)">Gemini 2.5 Flash 辨識 · 免費額度內 · 點擊示範</div>
+        <div style="font-size:11px;color:var(--text3)">點一下開啟相機 · 辨識需 Gemini API Key；沒有 Key 也能「直接記錄」</div>
       </div>
+      <input type="file" id="p2-camera" accept="image/*" capture="environment" style="display:none" onchange="p2HandleFile(this)">
       <input type="file" id="p2-file" accept="image/*" style="display:none" onchange="p2HandleFile(this)">
-      <div style="display:flex;gap:7px;margin-bottom:8px">
-        <button class="btn btn-outline btn-block" onclick="document.getElementById('p2-file').click()"><i class="ti ti-photo" style="margin-right:4px"></i>從相簿</button>
-        <button class="btn btn-outline btn-block" onclick="p2SimUpload()"><i class="ti ti-scan" style="margin-right:4px"></i>示範</button>
+      <div style="display:flex;gap:7px;margin-bottom:8px;align-items:center">
+        <button class="btn btn-outline btn-block" onclick="document.getElementById('p2-file').click()"><i class="ti ti-photo" style="margin-right:4px"></i>從相簿選照片</button>
       </div>
+      <div style="text-align:right;margin:-2px 0 8px"><a href="#" onclick="event.preventDefault();p2ShowDemoScan()" style="font-size:11px;color:var(--text3);text-decoration:underline">看示範（辨識結果長什麼樣，不會加入紀錄）</a></div>
       <div class="img-preview" id="p2-img-preview"><i class="ti ti-bowl-spoon" style="font-size:26px;color:var(--amber)"></i><span id="p2-img-label" style="font-size:12px;color:var(--text3)">照片已選擇</span></div>
       <div style="display:flex;gap:7px;margin-bottom:8px">
         <button class="btn btn-amber" id="p2-btn-analyze" style="display:none;flex:1" onclick="p2RunScan()"><i class="ti ti-sparkles"></i>Gemini 分析熱量</button>
@@ -703,11 +769,12 @@ button{cursor:pointer;border:none;background:none}
       <div id="p2-analyzing" style="display:none;text-align:center;padding:12px 0;font-size:13px;color:var(--text3)"><i class="ti ti-loader-2 spin" style="font-size:16px;vertical-align:-3px;margin-right:5px"></i>辨識中...</div>
       <div class="err-box" id="p2-err"><i class="ti ti-alert-circle"></i><span id="p2-err-msg"></span></div>
       <div id="p2-scan-result" style="display:none">
-        <div style="font-size:12px;color:var(--text3);margin-bottom:6px;display:flex;align-items:center;gap:4px"><i class="ti ti-sparkles" style="color:var(--amber)"></i>辨識完成，可點鉛筆調整份量</div>
+        <div class="note note-amber" id="p2-scan-demo-note" style="display:none;margin:0 0 8px"><i class="ti ti-eye"></i><span><strong>這是示範結果</strong>，不是你的照片，也不能加入紀錄。實際辨識請先拍照或從相簿選照片。</span></div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:6px;display:flex;align-items:center;gap:4px" id="p2-scan-done-note"><i class="ti ti-sparkles" style="color:var(--amber)"></i>辨識完成，可點鉛筆調整份量</div>
         <div id="p2-scan-items"></div>
         <div class="scan-total"><div><div style="font-size:12px;color:var(--text3)">本餐合計</div><div style="display:flex;gap:5px;margin-top:4px" id="p2-scan-macros"></div></div><div style="text-align:right"><div style="font-size:11px;color:var(--text3)">熱量</div><div style="font-size:20px;font-weight:700;color:var(--amber)" id="p2-scan-total">0 kcal</div></div></div>
         <div style="display:flex;gap:7px">
-          <button class="btn btn-green btn-block" onclick="p2ConfirmScan()"><i class="ti ti-check"></i>加入記錄</button>
+          <button class="btn btn-green btn-block" id="p2-btn-confirm-scan" onclick="p2ConfirmScan()"><i class="ti ti-check"></i>加入記錄</button>
           <button class="btn btn-outline" onclick="p2ResetScan()" style="flex:1"><i class="ti ti-refresh"></i>重掃</button>
         </div>
       </div>
@@ -775,10 +842,10 @@ button{cursor:pointer;border:none;background:none}
   <div class="card">
     <div class="card-title"><i class="ti ti-plus"></i>記錄今日體重</div>
     <div id="p3-quick-wrap" style="display:none;gap:5px;margin-bottom:10px;flex-wrap:wrap"></div>
-    <div class="field-row three" style="margin-bottom:10px">
-      <div class="field"><label for="p3-inp-date">日期</label><input type="date" id="p3-inp-date"></div>
-      <div class="field"><label for="p3-inp-weight">體重 (kg)</label><input type="number" id="p3-inp-weight" placeholder="65.5" min="30" max="200" step="0.1" oninput="p3PreviewBMI()"></div>
+    <div class="field-row two" style="margin-bottom:10px">
+      <div class="field"><label for="p3-inp-weight">體重 (kg)</label><input type="number" id="p3-inp-weight" placeholder="65.5" min="20" max="300" step="0.1" inputmode="decimal" oninput="p3PreviewBMI()"></div>
       <div class="field"><label for="p3-inp-time">時間</label><input type="time" id="p3-inp-time" value="07:00"></div>
+      <div class="field span-all"><label for="p3-inp-date">日期</label><input type="date" id="p3-inp-date"></div>
     </div>
     <div id="p3-bmi-preview" style="display:none;align-items:center;gap:12px;padding:12px 14px;background:var(--surface2);border-radius:var(--radius-sm);margin-bottom:10px;border-left:4px solid var(--green);transition:border-color .3s">
       <i class="ti ti-scale" style="color:var(--green);font-size:22px"></i>
@@ -820,7 +887,7 @@ button{cursor:pointer;border:none;background:none}
   <div class="card">
     <div class="card-title"><i class="ti ti-target"></i>目標設定</div>
     <div class="field-row two">
-      <div class="field"><label for="p3-goal-w">目標體重 (kg)</label><input type="number" id="p3-goal-w" placeholder="60" min="30" max="200" step="0.1" oninput="p3UpdateGoal()"></div>
+      <div class="field"><label for="p3-goal-w">目標體重 (kg)</label><input type="number" id="p3-goal-w" placeholder="60" min="20" max="300" step="0.1" inputmode="decimal" oninput="p3UpdateGoal()"></div>
       <div class="field"><label for="p3-goal-d">目標日期</label><input type="date" id="p3-goal-d" oninput="p3UpdateGoal()"></div>
     </div>
     <div id="p3-goal-plan" style="display:none" class="goal-hint"></div>
@@ -884,8 +951,8 @@ button{cursor:pointer;border:none;background:none}
     <div class="card-title" style="display:flex;align-items:center">
       <i class="ti ti-clipboard-list"></i>運動記錄
       <div style="display:flex;gap:0;border:0.5px solid var(--border2);border-radius:var(--radius-sm);overflow:hidden;margin-left:auto">
-        <button id="p4-log-today" onclick="p4SetLogRange('today')" style="padding:3px 10px;font-size:12px;border:none;background:var(--purple-bg);color:var(--purple);cursor:pointer;font-weight:500">今日</button>
-        <button id="p4-log-week" onclick="p4SetLogRange('week')" style="padding:3px 10px;font-size:12px;border:none;background:transparent;color:var(--text2);cursor:pointer">近 7 天</button>
+        <button id="p4-log-today" onclick="p4SetLogRange('today')" style="min-height:40px;padding:0 12px;font-size:12px;border:none;background:var(--purple-bg);color:var(--purple);cursor:pointer;font-weight:500">今日</button>
+        <button id="p4-log-week" onclick="p4SetLogRange('week')" style="min-height:40px;padding:0 12px;font-size:12px;border:none;background:transparent;color:var(--text2);cursor:pointer">近 7 天</button>
       </div>
     </div>
     <div id="p4-log"></div>
@@ -936,10 +1003,10 @@ button{cursor:pointer;border:none;background:none}
         <button onclick="p5SetPreset(1,0,8,0)" class="sleep-chip" data-h="7" style="flex:1 1 calc(25% - 4px);min-width:78px">01:00→08:00<span class="ch">7h 熬夜</span></button>
         <button onclick="p5SetPreset(22,30,7,30)" class="sleep-chip" data-h="9" style="flex:1 1 calc(25% - 4px);min-width:78px">22:30→07:30<span class="ch">9h 補眠</span></button>
       </div>
-      <div class="field-row three" style="margin-bottom:10px">
+      <div class="field-row two" style="margin-bottom:10px">
         <div class="field"><label for="p5-bed">就寢</label><input type="time" id="p5-bed" value="23:00" oninput="p5CalcDur()"></div>
         <div class="field"><label for="p5-wake">起床</label><input type="time" id="p5-wake" value="07:00" oninput="p5CalcDur()"></div>
-        <div class="field"><label for="p5-sleep-date">日期（起床日）</label><input type="date" id="p5-sleep-date"></div>
+        <div class="field span-all"><label for="p5-sleep-date">日期（起床日）</label><input type="date" id="p5-sleep-date"></div>
       </div>
       <div id="p5-dur-card" style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--surface2);border-radius:var(--radius-sm);margin-bottom:10px;border-left:4px solid var(--blue);transition:border-color .3s">
         <i class="ti ti-bed" style="color:var(--blue);font-size:22px"></i>
@@ -1001,29 +1068,36 @@ button{cursor:pointer;border:none;background:none}
 
   <div id="p5-panel-remind" style="display:none">
     <div class="card">
-      <div class="card-title"><i class="ti ti-bell"></i>提醒設定</div>
-      <div class="rem-row"><i class="ti ti-droplet" style="color:var(--blue)"></i><div class="rem-info"><div class="rn">飲水提醒</div><div class="rs">每 2 小時提醒補充水分</div></div><label class="toggle"><input type="checkbox" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
-      <div class="rem-row"><i class="ti ti-moon" style="color:var(--blue)"></i><div class="rem-info"><div class="rn">就寢提醒</div><div class="rs">睡前 30 分鐘提醒</div></div><label class="toggle"><input type="checkbox" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
-      <div class="rem-row"><i class="ti ti-sun" style="color:var(--amber)"></i><div class="rem-info"><div class="rn">起床記錄</div><div class="rs">起床後提醒填寫睡眠</div></div><label class="toggle"><input type="checkbox"><div class="toggle-track"></div><div class="toggle-thumb"></div></label></div>
-      <div class="field-row two" style="margin-top:12px">
-        <div class="field"><label>目標就寢</label><input type="time" value="23:00"></div>
-        <div class="field"><label>目標起床</label><input type="time" value="07:00"></div>
+      <div class="card-title"><i class="ti ti-bell"></i>提醒功能</div>
+      <div class="note note-blue" style="margin:0 0 12px"><i class="ti ti-info-circle"></i><span>提醒功能已獨立成健康家族的《喝水提醒》與《久坐提醒》兩支 App（同一網域、資料各自存在本機）。本 App 專心做紀錄與分析，不會在背景推播。</span></div>
+      <div class="field-row two" style="margin-bottom:8px">
+        <a class="btn btn-primary" href="/healthwater/" style="text-decoration:none;background:var(--blue);min-height:44px"><i class="ti ti-droplet"></i>喝水提醒</a>
+        <a class="btn btn-outline" href="/healthsit/" style="text-decoration:none;min-height:44px"><i class="ti ti-walk"></i>久坐提醒</a>
       </div>
+      <div style="font-size:11px;color:var(--text3);line-height:1.6">睡眠目標時數請到「個人資料」頁設定；睡眠紀錄仍在本頁「睡眠」分頁填寫。</div>
     </div>
   </div>
 </div>
 
 <!-- ============ PAGE 6: 總覽 ============ -->
-<div class="page" id="p6">
+<div class="page active" id="p6">
   <div class="page-header">
     <div class="page-icon" style="background:var(--amber-bg)"><i class="ti ti-layout-dashboard" style="color:var(--amber)"></i></div>
     <h1 class="page-title">健康總覽</h1>
     <div class="page-date" id="p6-date"></div>
   </div>
 
+  <div id="demo-banner" style="display:none;background:var(--amber-bg);border:1px solid var(--amber);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px;font-size:12px;color:var(--amber);line-height:1.5">
+    <div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:8px"><i class="ti ti-info-circle" style="font-size:15px;flex-shrink:0;margin-top:1px"></i><span>目前畫面上的體重、睡眠、運動、飲水是<strong>示範資料</strong>，只在畫面上顯示、<strong>不會存進你的紀錄</strong>。你新增第一筆真實紀錄時，示範會自動消失；也可以現在就清掉。</span></div>
+    <div style="display:flex;gap:6px">
+      <button onclick="clearDemoData()" style="flex:1;min-height:40px;padding:7px;border-radius:var(--radius-sm);border:1px solid var(--amber);background:var(--amber);color:#fff;font-size:12px;font-weight:600;cursor:pointer">清除示範，開始記錄</button>
+      <button onclick="dismissDemoBanner()" style="min-height:40px;padding:7px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-size:12px;cursor:pointer">先留著看</button>
+    </div>
+  </div>
+
   <div class="card">
     <div class="card-title"><i class="ti ti-award"></i>今日健康分數
-      <button onclick="document.getElementById('p6-score-info').classList.toggle('show')" style="margin-left:auto;width:22px;height:22px;border-radius:50%;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center" aria-label="分數說明"><i class="ti ti-question-mark" style="font-size:13px"></i></button>
+      <button onclick="document.getElementById('p6-score-info').classList.toggle('show')" style="margin-left:auto;width:40px;height:40px;margin:-10px 0 -10px auto;border-radius:50%;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center" aria-label="分數說明"><i class="ti ti-question-mark" style="font-size:15px"></i></button>
     </div>
     <div id="p6-score-info" style="display:none;font-size:12px;padding:10px 12px;background:var(--surface2);border-radius:var(--radius-sm);margin-bottom:10px;line-height:1.7">
       <div style="font-weight:600;margin-bottom:4px;color:var(--text)">分數權重</div>
@@ -1090,24 +1164,24 @@ button{cursor:pointer;border:none;background:none}
   </div>
 
   <div class="card">
-    <div class="card-title"><i class="ti ti-sparkles"></i>AI 個人化建議
-      <span class="badge badge-green" style="margin-left:auto"><i class="ti ti-cpu" style="font-size:11px"></i>Gemini 2.5</span>
+    <div class="card-title"><i class="ti ti-bulb"></i><span id="p6-ai-title">今日建議</span>
+      <span class="badge badge-gray" id="p6-ai-badge" style="margin-left:auto"><i class="ti ti-list-check" style="font-size:11px"></i>一般建議（依規則）</span>
     </div>
     <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:12px" id="p6-ai-wrap">
       <div id="p6-ai-content"></div>
     </div>
-    <button class="btn btn-outline btn-block" id="p6-ai-btn" onclick="p6GetAI()" style="margin-top:10px"><i class="ti ti-refresh"></i>重新產生建議</button>
+    <button class="btn btn-outline btn-block" id="p6-ai-btn" onclick="p6GetAI()" style="margin-top:10px"><i class="ti ti-sparkles"></i>用 AI 產生個人化建議（需 API Key）</button>
   </div>
 </div>
 
 <!-- Bottom Navigation -->
 <nav class="nav">
-  <button class="nav-item active" onclick="goPage('p1',this)"><i class="ti ti-user-circle"></i><span>資料</span><div class="nav-dot"></div></button>
-  <button class="nav-item" onclick="goPage('p3',this)"><i class="ti ti-scale"></i><span>體重</span><div class="nav-dot"></div></button>
-  <button class="nav-item" onclick="goPage('p2',this)"><i class="ti ti-salad"></i><span>飲食</span><div class="nav-dot"></div></button>
-  <button class="nav-item" onclick="goPage('p4',this)"><i class="ti ti-barbell"></i><span>運動</span><div class="nav-dot"></div></button>
-  <button class="nav-item" onclick="goPage('p5',this)"><i class="ti ti-moon"></i><span>睡眠</span><div class="nav-dot"></div></button>
-  <button class="nav-item" onclick="goPage('p6',this)"><i class="ti ti-layout-dashboard"></i><span>總覽</span><div class="nav-dot"></div></button>
+  <button class="nav-item active" data-page="p6" onclick="goPage('p6',this)"><i class="ti ti-layout-dashboard"></i><span>總覽</span><div class="nav-dot"></div></button>
+  <button class="nav-item" data-page="p3" onclick="goPage('p3',this)"><i class="ti ti-scale"></i><span>體重</span><div class="nav-dot"></div></button>
+  <button class="nav-item" data-page="p2" onclick="goPage('p2',this)"><i class="ti ti-salad"></i><span>飲食</span><div class="nav-dot"></div></button>
+  <button class="nav-item" data-page="p4" onclick="goPage('p4',this)"><i class="ti ti-barbell"></i><span>運動</span><div class="nav-dot"></div></button>
+  <button class="nav-item" data-page="p5" onclick="goPage('p5',this)"><i class="ti ti-moon"></i><span>睡眠</span><div class="nav-dot"></div></button>
+  <button class="nav-item" data-page="p1" onclick="goPage('p1',this)"><i class="ti ti-user-circle"></i><span>資料</span><div class="nav-dot"></div></button>
 </nav>
 
 <script>
@@ -1178,14 +1252,54 @@ function showToast(msg, type='ok', duration=2400){
   setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.remove(), 260); }, duration);
 }
 
-function saveState(){ try{ localStorage.setItem('healthAppState', JSON.stringify(STATE)); }catch(e){} }
+// 示範模式（STATE._demo=true）：示範紀錄只留在記憶體，落盤時一律排除，避免混進真實紀錄
+function saveState(){
+  try{
+    let out=STATE;
+    if(STATE._demo){ out=Object.assign({},STATE,{meals:{},weightRecords:[],exerciseRecords:[],sleepRecords:[],waterLogs:[]}); delete out._demo; }
+    localStorage.setItem('healthAppState', JSON.stringify(out));
+  }catch(e){}
+}
+// 使用者新增第一筆真實紀錄前呼叫：清掉記憶體中的示範資料並開始落盤
+function beginRealData(){
+  if(!STATE._demo) return;
+  STATE._demo=false;
+  try{ localStorage.setItem('healthDemoDismissed','1'); }catch(e){}
+  STATE.meals={}; STATE.weightRecords=[]; STATE.exerciseRecords=[]; STATE.sleepRecords=[]; STATE.waterLogs=[];
+  const b=document.getElementById('demo-banner'); if(b) b.style.display='none';
+}
+function sortByDate(arr){ if(Array.isArray(arr)) arr.sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))); return arr; }
+function latestByDate(arr){ if(!arr||!arr.length) return null; return [...arr].sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')))[arr.length-1]; }
+function latestSleep(){ return latestByDate(STATE.sleepRecords); }
+function latestWeight(){ return latestByDate(STATE.weightRecords); }
 function loadState(){
-  try{ const s=localStorage.getItem('healthAppState'); if(s){ const d=JSON.parse(s); Object.assign(STATE,d); }}catch(e){}
+  try{ const s=localStorage.getItem('healthAppState'); if(s){ const d=JSON.parse(s); delete d._demo; Object.assign(STATE,d); }}catch(e){}
   // 舊格式遷移：扁平 {breakfast,lunch,dinner,snack} → 以今日為 key 的日期分組
   if(STATE.meals && Array.isArray(STATE.meals.breakfast)){
     STATE.meals={[todayStr()]:{breakfast:STATE.meals.breakfast||[],lunch:STATE.meals.lunch||[],dinner:STATE.meals.dinner||[],snack:STATE.meals.snack||[]}};
   }
   if(!STATE.meals) STATE.meals={};
+  sortByDate(STATE.weightRecords); sortByDate(STATE.sleepRecords);
+}
+
+// ==================== 家族共用基本資料（HC.getProfile / patchProfile，key: hcProfile）====================
+// 身高 heightCm、性別 sex、體重 weightKg、生日 birth（本 App 用年齡，只讀不寫生日）、目標體重 goalWeightKg
+function syncFromFamilyProfile(){
+  if(typeof HC==='undefined') return;
+  const hp=HC.getProfile();
+  if(hp.heightCm>=100&&hp.heightCm<=250) STATE.profile.height=+hp.heightCm;
+  if(hp.sex==='m'||hp.sex==='f') STATE.profile.sex=hp.sex;
+  if(hp.birth){ const a=HC.ageFrom(hp.birth).years; if(a>=10&&a<=100) STATE.profile.age=a; }
+  // 體重：本 App 有紀錄時以最新紀錄為準，沒有才吃家族值
+  if(!STATE.weightRecords.length && hp.weightKg>=20&&hp.weightKg<=300) STATE.profile.weight=+hp.weightKg;
+  if(STATE.profile.goalWeight==null && hp.goalWeightKg>=20&&hp.goalWeightKg<=300) STATE.profile.goalWeight=+hp.goalWeightKg;
+}
+function syncToFamilyProfile(){
+  if(typeof HC==='undefined') return;
+  const p=STATE.profile;
+  // 示範模式下體重／目標體重可能來自示範資料，不往家族共用資料寫
+  const demo=!!STATE._demo;
+  HC.patchProfile({ heightCm:p.height, sex:p.sex, weightKg:demo?undefined:p.weight, goalWeightKg:demo?undefined:(p.goalWeight||undefined) });
 }
 
 // ==================== API KEY ====================
@@ -1206,7 +1320,7 @@ function updateApiKeyStatus(){
   if(!el)return;
   const key=getApiKey();
   if(key) el.innerHTML='<i class="ti ti-check" style="color:var(--green)"></i><span style="color:var(--green)">已設定 · ...'+key.slice(-4)+'</span><button onclick="clearApiKey()" style="margin-left:auto;font-size:11px;color:var(--red);background:none;border:none;cursor:pointer">清除</button>';
-  else el.innerHTML='<i class="ti ti-alert-circle" style="color:var(--amber)"></i><span style="color:var(--amber)">尚未設定 · 掃描和 AI 建議將使用示範模式</span>';
+  else el.innerHTML='<i class="ti ti-alert-circle" style="color:var(--amber)"></i><span style="color:var(--amber)">尚未設定 · 拍照辨識與 AI 建議需要 Key；搜尋／手動記錄不受影響</span>';
 }
 function clearApiKey(){ if(!confirm('確定清除 API Key？'))return; localStorage.removeItem('googleApiKey'); updateApiKeyStatus(); }
 
@@ -1256,19 +1370,22 @@ function refreshPage(id){
   if(id==='p6'){ document.getElementById('p6-date').textContent=today; p6Render(); }
 }
 
-// ==================== 大字體 / 長輩好讀模式 ====================
-function isBigFont(){ return localStorage.getItem('bigfont')==='1' || localStorage.getItem('senior_mode')==='1'; }
+// ==================== 大字體 / 長輩好讀模式（改走 core.js HC.setSeniorMode，跨家族同步）====================
+function isBigFont(){ return HC.isSeniorMode(); }
 function toggleBigFont(on){
-  localStorage.setItem('bigfont', on?'1':'0');
-  localStorage.setItem('senior_mode', on?'1':'0');
-  document.documentElement.classList.toggle('bigfont', on);
-  document.documentElement.classList.toggle('senior', on);
+  HC.setSeniorMode(!!on);
   showToast(on?'已開啟大字體好讀模式':'已恢復標準字體','ok',1400);
 }
-if(isBigFont()){
-  document.documentElement.classList.add('bigfont');
-  document.documentElement.classList.add('senior');
-}
+// 舊版自訂 key（bigfont / senior_mode / theme）一次性搬到家族共用 key 後移除
+(function migrateLegacyPrefs(){
+  try{
+    if(localStorage.getItem('bigfont')==='1'||localStorage.getItem('senior_mode')==='1'){ if(!HC.isSeniorMode()) HC.setSeniorMode(true); }
+    localStorage.removeItem('bigfont'); localStorage.removeItem('senior_mode');
+    const t=localStorage.getItem('theme');
+    if(t==='dark'||t==='light'){ if(HC.currentTheme()==='auto') HC.setTheme(t); }
+    localStorage.removeItem('theme');
+  }catch(e){}
+})();
 
 // ==================== 今日即時導航 (Daily Feed) ====================
 function renderDailyFeed(){
@@ -1310,16 +1427,14 @@ function renderDailyFeed(){
   }
   titleEl.innerHTML=title;
   textEl.textContent=text;
-  btnsEl.innerHTML=btns.map((b,i)=>`<button onclick="jumpFeed(${i})" class="btn btn-outline" style="height:32px;font-size:12px;padding:0 10px;border-radius:20px;background:var(--surface);border-color:var(--border2);cursor:pointer">${b.label}</button>`).join('');
+  btnsEl.innerHTML=btns.map((b,i)=>`<button onclick="jumpFeed(${i})" class="btn btn-outline" style="height:40px;font-size:12px;padding:0 12px;border-radius:20px;background:var(--surface);border-color:var(--border2);cursor:pointer">${b.label}</button>`).join('');
   window._feedBtns=btns;
 }
 
 function jumpFeed(i){
   const b=window._feedBtns && window._feedBtns[i];
   if(!b) return;
-  const navBtns=document.querySelectorAll('.nav-item');
-  const pageIdx={p1:0,p3:1,p2:2,p4:3,p5:4,p6:5};
-  const targetBtn=navBtns[pageIdx[b.page]||0];
+  const targetBtn=document.querySelector('.nav-item[data-page="'+b.page+'"]');
   goPage(b.page, targetBtn);
   if(typeof b.action==='function') setTimeout(b.action, 80);
 }
@@ -1328,15 +1443,16 @@ function jumpFeed(i){
 let p1Sex='m', p1Act=1.375, p1Goal='keep';
 
 function p1Render(){
-  // 套用主題切換高亮
-  const th=localStorage.getItem('theme')||'auto';
+  // 套用主題切換高亮（家族共用 key hcTheme）
+  const th=HC.currentTheme();
   ['th-auto','th-light','th-dark'].forEach(id=>{const el=document.getElementById(id); if(el) el.classList.toggle('on',id==='th-'+th);});
   const bfEl=document.getElementById('th-bigfont');
   if(bfEl) bfEl.checked=isBigFont();
   renderDailyFeed();
+  p1ShowErr('');
   document.getElementById('p1-height').value=STATE.profile.height;
-  // 體重從最新紀錄拉，回退至 profile
-  const latestW=STATE.weightRecords.length?STATE.weightRecords[STATE.weightRecords.length-1].weight:STATE.profile.weight;
+  // 體重從最新紀錄拉，回退至 profile（示範模式不拿示範體重，避免寫進 profile／家族資料）
+  const lw=STATE._demo?null:latestWeight(); const latestW=lw?lw.weight:STATE.profile.weight;
   STATE.profile.weight=latestW;
   document.getElementById('p1-weight').value=latestW;
   document.getElementById('p1-age').value=STATE.profile.age;
@@ -1357,12 +1473,29 @@ function p1Render(){
   p1Calc();
 }
 
+function p1ShowErr(msg){
+  const box=document.getElementById('p1-basic-err'); const t=document.getElementById('p1-basic-err-msg');
+  if(!box||!t) return; t.textContent=msg||''; box.classList.toggle('show',!!msg);
+}
+// 驗證身高／體重／年齡：清空或超出範圍時只提示、不落盤、不偷偷改回預設值
+function p1Validate(){
+  const hEl=document.getElementById('p1-height'), wEl=document.getElementById('p1-weight'), aEl=document.getElementById('p1-age');
+  const h=parseFloat(hEl.value), w=parseFloat(wEl.value), a=parseInt(aEl.value);
+  const errs=[];
+  const okH=h>=100&&h<=250, okW=w>=20&&w<=300, okA=a>=10&&a<=100;
+  hEl.classList.toggle('is-invalid',!okH); wEl.classList.toggle('is-invalid',!okW); aEl.classList.toggle('is-invalid',!okA);
+  if(!okH) errs.push(hEl.value===''?'請填身高':'身高需介於 100–250 cm');
+  if(!okW) errs.push(wEl.value===''?'請填體重':'體重需介於 20–300 kg');
+  if(!okA) errs.push(aEl.value===''?'請填年齡':'年齡需介於 10–100 歲');
+  p1ShowErr(errs.length?errs.join('；')+'（未儲存）':'');
+  return errs.length?null:{h,w,a};
+}
 function p1Calc(){
-  const h=parseFloat(document.getElementById('p1-height').value)||170;
-  const w=parseFloat(document.getElementById('p1-weight').value)||65;
-  const a=parseInt(document.getElementById('p1-age').value)||28;
+  const v=p1Validate();
+  if(!v) return;
+  const {h,w,a}=v;
   STATE.profile.height=h; STATE.profile.weight=w; STATE.profile.age=a;
-  saveState();
+  saveState(); syncToFamilyProfile();
   const bmi=calcBMI(w);
   const bi=bmiInfo(bmi);
   const bmiEl=document.getElementById('p1-bmi');
@@ -1384,7 +1517,8 @@ function p1Calc(){
 // 直接在個人資料頁改體重 → 自動記錄一筆今天的體重（已有今天紀錄則覆蓋），並同步各頁
 function p1SaveWeight(){
   const w=parseFloat(document.getElementById('p1-weight').value);
-  if(!w||w<20||w>300){ showToast('請輸入有效體重','warn'); return; }
+  if(!w||w<20||w>300){ p1Validate(); return; }
+  beginRealData();
   const d=todayStr();
   const ex=STATE.weightRecords.findIndex(r=>r.date===d);
   if(ex>=0) STATE.weightRecords[ex].weight=w;
@@ -1408,7 +1542,7 @@ function p1SetGoal(g,silent){
 }
 
 function p1CalcAdv(){
-  const w=parseFloat(document.getElementById('p1-weight').value)||65;
+  const w=parseFloat(document.getElementById('p1-weight').value)||STATE.profile.weight;
   const bf=parseFloat(document.getElementById('p1-bf').value)||0;
   const mm=parseFloat(document.getElementById('p1-mm').value)||0;
   const waist=parseFloat(document.getElementById('p1-waist').value)||0;
@@ -1424,7 +1558,13 @@ function p1CalcAdv(){
 
 function toggleAdv(){ const btn=document.getElementById('adv-toggle'); const body=document.getElementById('adv-body'); btn.classList.toggle('open'); body.classList.toggle('open'); }
 
-function p1Reset(){ STATE.profile={height:170,weight:65,age:28,sex:'m',actFactor:1.375,goal:'keep',waterGoal:2000,sleepGoal:7.5,bf:null,mm:null,waist:null,waterRate:null,lastWeightTime:'07:00',lastExDuration:30,lastExIntensity:'medium',lastSleepBed:'23:00',lastSleepWake:'07:00',proteinPerKg:1.8}; ['p1-bf','p1-mm','p1-waist','p1-water-rate'].forEach(id=>document.getElementById(id).value=''); p1Render(); }
+function p1Reset(){
+  if(!confirm('要把個人資料（身高、體重、年齡、活動量、目標、習慣目標、體組成）全部重設回預設值嗎？\n各項紀錄（飲食／體重／運動／睡眠／飲水）不會被刪除。')) return;
+  STATE.profile={height:170,weight:65,age:28,sex:'m',actFactor:1.375,goal:'keep',waterGoal:2000,sleepGoal:7.5,bf:null,mm:null,waist:null,waterRate:null,lastWeightTime:'07:00',lastExDuration:30,lastExIntensity:'medium',lastSleepBed:'23:00',lastSleepWake:'07:00',goalWeight:null,goalDate:null,proteinPerKg:1.8,foodPicks:{}};
+  ['p1-bf','p1-mm','p1-waist','p1-water-rate'].forEach(id=>document.getElementById(id).value='');
+  const gw=document.getElementById('p3-goal-w'); if(gw) gw.value=''; const gd=document.getElementById('p3-goal-d'); if(gd) gd.value='';
+  saveState(); p1Render(); showToast('已重設為預設值','ok');
+}
 
 // ==================== 資料管理 ====================
 function exportData(){
@@ -1477,6 +1617,7 @@ function clearAllData(){
   const v=prompt('將清除「所有」飲食、體重、運動、睡眠、飲水紀錄及個人資料。\n\n請輸入「清除」二字確認：');
   if(v!=='清除'){ if(v!==null) showToast('輸入不符，已取消','info'); return; }
   localStorage.removeItem('healthAppState');
+  localStorage.removeItem('healthDemoDismissed');
   // 詢問是否一併清掉 API Key（共用裝置/換機時建議清）
   if(getApiKey() && confirm('要一併清除已儲存的 API Key 嗎？\n（共用裝置或要把手機給別人時建議清除）')){
     localStorage.removeItem('googleApiKey');
@@ -1534,7 +1675,7 @@ function p2RenderLog(){
     const yHas=yest && yest[m] && yest[m].length>0;
     if(!has && !yHas) return;
     const mCal=todays[m].reduce((s,i)=>s+i.cal,0);
-    const dupBtn=yHas?`<button onclick="p2CopyYesterday('${m}')" style="margin-left:6px;font-size:10px;padding:1px 8px;border-radius:20px;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);cursor:pointer"><i class="ti ti-copy" style="font-size:10px;vertical-align:-1px"></i> 複製昨日</button>`:'';
+    const dupBtn=yHas?`<button onclick="p2CopyYesterday('${m}')" style="margin-left:6px;font-size:11px;min-height:40px;padding:0 10px;border-radius:20px;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);cursor:pointer"><i class="ti ti-copy" style="font-size:10px;vertical-align:-1px"></i> 複製昨日</button>`:'';
     html+=`<div style="font-size:12px;font-weight:600;color:${MEAL_COLORS[m]};display:flex;align-items:center;gap:4px;margin:4px 0"><i class="ti ti-circle" style="font-size:9px"></i>${MEAL_NAMES[m]}${dupBtn}<span style="margin-left:auto">${mCal} kcal</span></div>`;
     todays[m].forEach(item=>{ html+=`<div class="log-item"><div class="li-dot" style="background:${MEAL_COLORS[m]}"></div><div><div class="li-name">${esc(item.name)}</div><div class="li-sub">${esc(item.qty||'')}</div></div><div class="li-cal" style="color:${MEAL_COLORS[m]}">${item.cal} kcal</div><button class="li-del" onclick="p2DelItem('${m}',${item.id})" aria-label="刪除"><i class="ti ti-x"></i></button></div>`; });
   });
@@ -1546,6 +1687,7 @@ function p2DelItem(meal,id){ if(!confirm('確定刪除這筆飲食紀錄？刪�
 function p2CopyYesterday(meal){
   const yest=STATE.meals[dateOffset(-1)];
   if(!yest || !yest[meal] || !yest[meal].length){ showToast('昨日無此餐別記錄','warn'); return; }
+  beginRealData();
   const t=todayMeals();
   yest[meal].forEach(item=>{ t[meal].push({...item,id:Date.now()+Math.random()}); });
   saveState(); p2Refresh();
@@ -1578,21 +1720,28 @@ function p2RenderRecent(){
 
 function p2AddRecent(i){
   const f=_p2RecentCache[i]; if(!f) return;
+  beginRealData();
   todayMeals()[p2Meal].push({...f,id:Date.now()+Math.random()});
   saveState(); p2Refresh();
   showToast('已加入「'+f.name+'」至'+MEAL_NAMES[p2Meal],'ok');
 }
 
-function p2SimUpload(){
-  document.getElementById('p2-upload').style.display='none';
-  document.getElementById('p2-img-preview').classList.add('show');
-  document.getElementById('p2-img-label').textContent='雞腿便當照片（示範）';
-  document.getElementById('p2-btn-analyze').style.display='flex';
-  const qBtn=document.getElementById('p2-btn-quick-photo'); if(qBtn) qBtn.style.display='flex';
-  p2UploadB64=null;
+// 「看示範」：只展示辨識結果長什麼樣（MOCK_SCAN），明確標示為示範、不可加入紀錄、不走辨識流程
+let p2DemoScan=false;
+function p2ShowDemoScan(){
+  p2ResetScan();
+  p2DemoScan=true;
+  p2ScanFoods=MOCK_SCAN.map((f,i)=>({...f,id:i}));
+  p2RenderScan();
+  document.getElementById('p2-scan-demo-note').style.display='flex';
+  document.getElementById('p2-scan-done-note').style.display='none';
+  const cb=document.getElementById('p2-btn-confirm-scan'); if(cb) cb.style.display='none';
+  document.getElementById('p2-scan-result').style.display='block';
 }
 function p2HandleFile(input){
   const file=input.files[0]; if(!file)return;
+  if(!/^image\//.test(file.type||'')){ showToast('請選擇圖片檔','warn'); input.value=''; return; }
+  p2DemoScan=false;
   p2UploadMime=file.type||'image/jpeg';
   const r=new FileReader();
   r.onload=e=>{
@@ -1607,11 +1756,13 @@ function p2HandleFile(input){
 }
 
 function p2SavePhotoOnly(){
-  const defaultName=(p2UploadB64?'照片餐點':'雞腿便當')+' ('+MEAL_NAMES[p2Meal]+')';
+  if(!p2UploadB64){ showToast('請先拍照或從相簿選照片','warn'); return; }
+  const defaultName='照片餐點 ('+MEAL_NAMES[p2Meal]+')';
   const name=prompt('請輸入餐點名稱：',defaultName);
   if(!name) return;
   const calStr=prompt('估算熱量（大卡，可留空預設 500）：','500');
   const cal=parseInt(calStr)||500;
+  beginRealData();
   todayMeals()[p2Meal].push({
     name:name,
     qty:'1 份',
@@ -1628,36 +1779,40 @@ function p2SavePhotoOnly(){
 }
 
 async function p2RunScan(){
+  // 沒有照片一律不辨識、不回示範資料
+  if(!p2UploadB64){ showToast('請先拍照或從相簿選照片，才能辨識','warn'); return; }
   document.getElementById('p2-btn-analyze').style.display='none';
   const qBtn=document.getElementById('p2-btn-quick-photo'); if(qBtn) qBtn.style.display='none';
   document.getElementById('p2-img-preview').classList.remove('show');
   document.getElementById('p2-scan-result').style.display='none';
   document.getElementById('p2-err').classList.remove('show');
   document.getElementById('p2-analyzing').style.display='block';
-  if(p2UploadB64){
-    try{
-      const data=await callAI([{parts:[
-        {inlineData:{mimeType:p2UploadMime,data:p2UploadB64}},
-        {text:'請辨識餐盤照片中所有食物，估算份量（公克），針對台灣常見食物辨識，只回傳JSON不含其他文字：{"foods":[{"name":"名稱","quantity_g":數字,"calories":數字,"protein_g":數字,"fat_g":數字,"carbs_g":數字}]}'}
-      ]}]);
-      document.getElementById('p2-analyzing').style.display='none';
-      const parsed=JSON.parse(data.text.replace(/```json|```/g,'').trim());
-      p2ScanFoods=parsed.foods.map((f,i)=>({...f,id:i}));
-      p2RenderScan(); document.getElementById('p2-scan-result').style.display='block';
-    }catch(e){
-      document.getElementById('p2-analyzing').style.display='none';
-      let msg;
-      if(e.message==='offline') msg='目前是「離線模式」，已停用雲端辨識。';
-      else if(e.message==='no_key') msg='尚未設定 API Key，無法進行雲端辨識。';
-      else msg='辨識失敗（'+e.message+'）。';
-      document.getElementById('p2-err-msg').innerHTML=msg+'<div style="margin-top:6px"><button type="button" class="btn btn-outline" style="font-size:11px;height:28px;padding:0 10px;background:var(--surface);cursor:pointer" onclick="p2SavePhotoOnly()"><i class="ti ti-camera"></i>改為直接記錄照片餐點（免 Key）</button></div>';
-      document.getElementById('p2-err').classList.add('show');
-      p2ScanFoods=[];
-      document.getElementById('p2-scan-result').style.display='none';
-      document.getElementById('p2-upload').style.display='block';
-    }
-  }else{
-    setTimeout(()=>{ document.getElementById('p2-analyzing').style.display='none'; p2ScanFoods=MOCK_SCAN.map((f,i)=>({...f,id:i})); p2RenderScan(); document.getElementById('p2-scan-result').style.display='block'; },2000);
+  try{
+    const data=await callAI([{parts:[
+      {inlineData:{mimeType:p2UploadMime,data:p2UploadB64}},
+      {text:'請辨識餐盤照片中所有食物，估算份量（公克），針對台灣常見食物辨識，只回傳JSON不含其他文字：{"foods":[{"name":"名稱","quantity_g":數字,"calories":數字,"protein_g":數字,"fat_g":數字,"carbs_g":數字}]}'}
+    ]}]);
+    document.getElementById('p2-analyzing').style.display='none';
+    const parsed=JSON.parse(data.text.replace(/```json|```/g,'').trim());
+    if(!parsed||!Array.isArray(parsed.foods)||!parsed.foods.length) throw new Error('沒有辨識到食物，請換一張清楚的餐盤照片');
+    p2DemoScan=false;
+    p2ScanFoods=parsed.foods.map((f,i)=>({...f,id:i}));
+    p2RenderScan();
+    document.getElementById('p2-scan-demo-note').style.display='none';
+    document.getElementById('p2-scan-done-note').style.display='flex';
+    const cb=document.getElementById('p2-btn-confirm-scan'); if(cb) cb.style.display='flex';
+    document.getElementById('p2-scan-result').style.display='block';
+  }catch(e){
+    document.getElementById('p2-analyzing').style.display='none';
+    let msg;
+    if(e.message==='offline') msg='目前是「離線模式」，已停用雲端辨識。';
+    else if(e.message==='no_key') msg='尚未設定 API Key，無法進行雲端辨識。';
+    else msg='辨識失敗（'+esc(e.message)+'）。';
+    document.getElementById('p2-err-msg').innerHTML=msg+'<div style="margin-top:6px"><button type="button" class="btn btn-outline" style="font-size:12px;height:40px;padding:0 12px;background:var(--surface);cursor:pointer" onclick="p2SavePhotoOnly()"><i class="ti ti-camera"></i>改為直接記錄照片餐點（免 Key）</button></div>';
+    document.getElementById('p2-err').classList.add('show');
+    p2ScanFoods=[];
+    document.getElementById('p2-scan-result').style.display='none';
+    document.getElementById('p2-upload').style.display='block';
   }
 }
 
@@ -1673,8 +1828,8 @@ function p2RenderScan(){
 
 function p2EditScan(id){ const f=p2ScanFoods.find(x=>x.id===id); if(!f)return; const nq=prompt('調整「'+f.name+'」份量（g）：',f.quantity_g); if(!nq||isNaN(nq))return; const r=+nq/f.quantity_g; Object.assign(f,{quantity_g:+parseFloat(nq).toFixed(0),calories:Math.round((f.calories||0)*r),protein_g:+((f.protein_g||0)*r).toFixed(1),fat_g:+((f.fat_g||0)*r).toFixed(1),carbs_g:+((f.carbs_g||0)*r).toFixed(1)}); p2RenderScan(); }
 
-function p2ConfirmScan(){ const t=todayMeals(); const n=p2ScanFoods.length; p2ScanFoods.forEach(f=>{ t[p2Meal].push({name:f.name,qty:f.quantity_g+'g',cal:Math.round(f.calories||0),pro:+(f.protein_g||0).toFixed(1),fat:+(f.fat_g||0).toFixed(1),carb:+(f.carbs_g||0).toFixed(1),id:Date.now()+Math.random()}); }); saveState(); p2ResetScan(); p2Refresh(); showToast('已加入 '+n+' 項至'+MEAL_NAMES[p2Meal],'ok'); }
-function p2ResetScan(){ p2ScanFoods=[];p2UploadB64=null; document.getElementById('p2-upload').style.display='block'; document.getElementById('p2-img-preview').classList.remove('show'); document.getElementById('p2-btn-analyze').style.display='none'; const qBtn=document.getElementById('p2-btn-quick-photo'); if(qBtn) qBtn.style.display='none'; document.getElementById('p2-scan-result').style.display='none'; document.getElementById('p2-err').classList.remove('show'); document.getElementById('p2-file').value=''; }
+function p2ConfirmScan(){ if(p2DemoScan){ showToast('這是示範結果，不能加入紀錄；請先拍照再辨識','warn',2600); return; } if(!p2ScanFoods.length) return; beginRealData(); const t=todayMeals(); const n=p2ScanFoods.length; p2ScanFoods.forEach(f=>{ t[p2Meal].push({name:f.name,qty:f.quantity_g+'g',cal:Math.round(f.calories||0),pro:+(f.protein_g||0).toFixed(1),fat:+(f.fat_g||0).toFixed(1),carb:+(f.carbs_g||0).toFixed(1),id:Date.now()+Math.random()}); }); saveState(); p2ResetScan(); p2Refresh(); showToast('已加入 '+n+' 項至'+MEAL_NAMES[p2Meal],'ok'); }
+function p2ResetScan(){ p2ScanFoods=[];p2UploadB64=null;p2DemoScan=false; document.getElementById('p2-upload').style.display='block'; document.getElementById('p2-img-preview').classList.remove('show'); document.getElementById('p2-btn-analyze').style.display='none'; const qBtn=document.getElementById('p2-btn-quick-photo'); if(qBtn) qBtn.style.display='none'; document.getElementById('p2-scan-result').style.display='none'; document.getElementById('p2-scan-demo-note').style.display='none'; document.getElementById('p2-scan-done-note').style.display='flex'; const cb=document.getElementById('p2-btn-confirm-scan'); if(cb) cb.style.display='flex'; document.getElementById('p2-err').classList.remove('show'); document.getElementById('p2-file').value=''; const cam=document.getElementById('p2-camera'); if(cam) cam.value=''; }
 
 let p2ActiveCat='全部';
 const FOOD_CATS=['全部',...new Set(FOOD_DB.map(f=>f.cat))];
@@ -1735,11 +1890,14 @@ function p2Search(catChange){
     if(pb!==pa) return pb-pa;
     return a.f.name.length-b.f.name.length;
   });
-  const fdaRes=scored.map(x=>x.f);
+  const total=scored.length;
+  const LIMIT=50; // 分類 chip 不帶關鍵字時整類可達上千筆，只渲染前 50 筆
+  const fdaRes=scored.slice(0,LIMIT).map(x=>x.f);
 
   if(fdaRes.length){
     const aliasNote=aliases.length?`（同義詞：${aliases.join('、')}）`:'';
-    document.getElementById('p2-search-status').textContent=`找到 ${fdaRes.length} 筆（衛福部驗證）${aliasNote}`;
+    const capNote=total>LIMIT?`，只顯示前 ${LIMIT} 筆，請輸入關鍵字縮小範圍`:'';
+    document.getElementById('p2-search-status').textContent=`找到 ${total} 筆（衛福部驗證）${aliasNote}${capNote}`;
     document.getElementById('p2-search-results').innerHTML=fdaRes.map(f=>`
       <div class="food-result" onclick="p2SelectFood(${f.id},'fda')">
         <div class="fr-icon"><i class="ti ti-leaf"></i></div>
@@ -1817,7 +1975,7 @@ function p2SelectFood(id,src){
   // 記錄使用次數（排序用）
   if(!STATE.profile.foodPicks) STATE.profile.foodPicks={};
   STATE.profile.foodPicks[id]=(STATE.profile.foodPicks[id]||0)+1;
-  saveState();
+  if(!STATE._demo) saveState();
   document.getElementById('p2-add-name').textContent=p2SelectedFood.name;
   document.getElementById('p2-add-src-badge').textContent='衛福部食藥署 驗證資料';
   document.getElementById('p2-add-src-badge').style.cssText='font-size:10px;padding:1px 7px;border-radius:20px;background:#E1F5EE;color:#085041';
@@ -1845,6 +2003,7 @@ function p2ConfirmAdd(){
   const qty=parseFloat(document.getElementById('p2-add-qty').value)||100;
   const unit=document.getElementById('p2-add-unit').value;
   const r=qty/100;
+  beginRealData();
   todayMeals()[p2Meal].push({
     name:p2SelectedFood.name,
     qty:qty+unit,
@@ -1866,7 +2025,14 @@ function p2ConfirmAdd(){
   p2Refresh();
   showToast('已加入「'+addedName+'」至'+MEAL_NAMES[p2Meal],'ok');
 }
-function p2AddManual(){ const name=document.getElementById('p2-m-name').value.trim()||'自訂食品'; const cal=parseFloat(document.getElementById('p2-m-cal').value)||0; if(!cal){showToast('請輸入熱量','warn');return;} todayMeals()[p2Meal].push({name,qty:document.getElementById('p2-m-qty').value||'1份',cal,pro:parseFloat(document.getElementById('p2-m-pro').value)||0,fat:parseFloat(document.getElementById('p2-m-fat').value)||0,carb:parseFloat(document.getElementById('p2-m-carb').value)||0,id:Date.now()}); ['p2-m-name','p2-m-cal','p2-m-pro','p2-m-fat','p2-m-carb','p2-m-qty'].forEach(id=>document.getElementById(id).value=''); saveState(); p2Refresh(); showToast('已加入'+MEAL_NAMES[p2Meal],'ok'); }
+function p2AddManual(){ const name=document.getElementById('p2-m-name').value.trim()||'自訂食品'; const cal=parseFloat(document.getElementById('p2-m-cal').value)||0; if(!cal){showToast('請輸入熱量','warn');return;} beginRealData(); todayMeals()[p2Meal].push({name,qty:document.getElementById('p2-m-qty').value||'1份',cal,pro:parseFloat(document.getElementById('p2-m-pro').value)||0,fat:parseFloat(document.getElementById('p2-m-fat').value)||0,carb:parseFloat(document.getElementById('p2-m-carb').value)||0,id:Date.now()}); ['p2-m-name','p2-m-cal','p2-m-pro','p2-m-fat','p2-m-carb','p2-m-qty'].forEach(id=>document.getElementById(id).value=''); saveState(); p2Refresh(); showToast('已加入'+MEAL_NAMES[p2Meal],'ok'); }
+
+// ==================== 圖表配色：先看手動主題（data-theme），沒有才看系統偏好 ====================
+function chartColors(){
+  const manual=document.documentElement.dataset.theme;
+  const isDark=manual==='dark'?true:manual==='light'?false:window.matchMedia('(prefers-color-scheme:dark)').matches;
+  return { isDark, tc:isDark?'#9A9995':'#6A6965', gc:isDark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.06)' };
+}
 
 // ==================== PAGE 3 ====================
 let p3Range=7, p3Chart=null;
@@ -1913,7 +2079,7 @@ function p3SetWeight(v){
 function p3PreviewBMI(){
   const w=parseFloat(document.getElementById('p3-inp-weight').value);
   const wrap=document.getElementById('p3-bmi-preview');
-  if(!w||w<30||w>200){ wrap.style.display='none'; return; }
+  if(!w||w<20||w>300){ wrap.style.display='none'; return; }
   wrap.style.display='flex';
   const bmi=calcBMI(w);
   const bi=bmiInfo(bmi);
@@ -1926,7 +2092,7 @@ function p3PreviewBMI(){
   wrap.style.borderLeftColor=fg;
 }
 
-function p3Log(){ const d=document.getElementById('p3-inp-date').value; const w=parseFloat(document.getElementById('p3-inp-weight').value); const t=document.getElementById('p3-inp-time').value||'07:00'; if(!d||!w||w<30||w>200){showToast('請填入有效體重','warn');return;} const lastRec=STATE.weightRecords.length?STATE.weightRecords[STATE.weightRecords.length-1]:null; if(lastRec){ const diff=Math.abs(w-lastRec.weight); const daysGap=Math.max(1,Math.round((new Date(d)-new Date(lastRec.date))/86400000)); if(diff/daysGap>2 && !confirm('體重變化異常：較上次 ('+lastRec.weight+' kg) 變化 '+diff.toFixed(1)+' kg，平均每天 '+(diff/daysGap).toFixed(1)+' kg。\n\n是否確定輸入正確？')) return; } const ex=STATE.weightRecords.findIndex(r=>r.date===d); if(ex>=0){if(!confirm('已有記錄，是否覆蓋？'))return; STATE.weightRecords.splice(ex,1);} STATE.weightRecords.push({date:d,weight:w,time:t}); STATE.weightRecords.sort((a,b)=>a.date.localeCompare(b.date)); STATE.profile.weight=w; STATE.profile.lastWeightTime=t; document.getElementById('p3-inp-weight').value=''; document.getElementById('p1-weight').value=w; saveState(); p3Render(); showToast('已記錄體重 '+w+' kg','ok'); }
+function p3Log(){ const d=document.getElementById('p3-inp-date').value; const w=parseFloat(document.getElementById('p3-inp-weight').value); const t=document.getElementById('p3-inp-time').value||'07:00'; if(!d||!w||w<20||w>300){showToast('請填入有效體重（20–300 kg）與日期','warn');return;} beginRealData(); const lastRec=latestWeight(); if(lastRec){ const diff=Math.abs(w-lastRec.weight); const daysGap=Math.max(1,Math.round((new Date(d)-new Date(lastRec.date))/86400000)); if(diff/daysGap>2 && !confirm('體重變化異常：較上次 ('+lastRec.weight+' kg) 變化 '+diff.toFixed(1)+' kg，平均每天 '+(diff/daysGap).toFixed(1)+' kg。\n\n是否確定輸入正確？')) return; } const ex=STATE.weightRecords.findIndex(r=>r.date===d); if(ex>=0){if(!confirm('已有記錄，是否覆蓋？'))return; STATE.weightRecords.splice(ex,1);} STATE.weightRecords.push({date:d,weight:w,time:t}); STATE.weightRecords.sort((a,b)=>a.date.localeCompare(b.date)); STATE.profile.weight=w; STATE.profile.lastWeightTime=t; document.getElementById('p3-inp-weight').value=''; document.getElementById('p1-weight').value=w; saveState(); syncToFamilyProfile(); p3Render(); showToast('已記錄體重 '+w+' kg','ok'); }
 
 function p3RenderStats(){
   if(!STATE.weightRecords.length){ ['p3-sv-w','p3-sv-bmi','p3-sv-goal','p3-sv-week'].forEach(id=>document.getElementById(id).textContent='—'); document.getElementById('p3-tdee-note').style.display='none'; return; }
@@ -1944,7 +2110,7 @@ function p3RenderChart(){
   const filtered=STATE.weightRecords.filter(r=>r.date>=cutoffStr);
   if(p3Chart)p3Chart.destroy();
   if(!filtered.length){ document.getElementById('p3-chart-note').textContent='此區間暫無數據'; return; }
-  const isDark=window.matchMedia('(prefers-color-scheme:dark)').matches; const tc=isDark?'#888':'#999'; const gc=isDark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.05)';
+  const {tc,gc}=chartColors();
   const data=filtered.map(r=>r.weight); const minW=Math.min(...data); const maxW=Math.max(...data); const diff=+(data[data.length-1]-data[0]).toFixed(1);
   document.getElementById('p3-chart-note').textContent=`最低 ${minW} · 最高 ${maxW} · 區間變化 ${diff>0?'+':''}${diff} kg`;
   p3Chart=new Chart(document.getElementById('p3-chart').getContext('2d'),{type:'line',data:{labels:filtered.map(r=>r.date.slice(5)),datasets:[{data,borderColor:'#1D9E75',backgroundColor:'rgba(29,158,117,0.08)',tension:0.4,pointRadius:4,pointBackgroundColor:'#1D9E75',fill:true,spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:tc,font:{size:11}}},y:{grid:{color:gc},ticks:{color:tc,font:{size:11},callback:v=>v.toFixed(1)},suggestedMin:Math.floor(minW-1),suggestedMax:Math.ceil(maxW+1)}}}});
@@ -1960,7 +2126,7 @@ function p3RenderHistory(){
 
 function p3Del(date){ if(!confirm('確定刪除？'))return; STATE.weightRecords=STATE.weightRecords.filter(r=>r.date!==date); saveState(); p3Render(); }
 
-function p3UpdateGoal(){ const gw=parseFloat(document.getElementById('p3-goal-w').value); const gd=document.getElementById('p3-goal-d').value; STATE.profile.goalWeight=gw||null; STATE.profile.goalDate=gd||null; saveState(); if(!STATE.weightRecords.length||!gw)return; const cw=STATE.weightRecords[STATE.weightRecords.length-1].weight; const diff=+(cw-gw).toFixed(1); const el=document.getElementById('p3-sv-goal'); el.textContent=Math.abs(diff).toFixed(1); const sn=document.getElementById('p3-sn-goal'); if(diff>0){sn.textContent='還需減 '+diff+' kg';sn.className='sn c-amber';}else if(diff<0){sn.textContent='超出目標';sn.className='sn c-green';}else{sn.textContent='已達目標！';sn.className='sn c-green';} if(gd){ const days=Math.max(0,Math.round((new Date(gd)-new Date())/(86400000))); const plan=document.getElementById('p3-goal-plan'); if(days>0&&Math.abs(diff)>0){ plan.style.display='block'; const wr=+(diff/(days/7)).toFixed(2); plan.innerHTML=`每週需${diff>0?'減':'增'} <strong>${Math.abs(wr)} kg</strong> · ${Math.abs(wr)<=0.5?'<span class="c-green">速率安全</span>':'<span class="c-red">速率偏快，建議延長期限</span>'}`; }else plan.style.display='none'; }}
+function p3UpdateGoal(){ const gw=parseFloat(document.getElementById('p3-goal-w').value); const gd=document.getElementById('p3-goal-d').value; STATE.profile.goalWeight=(gw>=20&&gw<=300)?gw:null; STATE.profile.goalDate=gd||null; saveState(); syncToFamilyProfile(); if(!STATE.weightRecords.length||!gw)return; const cw=STATE.weightRecords[STATE.weightRecords.length-1].weight; const diff=+(cw-gw).toFixed(1); const el=document.getElementById('p3-sv-goal'); el.textContent=Math.abs(diff).toFixed(1); const sn=document.getElementById('p3-sn-goal'); if(diff>0){sn.textContent='還需減 '+diff+' kg';sn.className='sn c-amber';}else if(diff<0){sn.textContent='超出目標';sn.className='sn c-green';}else{sn.textContent='已達目標！';sn.className='sn c-green';} if(gd){ const days=Math.max(0,Math.round((new Date(gd)-new Date())/(86400000))); const plan=document.getElementById('p3-goal-plan'); if(days>0&&Math.abs(diff)>0){ plan.style.display='block'; const wr=+(diff/(days/7)).toFixed(2); plan.innerHTML=`每週需${diff>0?'減':'增'} <strong>${Math.abs(wr)} kg</strong> · ${Math.abs(wr)<=0.5?'<span class="c-green">速率安全</span>':'<span class="c-red">速率偏快，建議延長期限</span>'}`; }else plan.style.display='none'; }}
 
 // ==================== PAGE 4 ====================
 const EXERCISES={
@@ -2059,7 +2225,7 @@ function p4SetInt(v){ p4Int=v; ['p4-il','p4-im','p4-ih'].forEach((el,i)=>documen
 
 function p4UpdatePreview(){ if(!p4SelEx){ document.getElementById('p4-cp-val').textContent='—'; document.getElementById('p4-cp-lbl').textContent='請選擇運動項目'; return; } const dur=parseInt(document.getElementById('p4-dur-inp').value)||30; const met=p4SelEx.met[p4Int]||p4SelEx.met.medium; const cal=Math.round(met*STATE.profile.weight*0.0175*dur); document.getElementById('p4-cp-val').textContent=cal; document.getElementById('p4-cp-lbl').textContent=p4SelEx.name+' · '+dur+'分鐘'; document.getElementById('p4-cp-basis').textContent='體重 '+STATE.profile.weight+'kg · MET '+met; }
 
-function p4Log(){ if(!p4SelEx){showToast('請先選擇運動項目','warn');return;} const dur=parseInt(document.getElementById('p4-dur-inp').value)||30; const date=document.getElementById('p4-date-inp').value; const met=p4SelEx.met[p4Int]||p4SelEx.met.medium; const cal=Math.round(met*STATE.profile.weight*0.0175*dur); STATE.exerciseRecords.push({id:Date.now(),name:p4SelEx.name,icon:p4SelEx.icon,date,duration:dur,cal,intensity:p4Int}); STATE.profile.lastExDuration=dur; STATE.profile.lastExIntensity=p4Int; saveState(); p4Render(); showToast('已記錄 '+p4SelEx.name+' '+cal+' kcal','ok'); }
+function p4Log(){ if(!p4SelEx){showToast('請先選擇運動項目','warn');return;} const dur=parseInt(document.getElementById('p4-dur-inp').value)||30; const date=document.getElementById('p4-date-inp').value||todayStr(); const met=p4SelEx.met[p4Int]||p4SelEx.met.medium; const cal=Math.round(met*STATE.profile.weight*0.0175*dur); beginRealData(); STATE.exerciseRecords.push({id:Date.now(),name:p4SelEx.name,icon:p4SelEx.icon,date,duration:dur,cal,intensity:p4Int}); STATE.profile.lastExDuration=dur; STATE.profile.lastExIntensity=p4Int; saveState(); p4Render(); showToast('已記錄 '+p4SelEx.name+' '+cal+' kcal','ok'); }
 
 function p4RenderStats(){
   const ts=todayStr(); const tr=STATE.exerciseRecords.filter(r=>r.date===ts); const burned=tr.reduce((s,r)=>s+r.cal,0); const dur=tr.reduce((s,r)=>s+r.duration,0);
@@ -2076,7 +2242,7 @@ function p4RenderWeek(){
   const days=['一','二','三','四','五','六','日']; const ws=new Date(); const dow=ws.getDay()===0?6:ws.getDay()-1; ws.setDate(ws.getDate()-dow);
   let html=''; for(let i=0;i<7;i++){ const d=new Date(ws); d.setDate(ws.getDate()+i); const ds=ymd(d); const dr=STATE.exerciseRecords.filter(r=>r.date===ds); const cal=dr.reduce((s,r)=>s+r.cal,0); const isToday=ds===todayStr(); const cls=isToday?'today':cal>=400?'done':dr.length?'done':'rest'; html+=`<div class="wd"><div class="wd-name">${days[i]}</div><div class="wd-ring ${cls}">${dr.length?'✓':'·'}</div><div class="wd-sub">${cal||'—'}</div></div>`; }
   document.getElementById('p4-week').innerHTML=html;
-  const isDark=window.matchMedia('(prefers-color-scheme:dark)').matches; const tc=isDark?'#888':'#999'; const gc=isDark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.05)';
+  const {tc,gc}=chartColors();
   const data=[]; for(let i=0;i<7;i++){ const d=new Date(ws); d.setDate(ws.getDate()+i); data.push(STATE.exerciseRecords.filter(r=>r.date===ymd(d)).reduce((s,r)=>s+r.cal,0)); }
   if(p4Chart)p4Chart.destroy();
   p4Chart=new Chart(document.getElementById('p4-chart').getContext('2d'),{type:'bar',data:{labels:days,datasets:[{data,backgroundColor:data.map(v=>v>=400?'#534AB7':'#AFA9EC'),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:tc,font:{size:11}}},y:{grid:{color:gc},ticks:{color:tc,font:{size:11}},suggestedMin:0,suggestedMax:500}}}});
@@ -2172,9 +2338,9 @@ function p5CalcDur(){
 }
 function p5SetQ(q){ p5SleepQ=q; for(let i=1;i<=5;i++)document.getElementById('p5-q'+i).classList.toggle('on',i===q); }
 
-function p5LogSleep(){ const dur=p5CalcDur(); if(!dur){showToast('請填入就寢與起床時間','warn');return;} const date=document.getElementById('p5-sleep-date').value||todayStr(); const bed=document.getElementById('p5-bed').value; const wake=document.getElementById('p5-wake').value; const note=document.getElementById('p5-sleep-note').value; const ex=STATE.sleepRecords.findIndex(r=>r.date===date); if(ex>=0){if(!confirm('已有記錄，是否覆蓋？'))return; STATE.sleepRecords.splice(ex,1);} STATE.sleepRecords.push({date,bed,wake,dur,quality:p5SleepQ,note}); STATE.sleepRecords.sort((a,b)=>a.date.localeCompare(b.date)); STATE.profile.lastSleepBed=bed; STATE.profile.lastSleepWake=wake; document.getElementById('p5-sleep-note').value=''; saveState(); p5Render(); showToast('已記錄睡眠 '+dur+' 小時','ok'); }
+function p5LogSleep(){ const dur=p5CalcDur(); if(!dur){showToast('請填入就寢與起床時間','warn');return;} const date=document.getElementById('p5-sleep-date').value||todayStr(); const bed=document.getElementById('p5-bed').value; const wake=document.getElementById('p5-wake').value; const note=document.getElementById('p5-sleep-note').value; beginRealData(); const ex=STATE.sleepRecords.findIndex(r=>r.date===date); if(ex>=0){if(!confirm('已有記錄，是否覆蓋？'))return; STATE.sleepRecords.splice(ex,1);} STATE.sleepRecords.push({date,bed,wake,dur,quality:p5SleepQ,note}); STATE.sleepRecords.sort((a,b)=>a.date.localeCompare(b.date)); STATE.profile.lastSleepBed=bed; STATE.profile.lastSleepWake=wake; document.getElementById('p5-sleep-note').value=''; saveState(); p5Render(); showToast('已記錄睡眠 '+dur+' 小時','ok'); }
 
-function p5AddWater(amount){ const now=new Date(); const time=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0'); STATE.waterLogs.push({id:Date.now(),date:todayStr(),time,amount}); saveState(); p5Render(); showToast('已記錄 +'+amount+' ml','ok',1600); }
+function p5AddWater(amount){ if(!(amount>0)){ showToast('請輸入有效的飲水量','warn'); return; } beginRealData(); const now=new Date(); const time=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0'); STATE.waterLogs.push({id:Date.now(),date:todayStr(),time,amount}); saveState(); p5Render(); showToast('已記錄 +'+amount+' ml','ok',1600); }
 function p5CustomWater(){ const v=prompt('輸入飲水量 (ml)：','300'); if(v&&!isNaN(v))p5AddWater(parseInt(v)); }
 function p5FillRemaining(){
   const wg=STATE.profile.waterGoal||2000;
@@ -2187,7 +2353,8 @@ function p5FillRemaining(){
 function p5DelWater(id){ if(!confirm('確定刪除這筆飲水紀錄？')) return; STATE.waterLogs=STATE.waterLogs.filter(w=>w.id!==id); saveState(); p5Render(); }
 
 function p5RenderStats(){
-  const last=STATE.sleepRecords.length?STATE.sleepRecords[STATE.sleepRecords.length-1]:null;
+  const last=latestSleep(); // 取「日期最新」的一筆，不是陣列最後一筆
+  if(!last){ document.getElementById('p5-sv-sleep').textContent='—'; document.getElementById('p5-sn-sleep').textContent='尚無記錄'; document.getElementById('p5-sn-sleep').className='sn c-muted'; document.getElementById('p5-sv-quality').textContent='—'; }
   if(last){ document.getElementById('p5-sv-sleep').textContent=last.dur.toFixed(1); const sg=STATE.profile.sleepGoal; const sn=document.getElementById('p5-sn-sleep'); if(last.dur<sg-1){sn.textContent='偏少';sn.className='sn c-amber';}else if(last.dur<=sg+1){sn.textContent='達標';sn.className='sn c-green';}else{sn.textContent='偏多';sn.className='sn c-amber';} const qL=['','很差','差','普通','好','很好']; document.getElementById('p5-sv-quality').textContent=qL[last.quality]||'—'; }
   const wg=STATE.profile.waterGoal;
   const todayWater=STATE.waterLogs.filter(w=>w.date===todayStr()||!w.date);
@@ -2199,20 +2366,20 @@ function p5RenderStats(){
 }
 
 function p5RenderSleepChart(){
-  if(p5SleepChart)p5SleepChart.destroy(); const last7=[...STATE.sleepRecords].slice(-7);
+  if(p5SleepChart)p5SleepChart.destroy(); const last7=sortByDate([...STATE.sleepRecords]).slice(-7);
   if(!last7.length){
     const canvas=document.getElementById('p5-sleep-chart');
     if(canvas){const ctx=canvas.getContext('2d'); ctx.clearRect(0,0,canvas.width,canvas.height);}
     return;
   }
-  const isDark=window.matchMedia('(prefers-color-scheme:dark)').matches; const tc=isDark?'#888':'#999'; const gc=isDark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.05)';
+  const {tc,gc}=chartColors();
   const durs=last7.map(r=>r.dur); const sg=STATE.profile.sleepGoal;
   if(!document.getElementById('p5-sleep-chart'))return;
   p5SleepChart=new Chart(document.getElementById('p5-sleep-chart').getContext('2d'),{type:'bar',data:{labels:last7.map(r=>r.date.slice(5)),datasets:[{data:durs,backgroundColor:durs.map(d=>d>=sg?'#378ADD':'#B5D4F4'),borderRadius:4},{type:'line',data:new Array(durs.length).fill(sg),borderColor:'#EF9F27',borderDash:[4,3],borderWidth:1.5,pointRadius:0,fill:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:tc,font:{size:11}}},y:{grid:{color:gc},ticks:{color:tc,font:{size:11},callback:v=>v+'hr'},suggestedMin:4,suggestedMax:10}}}});
 }
 
-function p5RenderSleepLog(){ if(!STATE.sleepRecords.length){document.getElementById('p5-sleep-log').innerHTML='<div class="empty"><i class="ti ti-leaf"></i>尚無睡眠記錄</div>';return;} const qL=['','很差','差','普通','好','很好']; const qStyle=['','badge-red','badge-red','badge-amber','badge-green','badge-green']; document.getElementById('p5-sleep-log').innerHTML=[...STATE.sleepRecords].reverse().slice(0,7).map(r=>`<div class="hist-item"><span class="hi-date">${r.date.slice(5)}</span><span class="hi-weight c-blue">${r.dur.toFixed(1)} hr</span><span class="badge ${qStyle[r.quality]}">${qL[r.quality]}</span><span style="flex:1;font-size:11px;color:var(--text3);margin-left:8px">${esc(r.note||'')}</span><button class="hi-del" onclick="p5DelSleep('${r.date}')" aria-label="刪除"><i class="ti ti-x"></i></button></div>`).join(''); }
-function p5DelSleep(date){ STATE.sleepRecords=STATE.sleepRecords.filter(r=>r.date!==date); saveState(); p5Render(); }
+function p5RenderSleepLog(){ if(!STATE.sleepRecords.length){document.getElementById('p5-sleep-log').innerHTML='<div class="empty"><i class="ti ti-leaf"></i>尚無睡眠記錄</div>';return;} const qL=['','很差','差','普通','好','很好']; const qStyle=['','badge-red','badge-red','badge-amber','badge-green','badge-green']; document.getElementById('p5-sleep-log').innerHTML=sortByDate([...STATE.sleepRecords]).reverse().slice(0,7).map(r=>`<div class="hist-item"><span class="hi-date">${r.date.slice(5)}</span><span class="hi-weight c-blue">${r.dur.toFixed(1)} hr</span><span class="badge ${qStyle[r.quality]}">${qL[r.quality]}</span><span style="flex:1;font-size:11px;color:var(--text3);margin-left:8px">${esc(r.note||'')}</span><button class="hi-del" onclick="p5DelSleep('${r.date}')" aria-label="刪除"><i class="ti ti-x"></i></button></div>`).join(''); }
+function p5DelSleep(date){ if(!confirm('確定刪除 '+date+' 的睡眠紀錄？刪除後無法復原。')) return; STATE.sleepRecords=STATE.sleepRecords.filter(r=>r.date!==date); saveState(); p5Render(); }
 
 function p5RenderWater(){ const logs=[...STATE.waterLogs].filter(w=>w.date===todayStr()||!w.date).reverse(); document.getElementById('p5-water-log').innerHTML=logs.length?logs.map(w=>`<div class="log-item"><div class="li-dot" style="background:var(--blue)"></div><span class="li-name">${w.time}</span><span class="li-cal c-blue">${w.amount} ml</span><button class="li-del" onclick="p5DelWater(${w.id})" aria-label="刪除"><i class="ti ti-x"></i></button></div>`).join(''):'<div class="empty"><i class="ti ti-droplet"></i>今日尚未記錄飲水</div>'; }
 
@@ -2224,8 +2391,8 @@ function p6Render(){
   const eaten=Object.values(todayMeals()).reduce((s,m)=>s+m.reduce((ss,i)=>ss+i.cal,0),0);
   const burned=STATE.exerciseRecords.filter(r=>r.date===ts).reduce((s,r)=>s+r.cal,0);
   const net=eaten-burned; const wg=STATE.profile.waterGoal; const tw=STATE.waterLogs.filter(w=>w.date===ts||!w.date).reduce((s,w)=>s+w.amount,0);
-  const lastSleep=STATE.sleepRecords.length?STATE.sleepRecords[STATE.sleepRecords.length-1]:null; const sg=STATE.profile.sleepGoal;
-  const lastWeight=STATE.weightRecords.length?STATE.weightRecords[STATE.weightRecords.length-1]:null;
+  const lastSleep=latestSleep(); const sg=STATE.profile.sleepGoal;
+  const lastWeight=latestWeight();
 
   // Scores
   const eatScore=Math.min(Math.round(eaten/tdee*100),100)>=50?Math.min(Math.round(eaten/tdee*100),100):30;
@@ -2300,8 +2467,7 @@ function p6RenderWeightTrend(){
   if(goal){ const diff=+(cur-goal).toFixed(1); gEl.textContent=(diff>0?'+':'')+diff; gEl.className='sv '+(Math.abs(diff)<0.5?'c-green':'c-amber'); }
   else { gEl.textContent='—'; gEl.className='sv'; }
 
-  const isDark=window.matchMedia('(prefers-color-scheme:dark)').matches;
-  const tc=isDark?'#888':'#999'; const gc=isDark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.05)';
+  const {tc,gc}=chartColors();
   const vals=data.map(r=>r.weight);
   const minW=Math.min(...vals), maxW=Math.max(...vals);
   if(p6WeightChart)p6WeightChart.destroy();
@@ -2370,9 +2536,7 @@ function p6RenderWeek(){
   document.getElementById('p6-wk-ex-n').className='sn '+(totalExMin>=150?'c-green':'c-muted');
 
   // === 每日淨熱量柱狀圖（負=綠 赤字、正=琥珀 盈餘）===
-  const isDark=window.matchMedia('(prefers-color-scheme:dark)').matches;
-  const tc=isDark?'#888':'#999';
-  const gc=isDark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.05)';
+  const {tc,gc}=chartColors();
   if(p6Chart)p6Chart.destroy();
   const netColors=dailyNet.map(v=>v==null?'rgba(0,0,0,0)':v>0?'rgba(186,117,23,0.75)':'rgba(29,158,117,0.75)');
   p6Chart=new Chart(document.getElementById('p6-chart').getContext('2d'),{
@@ -2391,12 +2555,20 @@ function p6RenderWeek(){
   });
 }
 
+// 建議來源徽章：規則型＝灰色「一般建議」；只有 AI 真的回應成功才掛 Gemini 徽章
+function p6SetAdviceBadge(isAI){
+  const b=document.getElementById('p6-ai-badge'); const t=document.getElementById('p6-ai-title');
+  if(!b) return;
+  if(isAI){ b.className='badge badge-green'; b.innerHTML='<i class="ti ti-cpu" style="font-size:11px"></i>AI 個人化 · Gemini 2.5'; if(t) t.textContent='AI 個人化建議'; }
+  else { b.className='badge badge-gray'; b.innerHTML='<i class="ti ti-list-check" style="font-size:11px"></i>一般建議（依規則）'; if(t) t.textContent='今日建議'; }
+}
 function p6RenderAIMock(){
+  p6SetAdviceBadge(false);
   const eaten=Object.values(todayMeals()).reduce((s,m)=>s+m.reduce((ss,i)=>ss+i.cal,0),0);
   const tdee=calcTDEE(); const ts=todayStr();
   const tw=STATE.waterLogs.filter(w=>w.date===ts||!w.date).reduce((s,w)=>s+w.amount,0); const wg=STATE.profile.waterGoal;
   const burned=STATE.exerciseRecords.filter(r=>r.date===ts).reduce((s,r)=>s+r.cal,0);
-  const lastSleep=STATE.sleepRecords.length?STATE.sleepRecords[STATE.sleepRecords.length-1]:null;
+  const lastSleep=latestSleep();
   const pct=Math.round(eaten/tdee*100);
   const items=[];
   if(pct<60) items.push({type:'warn',text:`今日熱量攝取僅 ${pct}%，距目標還差 ${(tdee-eaten).toLocaleString()} kcal，記得補充正餐。`,tag:'飲食提醒'});
@@ -2416,8 +2588,8 @@ async function p6GetAI(){
   const eaten=Object.values(todayMeals()).reduce((s,m)=>s+m.reduce((ss,i)=>ss+i.cal,0),0);
   const burned=STATE.exerciseRecords.filter(r=>r.date===ts).reduce((s,r)=>s+r.cal,0);
   const tw=STATE.waterLogs.filter(w=>w.date===ts||!w.date).reduce((s,w)=>s+w.amount,0);
-  const lastSleep=STATE.sleepRecords.length?STATE.sleepRecords[STATE.sleepRecords.length-1]:null;
-  const lastW=STATE.weightRecords.length?STATE.weightRecords[STATE.weightRecords.length-1]:null;
+  const lastSleep=latestSleep();
+  const lastW=latestWeight();
   // 7 天滾動統計
   const cutoff7=dateOffset(-6);
   let wkNet=0, wkExMin=0, wkExCal=0, sleepSum=0, sleepN=0, waterSum=0, waterN=0;
@@ -2438,6 +2610,8 @@ async function p6GetAI(){
   try{
     const data=await callAI([{parts:[{text:`你是健康顧問，根據以下今日 + 本週 7 天數據用繁體中文給出 3–4 條具體個人化建議。注意觀察「趨勢」而非單日。只回傳JSON不含其他文字：{"advice":[{"type":"ok|warn|info","text":"建議內容","tag":"標籤"}]}\n\n[今日]\n- 熱量攝取：${eaten}/${tdee} kcal（${Math.round(eaten/tdee*100)}%）\n- 飲水：${tw}/${STATE.profile.waterGoal} ml\n- 運動消耗：${burned} kcal\n- 睡眠：${lastSleep?lastSleep.dur+'小時 品質'+lastSleep.quality+'/5':'無記錄'}\n- 體重：${lastW?lastW.weight+'kg BMI'+calcBMI(lastW.weight):'無記錄'}\n\n[近 7 天趨勢]\n- 累積淨熱量：${Math.round(wkNet)} kcal（換算約 ${(wkNet/7700).toFixed(2)} kg）\n- 體重變化：${wDelta>0?'+':''}${wDelta} kg\n- 運動總時數：${wkExMin} 分（${wkExCal} kcal）\n- 平均睡眠：${avgSleep} 小時\n- 平均飲水：${avgWater} ml/日\n\n- 健康目標：${STATE.profile.goal}`}]}],800);
     const parsed=JSON.parse(data.text.replace(/```json|```/g,'').trim());
+    if(!parsed||!Array.isArray(parsed.advice)||!parsed.advice.length) throw new Error('AI 沒有回傳建議');
+    p6SetAdviceBadge(true);
     document.getElementById('p6-ai-content').innerHTML=parsed.advice.map(a=>`<div class="ai-item"><div class="ai-dot" style="background:${a.type==='ok'?'var(--green)':a.type==='warn'?'var(--amber)':'var(--blue)'}"></div><div><div class="ai-text">${esc(a.text)}</div><span class="badge ${a.type==='ok'?'badge-green':a.type==='warn'?'badge-amber':'badge-blue'}" style="margin-top:4px">${esc(a.tag)}</span></div></div>`).join('');
   }catch(e){
     p6RenderAIMock();
@@ -2451,19 +2625,46 @@ async function p6GetAI(){
 document.querySelectorAll('#p5-panel-water,#p5-panel-remind').forEach(el=>el.style.display='none');
 document.getElementById('p5-sleep-date').value=todayStr();
 
-// 只在首次使用（localStorage 無資料）時載入示範資料
+loadState();
+
+// 示範資料：還沒有任何真實紀錄、也沒按過「清除示範」時載入——只放記憶體（STATE._demo），saveState 會排除，不會混進真實紀錄。
+// （改設定／只逛一逛不會讓示範消失；新增第一筆真實紀錄或按「清除示範」才會結束示範模式）
+function hasAnyRealRecord(){
+  return ['weightRecords','exerciseRecords','sleepRecords','waterLogs'].some(k=>Array.isArray(STATE[k])&&STATE[k].length)
+    || Object.values(STATE.meals||{}).some(m=>Object.values(m||{}).some(a=>Array.isArray(a)&&a.length));
+}
 let _isDemoData=false;
-const _existingData=localStorage.getItem('healthAppState');
-if(!_existingData){
+if(!hasAnyRealRecord() && localStorage.getItem('healthDemoDismissed')!=='1'){
   _isDemoData=true;
+  STATE._demo=true;
   STATE.weightRecords=[{date:dateOffset(-6),weight:68.5,time:'07:00'},{date:dateOffset(-4),weight:68.1,time:'07:00'},{date:dateOffset(-2),weight:67.6,time:'07:00'},{date:dateOffset(-1),weight:67.3,time:'07:00'}];
   STATE.sleepRecords=[{date:dateOffset(-2),bed:'23:00',wake:'07:00',dur:8.0,quality:5,note:''},{date:dateOffset(-1),bed:'23:30',wake:'07:15',dur:7.75,quality:4,note:''},{date:todayStr(),bed:'23:00',wake:'07:00',dur:8.0,quality:5,note:''}];
   STATE.exerciseRecords=[{id:1,name:'跑步',icon:'ti-run',date:dateOffset(-1),duration:35,cal:298,intensity:'medium',time:'18:30'},{id:2,name:'重訓',icon:'ti-barbell',date:dateOffset(-2),duration:50,cal:290,intensity:'medium',time:'19:00'}];
   STATE.waterLogs=[{id:1,date:todayStr(),time:'08:00',amount:250},{id:2,date:todayStr(),time:'10:30',amount:350},{id:3,date:todayStr(),time:'12:45',amount:250}];
 }
+// 家族共用基本資料（身高／性別／生日／體重）→ 帶入本 App；其他 App 改了也會透過 hcProfileChange 同步
+syncFromFamilyProfile();
+window.addEventListener('hcProfileChange',()=>{ syncFromFamilyProfile(); saveState(); const active=document.querySelector('.page.active')?.id; if(active) refreshPage(active); });
 
-loadState();
-refreshPage('p1');
+// 首次使用：顯示「這是示範資料」橫幅（在總覽首頁）
+if(_isDemoData){ const b=document.getElementById('demo-banner'); if(b) b.style.display='block'; }
+function dismissDemoBanner(){ const b=document.getElementById('demo-banner'); if(b) b.style.display='none'; }
+function clearDemoData(){
+  if(!confirm('將清掉畫面上的示範資料，從零開始記錄。確定嗎？')) return;
+  beginRealData();
+  saveState();
+  showToast('已清除示範資料，開始記錄你自己的吧！','ok',2000);
+  const active=document.querySelector('.page.active')?.id; refreshPage(active||'p6');
+}
+
+// #13 P3 目標體重預設為最新體重 - 5kg（示範模式下不預填，避免示範體重變成目標）
+if(!STATE._demo && STATE.weightRecords.length && !document.getElementById('p3-goal-w').value && STATE.profile.goalWeight==null){
+  const latestW=latestWeight().weight;
+  document.getElementById('p3-goal-w').value=Math.max(latestW-5,40).toFixed(1);
+}
+
+// 總覽頁為預設首頁
+refreshPage('p6');
 document.getElementById('p1-date').textContent=fmtDate();
 updateApiKeyStatus();
 p2InitCatTabs();
@@ -2474,22 +2675,8 @@ p2SetMeal(mealByTime());
 // 還原離線模式開關狀態
 (function initOffline(){ const on=isOfflineMode(); const t=document.getElementById('offline-toggle'); if(t) t.checked=on; const card=document.getElementById('apikey-card'); if(card&&on){ card.style.opacity='0.45'; card.style.pointerEvents='none'; } })();
 
-// 首次使用：顯示「這是示範資料」橫幅
-if(_isDemoData){ const b=document.getElementById('demo-banner'); if(b) b.style.display='block'; }
-function dismissDemoBanner(){ const b=document.getElementById('demo-banner'); if(b) b.style.display='none'; }
-function clearDemoData(){
-  if(!confirm('將清掉目前的示範資料，從零開始記錄。確定嗎？')) return;
-  STATE.meals={}; STATE.weightRecords=[]; STATE.exerciseRecords=[]; STATE.sleepRecords=[]; STATE.waterLogs=[];
-  saveState();
-  showToast('已清除示範資料，開始記錄你自己的吧！','ok',2000);
-  setTimeout(()=>location.reload(),700);
-}
-
-// #13 P3 目標體重預設為最新體重 - 5kg
-if(STATE.weightRecords.length&&!document.getElementById('p3-goal-w').value){
-  const latestW=STATE.weightRecords[STATE.weightRecords.length-1].weight;
-  document.getElementById('p3-goal-w').value=Math.max(latestW-5,40).toFixed(1);
-}
+// 家族切換浮鈕＋安裝橫幅（core.js）
+try{ HC.familyMenu('healthcare'); }catch(e){ console.warn('[HC] familyMenu failed', e); }
 
 // #14 P2 飲食 log-item 加入編輯功能（動態注入）
 const _origP2RenderLog=p2RenderLog;
@@ -2560,18 +2747,11 @@ if('serviceWorker' in navigator){
   });
 }
 
-// 主題切換
+// 主題切換：改走 core.js（家族共用 key hcTheme；HC 載入時已先套用，避免閃爍）。切完重畫當前頁讓圖表換色
 function setTheme(mode){
-  if(mode==='auto'){ document.documentElement.removeAttribute('data-theme'); localStorage.removeItem('theme'); }
-  else { document.documentElement.setAttribute('data-theme',mode); localStorage.setItem('theme',mode); }
-  ['th-auto','th-light','th-dark'].forEach(id=>{const el=document.getElementById(id); if(el) el.classList.remove('on');});
-  const cur=document.getElementById('th-'+(mode==='auto'?'auto':mode)); if(cur) cur.classList.add('on');
+  HC.setTheme(mode);
+  const active=document.querySelector('.page.active')?.id; if(active&&active!=='p1') refreshPage(active);
 }
-// 初始套用（DOM 就緒前，避免閃爍）
-(function applyInitTheme(){
-  const t=localStorage.getItem('theme');
-  if(t==='dark'||t==='light') document.documentElement.setAttribute('data-theme',t);
-})();
 
 function showUpdatePrompt(onAccept){
   const wrap=document.getElementById('toast-wrap'); if(!wrap) return;

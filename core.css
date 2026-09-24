@@ -12,7 +12,7 @@
   --border2: rgba(0,0,0,0.14);
   --text: #1A1917;
   --text2: #6B6A67;
-  --text3: #6A6965;
+  --text3: #6A6965; /* a11y:由 #9B9A97 加深至 ~4.6:1 對比(WCAG AA) */
   --green: #1D9E75;
   --green-bg: #E1F5EE;
   --amber: #BA7517;
@@ -28,6 +28,11 @@
   --nav-h: 70px;
   --radius: 12px;
   --radius-sm: 8px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md: 0 6px 18px rgba(0,0,0,.10);
+  --shadow-lg: 0 14px 34px rgba(0,0,0,.14);
   /* 各 App 覆寫 --brand / --brand-bg 即可換家族色 */
   --brand: #534AB7;
   --brand-bg: #EEEDFE;
@@ -58,13 +63,45 @@ input:focus,select:focus,textarea:focus{border-color:var(--brand)}
 input::placeholder,textarea::placeholder{color:var(--text3)}
 button{cursor:pointer;border:none;background:none}
 
-/* 大字體模式（長輩友善）— 加在 <html class="bigfont"> */
-html.bigfont{font-size:17.5px}
-html.bigfont .page-title{font-size:25px}
-html.bigfont .stat-card .sv,html.bigfont .rv{font-size:23px}
-html.bigfont input,html.bigfont select{height:46px}
-html.bigfont .btn{height:46px}
-html.bigfont .nav-item span{font-size:13px}
+/* 大字體與長輩模式（長輩友善·大字·高對比·零障礙）— 加在 <html class="bigfont"> 或 <html class="simple"> */
+html.bigfont, html.simple { font-size: 19px; line-height: 1.55; }
+html.bigfont .page-title, html.simple .page-title { font-size: 26px; font-weight: 800; }
+html.bigfont .big-reading, html.simple .big-reading { font-size: 54px; font-weight: 800; line-height: 1.05; font-variant-numeric: tabular-nums; }
+html.bigfont .big-reading .unit, html.simple .big-reading .unit { font-size: 18px; font-weight: 600; margin-left: 4px; }
+html.bigfont .reading-sub, html.simple .reading-sub { font-size: 15px; margin-top: 6px; }
+html.bigfont .stat-card .sv, html.simple .stat-card .sv, html.bigfont .rv, html.simple .rv { font-size: 24px; font-weight: 800; }
+html.bigfont input, html.simple input, html.bigfont select, html.simple select { min-height: 52px; font-size: 20px; border-radius: 12px; }
+html.bigfont textarea, html.simple textarea { font-size: 18px; line-height: 1.6; }
+html.bigfont .btn, html.simple .btn { min-height: 56px; font-size: 18px; border-radius: 14px; font-weight: 700; gap: 8px; }
+html.bigfont .stepper-btn, html.simple .stepper-btn { width: 56px !important; height: 56px !important; font-size: 28px !important; border-radius: 12px !important; }
+html.bigfont .stepper input, html.simple .stepper input { height: 56px !important; font-size: 26px !important; font-weight: 700 !important; text-align: center; }
+html.bigfont .chip, html.simple .chip { min-height: 46px; font-size: 17px; padding: 0 16px; border-radius: 23px; }
+html.bigfont .quick-btn, html.simple .quick-btn { padding: 18px 8px; min-height: 70px; }
+html.bigfont .quick-btn i, html.simple .quick-btn i { font-size: 32px; }
+html.bigfont .quick-btn span, html.simple .quick-btn span { font-size: 16px; font-weight: 700; }
+html.bigfont .nav-item i, html.simple .nav-item i { font-size: 30px; }
+html.bigfont .nav-item span, html.simple .nav-item span { font-size: 14px; font-weight: 700; }
+html.bigfont .card, html.simple .card { padding: 18px; margin-bottom: 16px; }
+html.bigfont .card-title, html.simple .card-title { font-size: 17px; letter-spacing: 0; }
+html.bigfont .card-title i, html.simple .card-title i { font-size: 20px; }
+html.bigfont .hint, html.simple .hint,
+html.bigfont .li-sub, html.simple .li-sub,
+html.bigfont .sl, html.simple .sl,
+html.bigfont .su, html.simple .su,
+html.bigfont .sn, html.simple .sn,
+html.bigfont .ring-lbl, html.simple .ring-lbl,
+html.bigfont .fam-sub, html.simple .fam-sub,
+html.bigfont .note, html.simple .note,
+html.bigfont .badge, html.simple .badge,
+html.bigfont .field label, html.simple .field label,
+html.bigfont .prog-label, html.simple .prog-label,
+html.bigfont .page-date, html.simple .page-date,
+html.bigfont .mc-time, html.simple .mc-time,
+html.bigfont .card-sub, html.simple .card-sub,
+html.bigfont .pc-sub, html.simple .pc-sub,
+html.bigfont .mini-unit, html.simple .mini-unit { font-size: 15px !important; }
+html.bigfont .desc, html.simple .desc, html.bigfont .en, html.simple .en { font-size: 16px; }
+html.bigfont .empty, html.simple .empty { font-size: 16px; padding: 30px 16px; }
 
 /* Layout */
 .app{max-width:480px;margin:0 auto;min-height:100vh;position:relative;background:var(--bg)}
@@ -144,6 +181,8 @@ html.bigfont .nav-item span{font-size:13px}
 .field-row{display:grid;gap:8px}
 .field-row.two{grid-template-columns:1fr 1fr}
 .field-row.three{grid-template-columns:1fr 1fr 1fr}
+.field-row>*{min-width:0} /* 讓 date 等輸入框能縮，避免撐爆 grid 造成水平溢出 */
+input,select{min-width:0}
 
 /* Generic pick buttons (段落選擇) */
 .pick-grid{display:grid;gap:6px;margin-bottom:10px}
@@ -239,6 +278,29 @@ html.bigfont .stepper input{height:50px;font-size:23px}
 .nav.compact .nav-item i{font-size:23px}
 .nav.compact .nav-item span{font-size:11px}
 
+/* 家族切換浮鈕 + 底部選單 + 家族基本資料 */
+.fam-fab{position:fixed;right:14px;bottom:calc(var(--nav-h) + 14px);width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#14B8A6,#0EA5E9);color:#fff;box-shadow:0 4px 16px rgba(0,0,0,.24);display:flex;align-items:center;justify-content:center;font-size:23px;z-index:200;border:none}
+.fam-fab:active{transform:scale(.93)}
+.fam-overlay{position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:450;display:none;align-items:flex-end;justify-content:center;overflow-x:hidden}
+.fam-overlay.show{display:flex}
+.fam-sheet{background:var(--surface);width:100%;max-width:480px;border-radius:18px 18px 0 0;padding:16px 14px calc(18px + env(safe-area-inset-bottom));max-height:86vh;overflow-y:auto;overflow-x:hidden;box-sizing:border-box}
+.fam-title{font-size:17px;font-weight:800;text-align:center;margin-bottom:4px;color:var(--text)}
+.fam-sub{font-size:12px;color:var(--text3);text-align:center;margin-bottom:12px}
+.fam-basic{background:var(--surface2);border-radius:12px;padding:12px;margin-bottom:14px}
+.fam-divider{font-size:12px;color:var(--text3);font-weight:600;margin:2px 0 8px;letter-spacing:1px}
+.fam-row{display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;text-decoration:none;color:var(--text);border:1px solid var(--border);margin-bottom:8px;background:var(--surface2)}
+.fam-row.cur{border-color:var(--brand);background:var(--brand-bg)}
+.fam-emo{font-size:22px}
+.fam-name{flex:1;font-weight:600;font-size:15px}
+.fam-here{font-size:12px;color:var(--brand);font-weight:700}
+.fam-row i{color:var(--text3)}
+.fam-close{text-align:center;padding:12px;color:var(--text2);font-weight:700;cursor:pointer}
+.fam-swatches{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.fam-swatch{width:38px;height:38px;border-radius:50%;border:2px solid var(--border2);cursor:pointer;background:var(--surface2);font-size:11px;color:var(--text3);display:flex;align-items:center;justify-content:center;transition:transform .1s}
+.fam-swatch:active{transform:scale(.9)}
+.fam-swatch.on{outline:3px solid var(--brand);outline-offset:2px;border-color:#fff}
+.fam-copyright{font-size:10.5px;color:var(--text3);text-align:center;line-height:1.7;padding:12px 6px 2px;border-top:1px solid var(--border);margin-top:6px}
+
 /* Toast */
 .toast-wrap{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:1000;display:flex;flex-direction:column;gap:6px;pointer-events:none;width:calc(100% - 32px);max-width:420px}
 .toast{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px 14px;display:flex;align-items:center;gap:8px;font-size:13px;box-shadow:0 4px 14px rgba(0,0,0,0.12);opacity:0;transform:translateY(-10px);transition:all .25s cubic-bezier(.2,.8,.2,1);pointer-events:auto}
@@ -250,6 +312,56 @@ html.bigfont .stepper input{height:50px;font-size:23px}
 .spin{display:inline-block;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* a11y：鍵盤焦點可見 + 尊重減少動態偏好 */
-:focus-visible{outline:2px solid var(--brand,#534AB7);outline-offset:2px}
-@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}
+/* ===== 安裝橫幅 hc-ib（在瀏覽器開啟且未安裝時自動出現；可關閉）===== */
+.hc-ib{position:fixed;left:0;right:0;bottom:var(--nav-h,0px);z-index:400;display:flex;align-items:center;gap:10px;
+  padding:11px 12px calc(11px + env(safe-area-inset-bottom));
+  background:var(--brand,#14B8A6);color:#fff;font-size:13.5px;line-height:1.35;
+  box-shadow:0 -4px 18px rgba(0,0,0,.2);animation:hcIbUp .28s ease}
+@keyframes hcIbUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.hc-ib .hc-ib-t{flex:1;display:flex;align-items:center;gap:6px}
+.hc-ib .hc-ib-t i{font-size:19px;flex:none}
+.hc-ib .hc-ib-t b{font-weight:700}
+.hc-ib .hc-ib-go{flex:none;background:#fff;color:var(--brand,#0f766e);border:none;border-radius:9px;
+  padding:8px 18px;font-weight:800;font-size:14px}
+.hc-ib .hc-ib-go:active{transform:scale(.95)}
+.hc-ib .hc-ib-x{flex:none;background:transparent;border:none;color:#fff;font-size:22px;line-height:1;padding:2px 4px;opacity:.9}
+body:has(#hc-ib) .fam-fab{bottom:calc(var(--nav-h,0px) + 60px)}
+
+/* ===== 更新橫幅 hc-upd（偵測到新版時從頂端跳出；點「立即更新」換新版）===== */
+.hc-upd{position:fixed;left:0;right:0;top:0;z-index:500;display:flex;align-items:center;justify-content:center;gap:12px;
+  padding:calc(9px + env(safe-area-inset-top)) 12px 9px;background:#0f766e;color:#fff;font-size:13.5px;
+  box-shadow:0 3px 14px rgba(0,0,0,.22);animation:hcUpdDown .28s ease}
+@keyframes hcUpdDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
+.hc-upd .hc-upd-t{display:flex;align-items:center;gap:6px}
+.hc-upd .hc-upd-t i{font-size:18px}
+.hc-upd .hc-upd-go{flex:none;background:#fff;color:#0f766e;border:none;border-radius:8px;padding:6px 15px;font-weight:800;font-size:13px}
+.hc-upd .hc-upd-go:active{transform:scale(.95)}
+
+/* 從 HUB「安裝」進來時：橫幅加外框、按鈕脈動，引導使用者注意 */
+.hc-ib.urge{box-shadow:0 -4px 22px rgba(0,0,0,.3),inset 0 0 0 2px rgba(255,255,255,.55)}
+.hc-ib.urge .hc-ib-go{animation:hcBtnPulse 1.05s ease-in-out infinite}
+@keyframes hcBtnPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(255,255,255,.65)}50%{transform:scale(1.05);box-shadow:0 0 0 7px rgba(255,255,255,0)}}
+
+/* ===== a11y:鍵盤焦點可見(WCAG 2.4.7) ===== */
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:3px}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--brand);outline-offset:1px}
+a:focus-visible,button:focus-visible,[role="button"]:focus-visible,.nav-item:focus-visible,.pick-btn:focus-visible,.chip:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+
+/* ===== a11y:尊重「減少動態」偏好,關掉脈動等動畫(WCAG 2.3.3) ===== */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
+}
+
+/* ===== 稜線家族帽 top app-bar(僅視覺外殼,不動醫療內容/色彩) ===== */
+.rl-signature{padding:32px 18px 26px;text-align:center;color:var(--text3,#6E8BA3);border-top:1px solid var(--border,rgba(130,130,130,.2));margin-top:22px}
+.rl-signature .rl-sig-row{display:inline-flex;align-items:center;gap:18px;text-align:left}
+.rl-signature .rl-sig-glyph{width:52px;height:52px;flex:none;color:var(--text,#141E2B)}
+.rl-signature .rl-sig-rule{width:2px;height:52px;background:#DE9A45;border-radius:2px;flex:none}
+.rl-signature .rl-sig-quote{margin:0;font-family:'Noto Serif TC','Songti TC',serif;font-weight:600;font-size:18px;line-height:1.4;letter-spacing:1px;color:var(--text,#141E2B)}
+.rl-signature .rl-sig-by{margin:14px 0 2px;font-size:12px;letter-spacing:5px;color:var(--text3,#6E8BA3)}
+.rl-signature .fam-credits{margin:8px auto 0;max-width:520px;font-size:11px;line-height:1.7;color:var(--text3,#6E8BA3)}
+.rl-appbar{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--brand);color:#fff}
+.rl-appbar .rl-mark{display:grid;place-items:center;width:38px;height:38px;border-radius:10px;background:rgba(255,255,255,.15);flex:none}
+.rl-appbar .rl-glyph{width:24px;height:24px}
+.rl-appbar .rl-title{font-family:'Noto Serif TC','Songti TC',serif;font-weight:600;font-size:18px;line-height:1.15}
+.rl-appbar .rl-sub{font-size:11.5px;opacity:.85;letter-spacing:1px;margin-top:1px}

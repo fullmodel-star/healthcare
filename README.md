@@ -74,3 +74,37 @@
 - 睡眠只能手動輸入，無 HRV / 睡眠分期
 - 條碼掃描尚未實作
 - InBody OCR 自動讀取為第二期功能
+
+---
+
+## 更新記錄 2026-09-24
+
+> 依前一輪審查（誠信類／接共用核心／版面觸控驗證）修正；`node --check` 全部 inline script 通過、Chrome headless 實測 0 錯誤。**尚未 commit、尚未部署。**
+
+### 誠信類
+1. **示範資料不再落盤**：示範紀錄只放記憶體（`STATE._demo`），`saveState` 一律排除；新增第一筆真實紀錄（`beginRealData()`）或按橫幅「清除示範，開始記錄」才結束示範。只改設定／逛頁面不會讓示範消失（`healthDemoDismissed` key）。示範模式下 p1 不拿示範體重、也不把示範體重寫進家族共用資料。橫幅移到總覽首頁。
+2. **拍照區直接開相機**：`<input type=file accept="image/*" capture="environment">`；沒有照片按辨識一律提示、不回 MOCK；`MOCK_SCAN` 只留在「看示範」小連結（`p2ShowDemoScan`），結果明確標示為示範且「加入記錄」鈕隱藏、`p2ConfirmScan` 拒收。`p2SimUpload` 已刪。
+3. **提醒頁假 toggle 移除**：改成說明卡＋《喝水提醒》`/healthwater/`、《久坐提醒》`/healthsit/` 兩個 root-relative 按鈕。
+4. **建議來源徽章誠實化**：預設灰色「一般建議（依規則）」，只有 `p6GetAI` 真的拿到 Gemini 回應才切成綠色「AI 個人化 · Gemini 2.5」；API Key 未設定的說明文字也不再說「示範模式」。
+
+### 接上共用核心（core.js，最小版）
+5. `<script src="core.js">` 放在 **head**（不是 body 結尾：主程式 inline script 就會呼叫 `HC.*`，且 HC 載入時先套手動主題避免閃爍）。**不載入 core.css**；`.fam-*`／`.hc-ib*`／`.hc-upd*`／`.pick-*`／`.note*`／`.btn-secondary` 樣式已抄進自帶 `<style>`，並補 `--brand/--brand-bg` 變數。
+   - `HC.familyMenu('healthcare')`：右下家族浮鈕＋底部選單＋安裝橫幅。
+   - 大字體／主題改走 `HC.setSeniorMode/isSeniorMode/setTheme/currentTheme`（key `hcBigFont`／`hcTheme`），舊 key `bigfont`／`senior_mode`／`theme` 一次性遷移後移除。
+   - 身高／性別／體重／目標體重讀寫 `HC.getProfile()/patchProfile()`（`heightCm/sex/weightKg/goalWeightKg`；年齡由 `birth` 換算、只讀不寫），監聽 `hcProfileChange` 反向同步。
+   - 01 資料夾原本就有一份 2026-07 的舊 core.js/core.css，已用 `00_共用核心` 現行版覆蓋。
+6. `--text3` `#9B9A97 → #6A6965`；補 `.field-row>*{min-width:0}`、`.note`/`.note-amber` 等。
+
+### 版面／觸控／驗證
+7. 體重與睡眠輸入列 三欄→兩欄＋日期跨欄（`.span-all`）；`.stat-grid.four` 改 `repeat(auto-fit,minmax(72px,1fr))`。360/320px 實測無水平溢出。
+8. 觸控目標：seg-btn／int-tab／si-edit／分數說明鈕／今日‧近7天／複製昨日／導航快捷鈕 ≥40px；toggle 36×20→44×24。
+9. 身高／體重／年齡清空或超出範圍 → 紅框＋inline 提示「（未儲存）」，不落盤、不改回預設；體重範圍統一 20–300。
+10. 「昨晚睡眠」與睡眠分數改取**日期最新**一筆（`latestSleep()`），載入時 sleep/weight 陣列先排序。
+11. 分類 chip 空關鍵字上限 50 筆＋「輸入關鍵字縮小範圍」提示。
+12. `p5DelSleep`、`p1Reset` 補 `confirm`；`p1Reset` 補 `goalWeight/goalDate/foodPicks`。
+13. 總覽（p6）改為預設首頁，底部導覽順序 總覽／體重／飲食／運動／睡眠／資料。
+14. 圖表配色改看 `document.documentElement.dataset.theme`（`chartColors()`），切換主題會重畫。
+
+### 其他
+- `sw.js` 快取 `health-app-v18 → v19`，`ASSETS` 加入 `./core.js`。
+- **build.ps1 要配合**：目前腳本對 `01_健康管理_healthcare` 跳過 `Copy-Item core.js`，需改成也複製 core.js（core.css 可不複製）。
