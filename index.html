@@ -540,6 +540,17 @@ body:has(#hc-ib) .fam-fab{bottom:calc(var(--nav-h,0px) + 60px)}
 .field-err.show{display:flex}
 input.is-invalid{border-color:var(--red)}
 
+
+/* 2026-10-09 桌機版（體驗盤點：1440 寬只用中間 450px，兩側全黑）
+   ≥1000px：App 寬度放到 980px，卡片排兩欄（每欄約 480px＝原本手機版設計寬度，卡片內容不必重排）；
+   頁首、非卡片區塊（說明、清單容器等）仍跨兩欄。用 html 前綴拉高權重，蓋過 01 內嵌的同名規則。 */
+@media (min-width:1000px){
+  html .app{max-width:980px}
+  html .nav{max-width:980px}
+  html .page.active{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:16px;align-items:start;align-content:start}
+  html .page.active>*{grid-column:1/-1}
+  html .page.active>.card{grid-column:auto}
+}
 </style>
 
 <!-- ── 分享預覽（稜線 App 分享卡系統 · 方案A 暖米白）─────────────────────
