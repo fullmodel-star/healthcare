@@ -547,9 +547,11 @@ input.is-invalid{border-color:var(--red)}
 @media (min-width:1000px){
   html .app{max-width:980px}
   html .nav{max-width:980px}
-  html .page.active{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:16px;align-items:start;align-content:start}
-  html .page.active>*{grid-column:1/-1}
-  html .page.active>.card{grid-column:auto}
+  /* 2026-10-10 重評發現：卡片只有 1～2 張的頁（202 血壓、207 血糖首頁）兩欄會變成「左欄兩張卡、右欄全空」，
+     比單欄更難看。只有同一頁至少 3 張卡才排兩欄；少於 3 張維持單欄置中。 */
+  html .page.active:has(> .card:nth-of-type(3)){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:16px;align-items:start;align-content:start}
+  html .page.active:has(> .card:nth-of-type(3))>*{grid-column:1/-1}
+  html .page.active:has(> .card:nth-of-type(3))>.card{grid-column:auto}
 }
 </style>
 
