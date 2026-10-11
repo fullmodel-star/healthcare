@@ -445,6 +445,63 @@ const HC = (function () {
     toast('已儲存家族基本資料，支援的 App 會自動帶入','ok',2600);
     const ov=document.getElementById('fam-ov'); if(ov) ov.classList.remove('show');
   }
+  // 2026-10-11 無障礙補丁：各 App 共用。①頁面主區補 role=main（LH 缺 main landmark）②沒有名稱的欄位/按鈕補 aria-label
+  //（優先順序：同欄位的 <label> → placeholder → title → 前一個兄弟文字）。動態產生的彈窗也要補，所以掛 MutationObserver（節流）。
+  function a11yPatch(){
+    const pages=document.querySelectorAll('.page');
+    if(pages.length) pages.forEach(p=>{ if(!p.getAttribute('role')) p.setAttribute('role','main'); });
+    else { const a=document.querySelector('.app')||document.body; if(!document.querySelector('main,[role=main]')) a.setAttribute('role','main'); }
+    const run=()=>{
+      document.querySelectorAll('input:not([type=hidden]),select,textarea').forEach(el=>{
+        if(el.getAttribute('aria-label')||el.getAttribute('aria-labelledby')) return;
+        if(el.id && document.querySelector('label[for="'+el.id+'"]')) return;
+        if(el.closest('label') && el.closest('label').textContent.trim()) return;
+        let t=el.getAttribute('placeholder')||el.title||'';
+        if(!t){ const f=el.closest('.field'); const lb=f&&f.querySelector('label'); if(lb) t=lb.textContent; }
+        if(!t){ let pv=el.previousElementSibling; if(pv) t=pv.textContent; }
+        if(!t && el.type==='file') t='選擇檔案';
+        if(!t && el.type==='checkbox') t='勾選';
+        t=(t||'').replace(/\s+/g,' ').trim().slice(0,30);
+        if(t) el.setAttribute('aria-label',t);
+      });
+      document.querySelectorAll('button:not([aria-label])').forEach(el=>{
+        if(el.textContent.trim()||el.title) return;
+        const ic=el.querySelector('i[class*="ti-"]'); if(!ic) return;
+        const m=(ic.className.match(/ti-([a-z0-9-]+)/g)||[]).map(x=>x.slice(3)).filter(x=>x!=='ti')[0]||'';
+        const map={settings:'設定',plus:'新增',x:'關閉',trash:'刪除',share:'分享',report:'報告','file-text':'報告',apps:'選單',download:'下載',upload:'上傳'};
+        el.setAttribute('aria-label',map[m]||'按鈕');
+      });
+    };
+    run();
+    let tm=0; try{ new MutationObserver(()=>{ clearTimeout(tm); tm=setTimeout(run,400); }).observe(document.body,{childList:true,subtree:true}); }catch(e){}
+  }
+
+  // 2026-10-11 A7 首次使用引導：每支 App 第一次開啟跳一次三步說明（localStorage 記住；01 有示範資料、04 有自己的 onboarding，不走這裡）
+  const WELCOME={
+    healthsenior:{t:'歡迎使用血壓日記',l:'三步開始，資料只存在這支手機。',s:[['記一筆血壓','點首頁大按鈕；收縮壓要大於舒張壓'],['設定吃藥提醒','到「用藥」頁新增藥物與時間'],['看診前整理報告','到「報告」頁一鍵整理給醫師看']]},
+    healthkids:{t:'歡迎使用成長樹',l:'三步開始，資料只存在這支手機。',s:[['新增第一個孩子','填生日與性別就能開始'],['記身高體重','到「生長」頁，對照 WHO 百分位'],['匯出疫苗提醒','到「疫苗」頁，未接種項目可匯出到行事曆']]},
+    healthwater:{t:'歡迎使用喝水提醒',l:'三步開始，資料只存在這支手機。',s:[['點杯量記一杯','150／250／350／500 ml 一鍵記錄'],['調整每日目標','到「設定」頁修改目標與杯量'],['開啟提醒','提醒只在 App 開著時響；也可匯出 .ics 行事曆']]},
+    healthsit:{t:'歡迎使用久坐提醒',l:'三步開始，資料只存在這支手機。',s:[['讓這頁開著','計時會從現在開始累積久坐時間'],['起身後按大按鈕','按「我站起來活動了」歸零並累計次數'],['調整間隔','到「設定」頁改提醒間隔；提醒只在 App 開著時響']]},
+    healthglu:{t:'歡迎使用血糖日記',l:'三步開始，資料只存在這支手機。',s:[['選測量時機','空腹、飯後 2 小時、睡前、隨機'],['輸入數值','系統會附上參考範圍的判讀'],['看趨勢','到「趨勢」頁看變化；判讀僅供參考，以醫師為準']]},
+    healthstretch:{t:'歡迎使用伸展運動',l:'三步開始，約 25 分鐘全身伸展。',s:[['選方案','25 分鐘完整，或 6 分鐘肩頸'],['跟著畫面做','插圖示範，倒數計時全程引導'],['到「紀錄」看連續天數','做不到疼痛的程度；有不適立刻停止']]}
+  };
+  function welcome(slug){
+    const w=WELCOME[slug]; if(!w) return;
+    const key='hf_welcome_'+slug;
+    try{ if(localStorage.getItem(key)) return; }catch(e){ return; }
+    setTimeout(()=>{
+      if(document.querySelector('.hc-wel')) return;
+      const el=document.createElement('div'); el.className='hc-wel'; el.setAttribute('role','dialog'); el.setAttribute('aria-modal','true'); el.setAttribute('aria-label',w.t);
+      el.innerHTML='<div class="sheet"><h2>'+w.t+'</h2><p class="lead">'+w.l+'</p><ol>'+
+        w.s.map((x,i)=>'<li><b class="n">'+(i+1)+'</b><div>'+x[0]+'<small>'+x[1]+'</small></div></li>').join('')+
+        '</ol><button type="button" class="go">開始使用</button></div>';
+      const close=()=>{ try{ localStorage.setItem(key,'1'); }catch(e){} el.remove(); };
+      el.querySelector('.go').onclick=close;
+      el.addEventListener('click',e=>{ if(e.target===el) close(); });
+      document.body.appendChild(el);
+    },700);
+  }
+
   function familyMenu(current){
     if(document.getElementById('fam-fab')) return;
     applyAccent(current); // 載入時先套用使用者選過的強調色
@@ -489,7 +546,13 @@ const HC = (function () {
       '</div>';
     fab.onclick=()=>{ ov.classList.add('show'); _famRefresh(); };
     ov.addEventListener('click',e=>{ if(e.target===ov) ov.classList.remove('show'); });
-    document.body.appendChild(fab); document.body.appendChild(ov);
+    // 2026-10-11 家族選單鈕：有頁首列就放進頁首右側（原本是浮在內容上的圓鈕，常蓋住卡片文字）；沒有頁首列才退回浮鈕
+    const bar=document.querySelector('.rl-appbar');
+    fab.setAttribute('aria-label','健康家族選單');
+    if(bar){ fab.classList.add('in-bar'); bar.appendChild(fab); } else document.body.appendChild(fab);
+    document.body.appendChild(ov);
+    try{ a11yPatch(); }catch(e){}
+    try{ welcome(current); }catch(e){}
     // 在瀏覽器開啟、尚未安裝時，自動跳出醒目安裝橫幅
     try{ const me=FAMILY.find(f=>f.slug===current); installBar(current, me?me.name:''); }catch(e){}
   }

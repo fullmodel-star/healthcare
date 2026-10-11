@@ -64,7 +64,7 @@
     --border2: rgba(255,255,255,0.14);
     --text: #F0EFE9;
     --text2: #A8A7A3;
-    --text3: #6B6A67;
+    --text3: #9B9A96;
     --green-bg: #0D2E22;
     --amber-bg: #2D1F08;
     --red-bg: #2D1210;
@@ -81,7 +81,7 @@
   --border2: rgba(255,255,255,0.14);
   --text: #F0EFE9;
   --text2: #A8A7A3;
-  --text3: #6B6A67;
+  --text3: #9B9A96;
   --green-bg: #0D2E22;
   --amber-bg: #2D1F08;
   --red-bg: #2D1210;
@@ -209,7 +209,7 @@ button{cursor:pointer;border:none;background:none}
 /* Activity buttons */
 .act-btn{width:100%;display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface2);font-size:13px;color:var(--text2);margin-bottom:6px;transition:all .15s}
 .act-btn.on{border-color:var(--blue);background:var(--blue-bg);color:var(--blue)}
-.act-btn .ar{font-size:13px;opacity:.7}
+.act-btn .ar{font-size:13px;color:var(--text2)}
 
 /* Goal buttons */
 .goal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
@@ -430,7 +430,7 @@ button{cursor:pointer;border:none;background:none}
 /* Sleep preset chips */
 .sleep-chip{padding:7px 6px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface2);color:var(--text2);font-size:13px;font-weight:500;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;transition:all .15s;line-height:1.2}
 .sleep-chip:hover{background:var(--blue-bg);border-color:var(--blue);color:var(--blue)}
-.sleep-chip .ch{font-size:13px;opacity:.7;font-weight:400}
+.sleep-chip .ch{font-size:13px;color:var(--text2);font-weight:400}
 
 /* Weight delta chips */
 .wt-chip{padding:7px 4px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface2);color:var(--text2);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;transition:all .15s;line-height:1.2}
@@ -492,6 +492,19 @@ button{cursor:pointer;border:none;background:none}
 .pick-btn.on{border-color:var(--brand);background:var(--brand-bg);color:var(--brand);font-weight:600}
 .fam-fab{position:fixed;right:14px;bottom:calc(var(--nav-h) + 14px);width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#14B8A6,#0EA5E9);color:#fff;box-shadow:0 4px 16px rgba(0,0,0,.24);display:flex;align-items:center;justify-content:center;font-size:23px;z-index:200;border:none}
 .fam-fab:active{transform:scale(.93)}
+.fam-fab.in-bar{position:static;flex:none;width:40px;height:40px;margin-left:auto;font-size:22px;background:rgba(255,255,255,.2);box-shadow:none;color:#fff;border:1px solid rgba(255,255,255,.35)}
+.fam-fab.in-bar ~ .lineShareFab{margin-left:0}
+:root{--green-tx:#0F7A58;--amber-tx:#8A5300}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--green-tx:#3FBF93;--amber-tx:#E0A040}}
+:root[data-theme="dark"]{--green-tx:#3FBF93;--amber-tx:#E0A040}
+.c-green,.badge-green,.wt-chip .wt-d,.wd-ring.ok{color:var(--green-tx)}
+.c-amber,.badge-amber{color:var(--amber-tx)}
+.btn-green{background:#157A5A}
+.btn-amber{background:#9A5F10}
+.note-amber,.note.note-amber{color:var(--amber-tx)}
+.btn{height:auto;min-height:44px}
+.hc-ib .hc-ib-go{min-height:44px}
+.hc-ib .hc-ib-x{min-width:44px;min-height:44px}
 .fam-overlay{position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:450;display:none;align-items:flex-end;justify-content:center;overflow-x:hidden}
 .fam-overlay.show{display:flex}
 .fam-sheet{background:var(--surface);width:100%;max-width:480px;border-radius:18px 18px 0 0;padding:16px 14px calc(18px + env(safe-area-inset-bottom));max-height:86vh;overflow-y:auto;overflow-x:hidden;box-sizing:border-box}
@@ -2830,7 +2843,7 @@ function showUpdatePrompt(onAccept){
 </script>
 <!--LINE_SHARE_START-->
 <style>
-.lineShareFab{width:32px;height:32px;border-radius:50%;background:#06C755;border:none;
+.lineShareFab{width:36px;height:36px;border-radius:50%;background:#06C755;border:none;
   cursor:pointer;display:flex;align-items:center;justify-content:center;
   padding:0;flex:0 0 auto;box-shadow:0 1px 3px rgba(0,0,0,.25)}
 .lineShareFab.lineShareFallback{position:absolute;top:50%;right:12px;transform:translateY(-50%);z-index:20}
@@ -2871,7 +2884,7 @@ function showUpdatePrompt(onAccept){
 <!--LINE_SHARE_END-->
 <!--REPORT_BTN_START-->
 <style>
-.reportFab{width:32px;height:32px;border-radius:50%;background:#6B7280;border:none;
+.reportFab{width:36px;height:36px;border-radius:50%;background:#6B7280;border:none;
   cursor:pointer;display:flex;align-items:center;justify-content:center;
   padding:0;flex:0 0 auto;box-shadow:0 1px 3px rgba(0,0,0,.25);text-decoration:none}
 .reportFab.reportFallback{position:fixed;top:12px;right:12px;z-index:9999}
