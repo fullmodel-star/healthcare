@@ -309,7 +309,7 @@ const HC = (function () {
   function notifyStatusHtml(){
     const p=notifyPermission(); let inner='';
     if(p==='granted') inner='<span class="badge badge-green"><i class="ti ti-bell-check"></i> 已允許</span><span style="font-size:12px;color:var(--text3);margin-left:8px">App 開啟時會以系統通知提醒</span>';
-    else if(p==='default') inner='<span class="badge badge-gray"><i class="ti ti-bell-question"></i> 尚未詢問</span><button type="button" class="btn btn-primary" style="min-height:40px;font-size:14px;margin-top:8px;width:100%" onclick="HC._notifyBtn()"><i class="ti ti-bell-ringing"></i>開啟系統通知權限</button>';
+    else if(p==='default') inner='<span class="badge badge-gray"><i class="ti ti-bell-question"></i> 尚未詢問</span><button type="button" class="btn btn-primary" style="min-height:44px;font-size:14px;margin-top:8px;width:100%" onclick="HC._notifyBtn()"><i class="ti ti-bell-ringing"></i>開啟系統通知權限</button>';
     else if(p==='denied') inner='<span class="badge badge-red"><i class="ti ti-bell-off"></i> 已拒絕</span><div style="font-size:12px;color:var(--text2);margin-top:6px;line-height:1.5">請到瀏覽器「網站設定 → 通知」解鎖後重新整理。未解鎖前提醒只會以畫面提示顯示。</div>';
     else inner='<span class="badge badge-gray"><i class="ti ti-bell-off"></i> 此瀏覽器不支援</span><div style="font-size:12px;color:var(--text2);margin-top:6px">提醒將以畫面提示為主；要準時提醒請匯入手機行事曆。</div>';
     return '<div class="hc-notify" data-hc-notify>'+inner+'</div>';
@@ -418,7 +418,10 @@ const HC = (function () {
         }
       }
       render();
-      document.body.appendChild(bar);
+      // 2026-10-11 安裝橫幅延後出現（首次造訪 25 秒後、再次造訪 6 秒後；從 HUB「安裝」進來則立即）：
+      // 原本一開啟就固定在底部，蓋住首屏卡片（盤點 201/202/203/204/206 都被扣）
+      let vc=1; try{ vc=(+localStorage.getItem('hf_visits_'+slug)||0)+1; localStorage.setItem('hf_visits_'+slug,String(vc)); }catch(e){}
+      setTimeout(()=>{ if(!document.getElementById('hc-ib')) document.body.appendChild(bar); }, urge?0:(vc>=2?6000:25000));
       // Android 的 beforeinstallprompt 可能稍晚才觸發 → 一到就把橫幅升級成一鍵安裝按鈕
       window.addEventListener('beforeinstallprompt', ()=>{ setTimeout(render,60); });
       window.addEventListener('appinstalled', ()=>{ _ibHide(slug); try{ toast('安裝完成！','ok'); }catch(e){} });
@@ -448,6 +451,7 @@ const HC = (function () {
   // 2026-10-11 無障礙補丁：各 App 共用。①頁面主區補 role=main（LH 缺 main landmark）②沒有名稱的欄位/按鈕補 aria-label
   //（優先順序：同欄位的 <label> → placeholder → title → 前一個兄弟文字）。動態產生的彈窗也要補，所以掛 MutationObserver（節流）。
   function a11yPatch(){
+    document.querySelectorAll('img[alt=""]:not([role])').forEach(i=>i.setAttribute('role','presentation'));
     const pages=document.querySelectorAll('.page');
     if(pages.length) pages.forEach(p=>{ if(!p.getAttribute('role')) p.setAttribute('role','main'); });
     else { const a=document.querySelector('.app')||document.body; if(!document.querySelector('main,[role=main]')) a.setAttribute('role','main'); }
@@ -483,6 +487,7 @@ const HC = (function () {
     healthwater:{t:'歡迎使用喝水提醒',l:'三步開始，資料只存在這支手機。',s:[['點杯量記一杯','150／250／350／500 ml 一鍵記錄'],['調整每日目標','到「設定」頁修改目標與杯量'],['開啟提醒','提醒只在 App 開著時響；也可匯出 .ics 行事曆']]},
     healthsit:{t:'歡迎使用久坐提醒',l:'三步開始，資料只存在這支手機。',s:[['讓這頁開著','計時會從現在開始累積久坐時間'],['起身後按大按鈕','按「我站起來活動了」歸零並累計次數'],['調整間隔','到「設定」頁改提醒間隔；提醒只在 App 開著時響']]},
     healthglu:{t:'歡迎使用血糖日記',l:'三步開始，資料只存在這支手機。',s:[['選測量時機','空腹、飯後 2 小時、睡前、隨機'],['輸入數值','系統會附上參考範圍的判讀'],['看趨勢','到「趨勢」頁看變化；判讀僅供參考，以醫師為準']]},
+    hub:{t:'歡迎來到健康家族',l:'8 支獨立的健康小工具，各自可安裝，資料只存在你的裝置。',s:[['挑一支需要的','血壓、血糖、喝水、久坐、伸展、成長樹、她的節奏、健康管理'],['點「安裝」或「開啟」','「安裝」會帶你加到手機桌面，「開啟」直接使用'],['家族資料填一次','往下的「家族基本資料」填好，支援的 App 會自動帶入']]},
     healthstretch:{t:'歡迎使用伸展運動',l:'三步開始，約 25 分鐘全身伸展。',s:[['選方案','25 分鐘完整，或 6 分鐘肩頸'],['跟著畫面做','插圖示範，倒數計時全程引導'],['到「紀錄」看連續天數','做不到疼痛的程度；有不適立刻停止']]}
   };
   function welcome(slug){
@@ -566,7 +571,7 @@ const HC = (function () {
            bmi, bmiInfo, bmr, normalCdf, zToPercentile,
            getApiKey, saveApiKey, clearApiKey, isOffline, setOffline, callAI,
            buildICS, downloadICS, canNotify, notifyPermission, requestNotify, notify, notifyStatusHtml, _notifyBtn,
-           getProfile, patchProfile, familyMenu, _famSexSet, _famSaveProfile,
+           getProfile, patchProfile, familyMenu, welcome, _famSexSet, _famSaveProfile,
            promptInstall, isInstalled, installBar, _ibHide, applyAccent, setAccent,
            registerSW, lineChart };
 })();
