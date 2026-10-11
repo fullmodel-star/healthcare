@@ -421,7 +421,7 @@ const HC = (function () {
       // 2026-10-11 安裝橫幅延後出現（首次造訪 25 秒後、再次造訪 6 秒後；從 HUB「安裝」進來則立即）：
       // 原本一開啟就固定在底部，蓋住首屏卡片（盤點 201/202/203/204/206 都被扣）
       let vc=1; try{ vc=(+localStorage.getItem('hf_visits_'+slug)||0)+1; localStorage.setItem('hf_visits_'+slug,String(vc)); }catch(e){}
-      setTimeout(()=>{ if(!document.getElementById('hc-ib')) document.body.appendChild(bar); }, urge?0:(vc>=2?6000:25000));
+      setTimeout(()=>{ if(!document.getElementById('hc-ib')) document.body.appendChild(bar); }, urge?0:(vc>=2?12000:30000));
       // Android 的 beforeinstallprompt 可能稍晚才觸發 → 一到就把橫幅升級成一鍵安裝按鈕
       window.addEventListener('beforeinstallprompt', ()=>{ setTimeout(render,60); });
       window.addEventListener('appinstalled', ()=>{ _ibHide(slug); try{ toast('安裝完成！','ok'); }catch(e){} });
