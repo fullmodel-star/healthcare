@@ -1,5 +1,11 @@
 # 更新記錄 CHANGELOG
 
+## 2026-10-11 · 體驗提升（第二輪）：對比、觸控目標、內文字級
+- 問題：Lighthouse 無障礙 89–96，剩餘為 color-contrast（歡迎框「開始」鈕與久坐大鈕白字 2.5–2.8:1、深色模式 purple/blue/pink/品牌色文字 2.1–4.4:1、HUB 編號圓點／flag／頁尾連結）；各 App 自訂 tab/chip/清單鈕 30–42px；內文 14px。
+- 改法：00 共用核心 core.css 加區塊（.go/.stand-btn 底色用 --brand-solid；深色提亮 --blue/--purple/--pink/--brand-ink；input/select min-height 44；pick-btn/meal-tab/mode-tab/cat-btn/act-btn/dur-chip/goal-btn/adv-toggle/hi-del/cal-nav ≥44；inline min-height:40 一律 44；li-name/li-sub/note/empty/field label 15px）；core.js 通知授權鈕 44px；01 index.html 內嵌抄本同步並修 demo 橫幅鈕與 balance-hint 對比、食物分類/最近 chips、int-tab；HUB 內嵌 .num/.flag/footer a；07 smart-sub opacity 1；各 App sw 快取版號 +1。
+- 前→後：LH 無障礙（深色）HUB/01–08 = 96/96/96/96/96/96/96/96/96 → 全部 100（淺色 08/06 驗過 100）；逐頁小目標（排除頁首 fab 與 toggle）01 共 ~80 → 1（頁首 fab），204 18 → 0，205/206 各 -1；橫向溢出 0、console 錯誤 0。
+- 未動：桌機版面、頁首 32–40px 鈕、10-10 的 ≥3 卡兩欄與 .hc-ib-t。
+
 ## v1.8.0 — 2026-09-24 誠信修正 + 接上家族共用核心（最新，未 commit／未部署）
 
 > 詳細逐項見 `README.md`「更新記錄 2026-09-24」。

@@ -511,6 +511,11 @@ button{cursor:pointer;border:none;background:none}
 input:not([type=checkbox]):not([type=radio]):not([type=range]),select{min-height:44px}
 .li-name,.li-sub,.note,.empty,.field label{font-size:15px}
 .seg-btn{height:auto;min-height:44px}
+/* 2026-10-11 第二輪（A5）：各 App 自訂的 tab/chip/清單鈕補到 ≥44px 觸控目標 */
+.pick-btn,.meal-tab,.mode-tab,.cat-btn,.act-btn,.dur-chip,.goal-btn,.adv-toggle{min-height:44px}
+.hi-del,.cal-nav{min-width:44px;min-height:44px}
+button[style*="min-height:40px"]{min-height:44px!important}
+.int-tab,button[id^="p2-cat-"],button[onclick^="p2AddRecent"],button[onclick^="p4ApplyRecent"]{min-height:44px}
 .note-amber,.note.note-amber{color:var(--amber-tx)}
 .btn{height:auto;min-height:44px}
 .hc-ib .hc-ib-go{min-height:44px}
