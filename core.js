@@ -328,7 +328,9 @@ const HC = (function () {
   function registerSW(){
     if(!('serviceWorker' in navigator)) return;
     let _reloading=false;
-    navigator.serviceWorker.addEventListener('controllerchange',()=>{ if(!_reloading){ _reloading=true; location.reload(); } });
+    // 首訪（載入時沒有 controller）時 SW 第一次 clients.claim() 只記下、不重整；之後的 controllerchange（＝新版接手）才重整（2026-10-12）
+    let _hadCtrl=!!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener('controllerchange',()=>{ if(!_hadCtrl){ _hadCtrl=true; return; } if(!_reloading){ _reloading=true; location.reload(); } });
     window.addEventListener('load',()=>{
       navigator.serviceWorker.register('./sw.js').then(reg=>{
         if(reg.waiting && navigator.serviceWorker.controller) _updateBar(reg.waiting); // 已有等待中的新版

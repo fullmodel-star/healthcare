@@ -358,6 +358,9 @@ button{cursor:pointer;border:none;background:none}
 /* Empty */
 .empty{text-align:center;padding:20px 0;font-size:15px;color:var(--text3)}
 .empty i{font-size:28px;display:block;margin-bottom:6px}
+.empty .empty-t{font-size:16px;font-weight:600;color:var(--text2);margin-bottom:4px}
+.empty .empty-acts{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:12px}
+.empty .empty-acts .btn i{font-size:18px;display:inline;margin:0}
 
 /* Derived */
 .derived-row{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--surface2);border-radius:var(--radius-sm);margin-top:5px;font-size:15px;color:var(--text2)}
@@ -957,7 +960,7 @@ header .lineShareFab,header .reportFab,.rl-appbar .lineShareFab,.rl-appbar .repo
         <button class="seg-btn" id="p3-r90" onclick="p3SetRange(90)" style="padding:0 10px">90天</button>
       </div>
     </div>
-    <div class="chart-wrap"><canvas id="p3-chart" role="img" aria-label="近期體重趨勢圖"></canvas></div>
+    <div class="chart-wrap" id="p3-chart-wrap"><canvas id="p3-chart" role="img" aria-label="近期體重趨勢圖"></canvas></div>
     <div id="p3-chart-note" style="font-size:15px;color:var(--text3);text-align:center;min-height:16px"></div>
   </div>
 
@@ -1224,8 +1227,8 @@ header .lineShareFab,header .reportFab,.rl-appbar .lineShareFab,.rl-appbar .repo
       <div class="stat-card"><div class="sl">14 天變化</div><div><span class="sv" id="p6-wt-delta">—</span><span class="su">kg</span></div></div>
       <div class="stat-card"><div class="sl">距目標</div><div><span class="sv" id="p6-wt-goal">—</span><span class="su">kg</span></div></div>
     </div>
-    <div class="chart-wrap"><canvas id="p6-weight-chart" role="img" aria-label="近期體重趨勢圖"></canvas></div>
-    <div id="p6-weight-empty" class="empty" style="display:none"><i class="ti ti-scale"></i>尚無體重紀錄，至「體重」頁開始記錄</div>
+    <div class="chart-wrap" id="p6-weight-wrap"><canvas id="p6-weight-chart" role="img" aria-label="近期體重趨勢圖"></canvas></div>
+    <div id="p6-weight-empty" class="empty" style="display:none"><i class="ti ti-scale"></i><div class="empty-t">還沒有體重紀錄</div>記下第一筆體重後，這裡會畫出近 14 天的體重變化。<div class="empty-acts"><button type="button" class="btn btn-green" onclick="p6GoLog('p3')"><i class="ti ti-plus"></i>記一筆體重</button></div></div>
   </div>
 
   <div class="card">
@@ -1237,7 +1240,9 @@ header .lineShareFab,header .reportFab,.rl-appbar .lineShareFab,.rl-appbar .repo
     </div>
     <div class="week-grid" id="p6-week"></div>
     <div style="font-size:15px;color:var(--text3);margin:8px 0 4px;display:flex;align-items:center;gap:4px"><i class="ti ti-chart-line" style="font-size:15px"></i>每日淨熱量（柱）vs 體重（線）</div>
-    <div class="chart-wrap"><canvas id="p6-chart" role="img" aria-label="近7日熱量收支圖"></canvas></div>
+    <div class="chart-wrap" id="p6-chart-wrap"><canvas id="p6-chart" role="img" aria-label="近7日熱量收支圖"></canvas></div>
+    <div id="p6-chart-note" style="display:none;font-size:15px;color:var(--text3);text-align:center;margin-top:4px">本週還沒有體重紀錄，記下後會畫出體重線。<div style="display:flex;justify-content:center;margin-top:8px"><button type="button" class="btn btn-outline" onclick="p6GoLog('p3')"><i class="ti ti-scale"></i>記一筆體重</button></div></div>
+    <div id="p6-chart-empty" class="empty" style="display:none"><i class="ti ti-chart-bar"></i><div class="empty-t">本週還沒有飲食、運動或體重紀錄</div>記下吃了什麼、做了什麼運動或今天的體重，這裡會畫出每天的熱量收支與體重變化。<div class="empty-acts"><button type="button" class="btn btn-green" onclick="p6GoLog('p2')"><i class="ti ti-salad"></i>記一筆飲食</button><button type="button" class="btn btn-outline" onclick="p6GoLog('p3')"><i class="ti ti-scale"></i>記一筆體重</button></div></div>
   </div>
 
   <div class="card">
@@ -2219,7 +2224,9 @@ function p3RenderChart(){
   const cutoff=new Date(); cutoff.setDate(cutoff.getDate()-(p3Range-1)); const cutoffStr=ymd(cutoff);
   const filtered=STATE.weightRecords.filter(r=>r.date>=cutoffStr);
   if(p3Chart)p3Chart.destroy();
-  if(!filtered.length){ document.getElementById('p3-chart-note').textContent='此區間暫無數據'; return; }
+  const p3Wrap=document.getElementById('p3-chart-wrap');
+  if(!filtered.length){ p3Chart=null; if(p3Wrap)p3Wrap.style.display='none'; document.getElementById('p3-chart-note').textContent=STATE.weightRecords.length?'這個區間沒有體重紀錄，可切換 30 天／90 天查看，或在上方記一筆。':'還沒有體重紀錄：在上方填入體重、按「記錄體重」，這裡就會畫出趨勢。'; return; }
+  if(p3Wrap)p3Wrap.style.display='';
   const {tc,gc}=chartColors();
   const data=filtered.map(r=>r.weight); const minW=Math.min(...data); const maxW=Math.max(...data); const diff=+(data[data.length-1]-data[0]).toFixed(1);
   document.getElementById('p3-chart-note').textContent=`最低 ${minW} · 最高 ${maxW} · 區間變化 ${diff>0?'+':''}${diff} kg`;
@@ -2496,6 +2503,14 @@ function p5RenderWater(){ const logs=[...STATE.waterLogs].filter(w=>w.date===tod
 // ==================== PAGE 6 ====================
 let p6Chart=null;
 
+// 總覽空狀態的行動按鈕：切到對應頁並把焦點放在第一個輸入欄（p3 體重／p2 飲食）
+function p6GoLog(page){
+  goPage(page, document.querySelector('.nav-item[data-page="'+page+'"]'));
+  window.scrollTo(0,0);
+  const inp=document.getElementById(page==='p3'?'p3-inp-weight':'p2-search-q');
+  if(inp){ try{ inp.scrollIntoView({block:'center'}); inp.focus({preventScroll:true}); }catch(e){} }
+}
+
 function p6Render(){
   const tdee=calcTDEE(); const ts=todayStr();
   const eaten=Object.values(todayMeals()).reduce((s,m)=>s+m.reduce((ss,i)=>ss+i.cal,0),0);
@@ -2551,14 +2566,15 @@ let p6WeightChart=null;
 function p6RenderWeightTrend(){
   const canvas=document.getElementById('p6-weight-chart');
   const empty=document.getElementById('p6-weight-empty');
+  const wrap=document.getElementById('p6-weight-wrap');
   const recs=STATE.weightRecords;
   if(!recs.length){
-    empty.style.display='block'; if(canvas)canvas.style.display='none';
+    empty.style.display='block'; if(wrap)wrap.style.display='none';
     ['p6-wt-cur','p6-wt-delta','p6-wt-goal'].forEach(id=>{const e=document.getElementById(id);e.textContent='—';e.className='sv';});
     if(p6WeightChart){p6WeightChart.destroy();p6WeightChart=null;}
     return;
   }
-  empty.style.display='none'; canvas.style.display='block';
+  empty.style.display='none'; if(wrap)wrap.style.display=''; canvas.style.display='block';
 
   const cutoff=dateOffset(-13);
   let data=recs.filter(r=>r.date>=cutoff);
@@ -2594,7 +2610,7 @@ function p6RenderWeek(){
   const sleepGoal=STATE.profile.sleepGoal;
 
   let html='';
-  const dailyNet=[], dailyWeight=[], dailyExMin=[];
+  const dailyNet=[], dailyWeight=[], dailyExMin=[], chartNet=[];
 
   for(let i=0;i<7;i++){
     const d=new Date(ws); d.setDate(ws.getDate()+i);
@@ -2619,6 +2635,9 @@ function p6RenderWeek(){
     dailyNet.push(isFuture?null:eaten-exCal-maint);
     dailyExMin.push(isFuture?0:exMin);
     dailyWeight.push(wRec?wRec.weight:null);
+    // 圖表只畫「那天真的有飲食或運動紀錄」的柱，沒紀錄的日子不畫假的赤字柱（統計卡仍用 dailyNet）
+    const hasMeal=!!meals&&Object.values(meals).some(m=>Array.isArray(m)&&m.length);
+    chartNet.push(!isFuture&&(hasMeal||exRecs.length)?eaten-exCal-maint:null);
   }
   document.getElementById('p6-week').innerHTML=html;
 
@@ -2647,19 +2666,25 @@ function p6RenderWeek(){
 
   // === 每日淨熱量柱狀圖（負=綠 赤字、正=琥珀 盈餘）===
   const {tc,gc}=chartColors();
-  if(p6Chart)p6Chart.destroy();
-  const netColors=dailyNet.map(v=>v==null?'rgba(0,0,0,0)':v>0?'rgba(186,117,23,0.75)':'rgba(29,158,117,0.75)');
+  if(p6Chart){p6Chart.destroy();p6Chart=null;}
+  const hasNet=chartNet.some(v=>v!=null), hasW=dailyWeight.some(v=>v!=null);
+  const cWrap=document.getElementById('p6-chart-wrap'), cEmpty=document.getElementById('p6-chart-empty'), cNote=document.getElementById('p6-chart-note');
+  // 無資料：不畫空座標軸，改顯示說明＋行動按鈕
+  if(!hasNet&&!hasW){ cWrap.style.display='none'; cNote.style.display='none'; cEmpty.style.display='block'; return; }
+  cWrap.style.display=''; cEmpty.style.display='none'; cNote.style.display=hasW?'none':'block';
+  const netColors=chartNet.map(v=>v==null?'rgba(0,0,0,0)':v>0?'rgba(186,117,23,0.75)':'rgba(29,158,117,0.75)');
+  const ds=[{label:'淨熱量',data:chartNet,backgroundColor:netColors,borderRadius:4,yAxisID:'y',order:2}];
+  if(hasW) ds.push({type:'line',label:'體重',data:dailyWeight,yAxisID:'y1',borderColor:'#7F77DD',backgroundColor:'#7F77DD',borderWidth:2,pointRadius:3,tension:.3,spanGaps:true,order:1});
   p6Chart=new Chart(document.getElementById('p6-chart').getContext('2d'),{
     type:'bar',
-    data:{labels:days,datasets:[
-      {label:'淨熱量',data:dailyNet,backgroundColor:netColors,borderRadius:4}
-    ]},
+    data:{labels:days,datasets:ds},
     options:{
       responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>(c.raw>0?'盈餘 +':'赤字 ')+c.raw.toLocaleString()+' kcal'}}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.dataset.yAxisID==='y1'?'體重 '+c.raw+' kg':(c.raw>0?'盈餘 +':'赤字 ')+c.raw.toLocaleString()+' kcal'}}},
       scales:{
         x:{grid:{display:false},ticks:{color:tc,font:{size:11}}},
-        y:{grid:{color:gc},ticks:{color:tc,font:{size:10},callback:v=>v.toLocaleString()}}
+        y:{display:hasNet,grid:{color:gc},ticks:{color:tc,font:{size:10},callback:v=>v.toLocaleString()}},
+        y1:{display:hasW,position:'right',beginAtZero:false,grid:{display:false},suggestedMin:hasW?Math.floor(Math.min(...dailyWeight.filter(v=>v!=null))-1):undefined,suggestedMax:hasW?Math.ceil(Math.max(...dailyWeight.filter(v=>v!=null))+1):undefined,ticks:{color:tc,font:{size:10},callback:v=>(+v).toFixed(1)}}
       }
     }
   });
@@ -2837,6 +2862,7 @@ setInterval(()=>{
 
 // PWA: 註冊 service worker + 新版本提示
 if('serviceWorker' in navigator){
+  let _hadCtrl=!!navigator.serviceWorker.controller;
   window.addEventListener('load',()=>{
     navigator.serviceWorker.register('./sw.js').then(reg=>{
       console.log('[PWA] SW registered:',reg.scope);
@@ -2851,7 +2877,9 @@ if('serviceWorker' in navigator){
       });
     }).catch(err=>console.warn('[PWA] SW register failed:',err));
     let _reloading=false;
+    // 首訪（載入時沒有 controller）時 SW 第一次 clients.claim() 只記下、不重整；之後的 controllerchange（新版接手）才重整（2026-10-12）
     navigator.serviceWorker.addEventListener('controllerchange',()=>{
+      if(!_hadCtrl){ _hadCtrl=true; return; }
       if(!_reloading){ _reloading=true; location.reload(); }
     });
   });
