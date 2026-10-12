@@ -99,6 +99,7 @@ const HC = (function () {
       a.download = 'health-family-backup-' + todayStr() + '.json';
       a.click();
       setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+      try{ localStorage.setItem('hf_last_backup', todayStr()); }catch(e){}
       toast('全家族資料備份成功！','ok');
     } catch(e) {
       toast('匯出備份失敗','warn');
@@ -309,7 +310,7 @@ const HC = (function () {
   function notifyStatusHtml(){
     const p=notifyPermission(); let inner='';
     if(p==='granted') inner='<span class="badge badge-green"><i class="ti ti-bell-check"></i> 已允許</span><span style="font-size:12px;color:var(--text3);margin-left:8px">App 開啟時會以系統通知提醒</span>';
-    else if(p==='default') inner='<span class="badge badge-gray"><i class="ti ti-bell-question"></i> 尚未詢問</span><button type="button" class="btn btn-primary" style="min-height:44px;font-size:14px;margin-top:8px;width:100%" onclick="HC._notifyBtn()"><i class="ti ti-bell-ringing"></i>開啟系統通知權限</button>';
+    else if(p==='default') inner='<span class="badge badge-gray"><i class="ti ti-bell-question"></i> 尚未詢問</span><button type="button" class="btn btn-primary" style="min-height:44px;font-size:15px;margin-top:8px;width:100%" onclick="HC._notifyBtn()"><i class="ti ti-bell-ringing"></i>開啟系統通知權限</button>';
     else if(p==='denied') inner='<span class="badge badge-red"><i class="ti ti-bell-off"></i> 已拒絕</span><div style="font-size:12px;color:var(--text2);margin-top:6px;line-height:1.5">請到瀏覽器「網站設定 → 通知」解鎖後重新整理。未解鎖前提醒只會以畫面提示顯示。</div>';
     else inner='<span class="badge badge-gray"><i class="ti ti-bell-off"></i> 此瀏覽器不支援</span><div style="font-size:12px;color:var(--text2);margin-top:6px">提醒將以畫面提示為主；要準時提醒請匯入手機行事曆。</div>';
     return '<div class="hc-notify" data-hc-notify>'+inner+'</div>';
