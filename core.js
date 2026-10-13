@@ -208,8 +208,54 @@ const HC = (function () {
     }
   }
 
+  /* ---------- 返回鍵（2026-10-13 UI/UX 評比 X5：分頁切換不進瀏覽紀錄，手機返回鍵直接離開 App）----------
+     規則（同 Android 底部導覽慣例）：首頁＝第一個 .nav-item；從首頁切到其他分頁 pushState 一筆，分頁之間 replaceState，
+     點回首頁則 history.back()。所以任何分頁按返回 → 回首頁；在首頁按返回才離開 App。網址不變（重新整理一律回首頁）。
+     內層畫面（例如伸展播放中、家族選單）用 HC.openLayer(name,onBack)：返回鍵先呼叫 onBack，回傳 false 代表使用者取消、留在原畫面。 */
+  const _nav={home:null, show:null, onShow:null, restoring:false, skip:0, layers:[]};
+  function _navHome(){ if(_nav.home) return _nav.home; const b=document.querySelector('.nav-item[data-page]'); if(b) return b.getAttribute('data-page'); const p=document.querySelector('.page'); return p?p.id:''; }
+  function _navCur(){ const p=document.querySelector('.page.active'); return p?p.id:''; }
+  function navSetup(o){ Object.assign(_nav, o||{}); }
+  function navTrack(from, to){
+    if(_nav.restoring || !from || !to || from===to) return;
+    const st=history.state||{}; const home=_navHome();
+    try{
+      if(to===home){ if(st.hcPage && st.hcPage!==home){ _nav.skip++; history.back(); } }
+      else if(st.hcPage) history.replaceState(Object.assign({}, st, {hcPage:to}), '');
+      else history.pushState({hcPage:to}, '');
+    }catch(e){}
+  }
+  function openLayer(name, onBack){
+    try{ _nav.layers.push({name, onBack}); history.pushState({hcPage:_navCur()||(history.state&&history.state.hcPage)||null, hcLayer:name}, ''); }catch(e){}
+  }
+  // 內層畫面由畫面上的按鈕關閉時呼叫：把 openLayer 那一筆紀錄退掉（不觸發 onBack）
+  function closeLayer(name){
+    const i=_nav.layers.map(l=>l.name).lastIndexOf(name); if(i<0) return;
+    _nav.layers.splice(i,1);
+    try{ if(history.state && history.state.hcLayer===name){ _nav.skip++; history.back(); } }catch(e){}
+  }
+  window.addEventListener('popstate', e=>{
+    if(_nav.skip>0){ _nav.skip--; return; }
+    if(_nav.layers.length){
+      const L=_nav.layers[_nav.layers.length-1]; let ok=true;
+      try{ ok=(L.onBack? L.onBack() : true)!==false; }catch(err){}
+      if(ok){ const i=_nav.layers.indexOf(L); if(i>=0) _nav.layers.splice(i,1); } // onBack 內若已自行 closeLayer，這裡不重複移除
+      else { try{ history.pushState({hcPage:_navCur()||null, hcLayer:L.name}, ''); }catch(err){} }
+      return;
+    }
+    const st=e.state||{}; const target=st.hcPage||_navHome();
+    if(!target || target===_navCur()) return;
+    _nav.restoring=true;
+    try{ if(_nav.show) _nav.show(target); else goPage(target, null, _nav.onShow); }catch(err){}
+    _nav.restoring=false;
+  });
+
   /* ---------- 分頁導覽 ---------- */
   function goPage(id, btn, onShow){
+    if(onShow) _nav.onShow=onShow;
+    navTrack(_navCur(), id);
+    // 安裝橫幅只在首頁出現（2026-10-13：202/203/205 表單頁的按鈕被橫幅＋底部導覽蓋住）
+    try{ document.body.classList.toggle('hc-not-home', id!==_navHome()); }catch(e){}
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
     const pg=document.getElementById(id); if(pg) pg.classList.add('active');
@@ -217,7 +263,11 @@ const HC = (function () {
     else { const nb=document.querySelector('.nav-item[data-page="'+id+'"]'); if(nb) nb.classList.add('active'); }
     if(onShow) onShow(id);
     window.scrollTo(0,0);
+    _navNarrow();
   }
+  // 2026-10-13：≥1280 時單欄頁內容只有 980px，底部導覽跟著縮（評比 208 U4：導覽橫跨 1240、內容只在中間）
+  function _navNarrow(){ try{ const pg=document.querySelector('.page.active'); if(pg) document.body.classList.toggle('hc-narrow', pg.getBoundingClientRect().width<=1000); }catch(e){} }
+  try{ window.addEventListener('load', _navNarrow); window.addEventListener('resize', ()=>{ clearTimeout(_navNarrow._t); _navNarrow._t=setTimeout(_navNarrow,150); }); }catch(e){}
 
   /* ---------- 計算：BMI / BMR / TDEE ---------- */
   function bmi(w,h){ if(!h||!w) return 0; return +(w/((h/100)**2)).toFixed(1); }
@@ -421,10 +471,20 @@ const HC = (function () {
         }
       }
       render();
-      // 2026-10-11 安裝橫幅延後出現（首次造訪 25 秒後、再次造訪 6 秒後；從 HUB「安裝」進來則立即）：
-      // 原本一開啟就固定在底部，蓋住首屏卡片（盤點 201/202/203/204/206 都被扣）
+      // 2026-10-13 UI/UX 評比：固定在底部的橫幅（疊在底部導覽上）會蓋住表單的儲存鈕、喝水的「其他量／復原」（202/203/205 誤觸分頁）。
+      // 改成：一般情況＝放在首頁內容最後面的一張卡（不蓋任何東西）；只有從 HUB 按「安裝」進來（urge）才固定在底部，
+      // 且只在首頁、沒有在輸入時出現（CSS：body.hc-not-home／body.hc-typing），頁面底部另留空間。
       let vc=1; try{ vc=(+localStorage.getItem('hf_visits_'+slug)||0)+1; localStorage.setItem('hf_visits_'+slug,String(vc)); }catch(e){}
-      setTimeout(()=>{ if(!document.getElementById('hc-ib')) document.body.appendChild(bar); }, urge?0:(vc>=2?12000:30000));
+      if(urge){ setTimeout(()=>{ if(!document.getElementById('hc-ib')) document.body.appendChild(bar); }, 0); }
+      else {
+        const put=()=>{ if(document.getElementById('hc-ib')) return; const hp=document.getElementById(_navHome());
+          if(hp){ bar.classList.add('inline'); hp.appendChild(bar); } else document.body.appendChild(bar); };
+        if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', put); else setTimeout(put, 0);
+      }
+      if(!window._hcTypingBound){ window._hcTypingBound=1;
+        const isField=t=>t && t.matches && t.matches('input:not([type=checkbox]):not([type=radio]):not([type=range]),textarea,select');
+        document.addEventListener('focusin', e=>{ if(isField(e.target)) document.body.classList.add('hc-typing'); });
+        document.addEventListener('focusout', e=>{ if(isField(e.target)) document.body.classList.remove('hc-typing'); }); }
       // Android 的 beforeinstallprompt 可能稍晚才觸發 → 一到就把橫幅升級成一鍵安裝按鈕
       window.addEventListener('beforeinstallprompt', ()=>{ setTimeout(render,60); });
       window.addEventListener('appinstalled', ()=>{ _ibHide(slug); try{ toast('安裝完成！','ok'); }catch(e){} });
@@ -442,15 +502,37 @@ const HC = (function () {
   function _famRefresh(){ const p=getProfile(); const g=id=>document.getElementById(id);
     if(g('fam-name')) g('fam-name').value=p.name||''; if(g('fam-birth')) g('fam-birth').value=p.birth||''; if(g('fam-height')) g('fam-height').value=p.heightCm||'';
     if(g('fam-weight')) g('fam-weight').value=p.weightKg||''; if(g('fam-goalw')) g('fam-goalw').value=p.goalWeightKg||''; _famSexSet(p.sex||''); }
+  /* 2026-10-13 家族基本資料範圍檢查（評比 200：身高 9999 照樣「已儲存」並帶入其他 App）。
+     ids＝{height,weight,goalw,birth} 各欄位的 input id；不合理就在欄位下方顯示紅字並回傳 false（不存）。 */
+  const PROFILE_RANGE={height:[50,250,'身高請填 50～250 cm'],weight:[2,300,'體重請填 2～300 kg'],goalw:[2,300,'目標體重請填 2～300 kg']};
+  function fieldError(el, msg){
+    if(!el) return; const box=el.closest('.field')||el.parentNode; let m=box.querySelector('.hc-ferr');
+    if(!msg){ if(m) m.remove(); el.removeAttribute('aria-invalid'); return; }
+    if(!m){ m=document.createElement('div'); m.className='hc-ferr'; m.setAttribute('role','alert'); box.appendChild(m); }
+    m.textContent=msg; el.setAttribute('aria-invalid','true');
+  }
+  function checkProfileFields(ids){
+    let bad=null; const g=id=>id?document.getElementById(id):null;
+    Object.keys(PROFILE_RANGE).forEach(k=>{ const el=g(ids[k]); if(!el) return; const raw=String(el.value||'').trim(); const r=PROFILE_RANGE[k];
+      const v=parseFloat(raw); const err=raw!=='' && (!isFinite(v) || v<r[0] || v>r[1]) ? r[2] : '';
+      fieldError(el, err); if(err && !bad) bad=el; });
+    const b=g(ids.birth); if(b){ const v=b.value; let err='';
+      if(v){ const d=new Date(v); if(isNaN(d) || v>todayStr()) err='生日不能晚於今天'; else if(d.getFullYear()<1900) err='生日年份請確認（1900 年以後）'; }
+      fieldError(b, err); if(err && !bad) bad=b; }
+    if(bad){ try{ bad.scrollIntoView({block:'center'}); bad.focus(); }catch(e){} toast('有欄位超出合理範圍，請看紅字說明','warn',3000); return false; }
+    return true;
+  }
   function _famSaveProfile(){
     const g=id=>document.getElementById(id);
+    if(!checkProfileFields({height:'fam-height',weight:'fam-weight',goalw:'fam-goalw',birth:'fam-birth'})) return;
     patchProfile({ name:(g('fam-name').value||'').trim(), sex:_famSex||undefined,
       birth:g('fam-birth').value||undefined, heightCm:parseFloat(g('fam-height').value)||undefined,
       weightKg:parseFloat(g('fam-weight').value)||undefined, goalWeightKg:parseFloat(g('fam-goalw').value)||undefined });
     try{ window.dispatchEvent(new Event('hcProfileChange')); }catch(e){}
     toast('已儲存家族基本資料，支援的 App 會自動帶入','ok',2600);
-    const ov=document.getElementById('fam-ov'); if(ov) ov.classList.remove('show');
+    _famClose();
   }
+  function _famClose(){ const ov=document.getElementById('fam-ov'); if(ov && ov.classList.contains('show')){ ov.classList.remove('show'); closeLayer('fam'); } }
   // 2026-10-11 無障礙補丁：各 App 共用。①頁面主區補 role=main（LH 缺 main landmark）②沒有名稱的欄位/按鈕補 aria-label
   //（優先順序：同欄位的 <label> → placeholder → title → 前一個兄弟文字）。動態產生的彈窗也要補，所以掛 MutationObserver（節流）。
   function a11yPatch(){
@@ -550,10 +632,12 @@ const HC = (function () {
         '<button class="btn btn-primary btn-block" onclick="HC._famSaveProfile()"><i class="ti ti-check"></i>儲存基本資料</button>'+
       '</div>'+
       '<footer class="rl-signature"><div class="rl-sig-row"><svg class="rl-sig-glyph" width="56" height="56" viewBox="0 0 64 64" fill="none" stroke-linejoin="round" stroke-linecap="round" stroke-width="3.6"><path d="M0 54 L8 48 L14 51 L22 38 L26 42 L36 14 L46 34 L61 44" stroke="currentColor"/><path d="M31.3 27.2 L36 14 L38.7 19.4" stroke="#DE9A45"/></svg><span class="rl-sig-rule"></span><p class="rl-sig-quote">人生走稜，<br>高低都是風景。</p></div><p class="rl-sig-by">Ridgeline · by Lucas</p><p class="fam-credits">© 2026 版權所有，保留一切權利 · 圖示 Tabler · 圖表 Chart.js · 生長標準 WHO · 時程 衛福部<br>免責：本 App 內容與提醒僅供健康參考，不能取代醫師診斷；身體不適請就醫。</p></footer>'+
-      '<div class="fam-close" onclick="document.getElementById(\'fam-ov\').classList.remove(\'show\')">關閉</div>'+
+      '<div class="fam-close" role="button" tabindex="0" onclick="HC._famClose()">關閉</div>'+
       '</div>';
-    fab.onclick=()=>{ ov.classList.add('show'); _famRefresh(); };
-    ov.addEventListener('click',e=>{ if(e.target===ov) ov.classList.remove('show'); });
+    fab.onclick=()=>{ ov.classList.add('show'); _famRefresh(); openLayer('fam', ()=>{ ov.classList.remove('show'); }); };
+    ov.addEventListener('click',e=>{ if(e.target===ov) _famClose(); });
+    // 2026-10-13 HUB「已使用過的 App N/8」原本只看資料 key，打開但還沒存東西的 App 不算（評比 200：開過 2 支仍 0/8）→ 開啟就記一筆
+    try{ localStorage.setItem('hf_opened_'+current, todayStr()); }catch(e){}
     // 2026-10-11 家族選單鈕：有頁首列就放進頁首右側（原本是浮在內容上的圓鈕，常蓋住卡片文字）；沒有頁首列才退回浮鈕
     const bar=document.querySelector('.rl-appbar');
     fab.setAttribute('aria-label','健康家族選單');
@@ -574,7 +658,8 @@ const HC = (function () {
            bmi, bmiInfo, bmr, normalCdf, zToPercentile,
            getApiKey, saveApiKey, clearApiKey, isOffline, setOffline, callAI,
            buildICS, downloadICS, canNotify, notifyPermission, requestNotify, notify, notifyStatusHtml, _notifyBtn,
-           getProfile, patchProfile, familyMenu, welcome, _famSexSet, _famSaveProfile,
+           getProfile, patchProfile, familyMenu, welcome, _famSexSet, _famSaveProfile, _famClose, checkProfileFields, fieldError,
+           navSetup, navTrack, openLayer, closeLayer,
            promptInstall, isInstalled, installBar, _ibHide, applyAccent, setAccent,
            registerSW, lineChart };
 })();

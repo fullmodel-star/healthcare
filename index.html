@@ -567,6 +567,16 @@ body:has(#hc-ib) .fam-fab{bottom:calc(var(--nav-h,0px) + 60px)}
 .hc-ib.urge{box-shadow:0 -4px 22px rgba(0,0,0,.3),inset 0 0 0 2px rgba(255,255,255,.55)}
 .hc-ib.urge .hc-ib-go{animation:hcBtnPulse 1.05s ease-in-out infinite}
 @keyframes hcBtnPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(255,255,255,.65)}50%{transform:scale(1.05);box-shadow:0 0 0 7px rgba(255,255,255,0)}}
+/* 2026-10-13 同步 core.css：安裝橫幅預設改成首頁最後一張卡（.inline）；固定版只在首頁、未輸入時出現；欄位錯誤紅字 .hc-ferr */
+.hc-ib.inline{position:static;margin:18px 0 4px;border-radius:12px;box-shadow:none;animation:none;padding:11px 12px}
+body.hc-not-home #hc-ib:not(.inline),body.hc-typing #hc-ib:not(.inline){display:none}
+body:has(#hc-ib:not(.inline)) .page{padding-bottom:calc(var(--nav-h) + 120px)}
+.hc-ferr{margin-top:5px;font-size:15px;line-height:1.4;color:#B3261E;font-weight:600}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .hc-ferr{color:#FF8A80}}
+:root[data-theme="dark"] .hc-ferr{color:#FF8A80}
+/* 2026-10-13 評比 201：食物分類 20 顆膠囊排成一列可橫向捲動（原本換行佔滿一屏，搜尋結果被擠到第二屏） */
+#p2-cat-tabs{flex-wrap:nowrap!important;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px;scrollbar-width:thin}
+#p2-cat-tabs>button{flex:none;white-space:nowrap}
 /* 個人資料驗證錯誤提示 */
 .field-err{font-size:15px;color:var(--red);margin:-4px 0 10px;display:none;align-items:center;gap:4px}
 .field-err.show{display:flex}
@@ -1435,12 +1445,15 @@ async function callAI(contents, maxTokens=1000){
 
 // ==================== NAV ====================
 function goPage(id, btn){
+  // 2026-10-13 返回鍵（評比 201 X5：分頁切換不進瀏覽紀錄，返回鍵直接離開 App）：交給 core.js 的 HC.navTrack 記一筆
+  try{ const cur=document.querySelector('.page.active'); HC.navTrack(cur?cur.id:'', id); document.body.classList.toggle('hc-not-home', id!=='p6'); }catch(e){}
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   if(btn) btn.classList.add('active');
   refreshPage(id);
 }
+try{ HC.navSetup({home:'p6', show:id=>goPage(id, document.querySelector('.nav-item[data-page="'+id+'"]'))}); }catch(e){}
 
 function refreshPage(id){
   const today = fmtDate();
@@ -2098,7 +2111,9 @@ function p2SelectFood(id,src){
   document.getElementById('p2-add-unit').value=p2SelectedFood.unit==='ml'?'ml':'g';
   p2RenderPortionChips();
   p2UpdatePreview();
-  document.getElementById('p2-add-panel').classList.add('show');
+  const ap=document.getElementById('p2-add-panel'); ap.classList.add('show');
+  // 2026-10-13：份量面板捲進畫面（評比 201：點白飯後面板出現在清單最下方的視窗外，看起來像沒反應）
+  try{ setTimeout(()=>ap.scrollIntoView({block:'center',behavior:'smooth'}),30); }catch(e){}
 }
 
 function p2UpdatePreview(){
@@ -2215,8 +2230,12 @@ function p3RenderStats(){
   document.getElementById('p3-sv-w').textContent=w.toFixed(1); document.getElementById('p3-sv-bmi').textContent=bmi; document.getElementById('p3-sv-bmi').className='sv '+bi.c.replace('c-',''); document.getElementById('p3-sn-bmi').textContent=bi.t; document.getElementById('p3-sn-bmi').className='sn '+bi.c;
   document.getElementById('p3-bmi-ptr').style.left=bmiPct(bmi)+'%';
   const prev=STATE.weightRecords.length>=2?STATE.weightRecords[STATE.weightRecords.length-2]:null;
+  // 2026-10-13：只有一筆時要把舊文字清掉（評比 201：清除示範後記第一筆 68.5，仍殘留示範資料的「-0.3 kg 較上次」「體重更新為 67.3 kg」）
   if(prev){ const diff=+(w-prev.weight).toFixed(1); const sn=document.getElementById('p3-sn-w'); sn.textContent=(diff>0?'+':'')+diff+' kg 較上次'; sn.className='sn '+(diff<0?'c-green':diff>0?'c-amber':'c-muted'); }
+  else { const sn=document.getElementById('p3-sn-w'); sn.textContent='第一筆紀錄'; sn.className='sn c-muted'; }
+  document.getElementById('p3-tdee-note').style.display='none';
   const ago7=new Date(); ago7.setDate(ago7.getDate()-7); const ago7Str=ymd(ago7); const old=STATE.weightRecords.filter(r=>r.date<=ago7Str); if(old.length){ const wdiff=+(w-old[old.length-1].weight).toFixed(1); document.getElementById('p3-sv-week').textContent=(wdiff>0?'+':'')+wdiff; document.getElementById('p3-sv-week').className='sv '+(wdiff<0?'c-green':wdiff>0?'c-amber':'c-muted'); document.getElementById('p3-sn-week').textContent=wdiff<0?'持續下降':wdiff>0?'略有上升':'持平'; }
+  else { document.getElementById('p3-sv-week').textContent='—'; document.getElementById('p3-sv-week').className='sv'; document.getElementById('p3-sn-week').textContent='滿 7 天後顯示'; }
   const newBMR=Math.round((10*w)+(6.25*STATE.profile.height)-(5*STATE.profile.age)+(STATE.profile.sex==='m'?5:-161)); const newTDEE=Math.round(newBMR*STATE.profile.actFactor); const oldTDEE=calcTDEE(); if(Math.abs(newTDEE-oldTDEE)>30){ document.getElementById('p3-tdee-note').style.display='flex'; document.getElementById('p3-tdee-msg').textContent=`體重更新為 ${w} kg，TDEE 重算為 ${newTDEE.toLocaleString()} kcal`; }
 }
 
