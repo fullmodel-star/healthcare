@@ -1,5 +1,12 @@
 # 上架 Google Play 商店 — 完整步驟
 
+> ⚠️ **2026-10-19 更新（以這段為準，下文舊網址僅供對照）**
+> - 截至 2026-10-19 Play 商店查無此 App（`play.google.com/store/apps/details?id=io.github.fullmodelstar.healthcare` 回 404）＝**尚未上架**。
+> - 本 App 主力網址已改為家族版 **https://health-family.fullmodel.workers.dev/healthcare/**（`200_健康家族\build.ps1` → `npx wrangler deploy`）。GitHub Pages 這份（fullmodel-star.github.io/healthcare）只是同步副本，**家族選單連到 /hub/ 等其他支在 GitHub 上會 404**，所以 Play 版請包家族網址。
+> - `play-store/twa-manifest.json`（及 `_封存_20健康管理_Play上架源與簽章金鑰\play-store\twa-manifest.json`）已改指向家族網址（host／iconUrl／webManifestUrl／fullScopeUrl），主題色對齊網頁 manifest（#141E2B）。**舊的 `healthcare-1.0.0-release.aab` 仍是指向 GitHub 的版本，要上架前請在封存資料夾重跑 `建置AAB.ps1`（需你親自輸入金鑰密碼）。**
+> - 數位資產連結改放 **`https://health-family.fullmodel.workers.dev/.well-known/assetlinks.json`**：拿到 Play App Signing 指紋後填進 `play-store/assetlinks.json`，放到 `200_健康家族\dist\.well-known\`（需在 build.ps1 加一步複製）再部署，並開網址確認讀得到（wrangler 預設會略過點開頭資料夾，部署後一定要實測）。
+> - 隱私權政策網址：`https://health-family.fullmodel.workers.dev/healthcare/privacy-policy`。
+
 本 App 已是符合上架資格的 PWA，並已部署在
 **https://fullmodel-star.github.io/healthcare/** （GitHub Pages，已上線）。
 
