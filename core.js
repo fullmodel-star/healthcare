@@ -422,14 +422,14 @@ const HC = (function () {
 
   /* ---------- 家族切換選單（浮鈕 + 底部選單 + 基本資料表）---------- */
   const FAMILY=[
-    {slug:'healthcare',name:'健康管理',emo:'🩺'},
-    {slug:'healthsenior',name:'血壓日記',emo:'🩸'},
-    {slug:'healthkids',name:'成長樹',emo:'🌱'},
-    {slug:'healthfem',name:'她的節奏',emo:'🌙'},
-    {slug:'healthwater',name:'喝水提醒',emo:'💧'},
-    {slug:'healthsit',name:'久坐提醒',emo:'🚶'},
-    {slug:'healthglu',name:'血糖日記',emo:'🍬'},
-    {slug:'healthstretch',name:'伸展運動',emo:'🧘'},
+    {slug:'healthcare',name:'健康管理',emo:'🩺',ic:'heart-rate-monitor'},
+    {slug:'healthsenior',name:'血壓日記',emo:'🩸',ic:'heartbeat'},
+    {slug:'healthkids',name:'成長樹',emo:'🌱',ic:'plant-2'},
+    {slug:'healthfem',name:'她的節奏',emo:'🌙',ic:'moon'},
+    {slug:'healthwater',name:'喝水提醒',emo:'💧',ic:'glass-full'},
+    {slug:'healthsit',name:'久坐提醒',emo:'🚶',ic:'armchair'},
+    {slug:'healthglu',name:'血糖日記',emo:'🍬',ic:'droplet-half-2'},
+    {slug:'healthstretch',name:'伸展運動',emo:'🧘',ic:'stretching'},
   ];
   const FAMILY_BASE='/'; // root-relative：同一網域下的 /<slug>/，GitHub Pages 與 Cloudflare Pages 皆適用
   function _famEsc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -575,11 +575,47 @@ const HC = (function () {
     hub:{t:'歡迎來到健康家族',l:'8 支獨立的健康小工具，各自可安裝，資料只存在你的裝置。',s:[['挑一支需要的','血壓、血糖、喝水、久坐、伸展、成長樹、她的節奏、健康管理'],['點「安裝」或「開啟」','「安裝」會帶你加到手機桌面，「開啟」直接使用'],['家族資料填一次','往下的「家族基本資料」填好，支援的 App 會自動帶入']]},
     healthstretch:{t:'歡迎使用伸展運動',l:'三步開始，約 25 分鐘全身伸展。',s:[['選方案','25 分鐘完整，或 6 分鐘肩頸'],['跟著畫面做','插圖示範，倒數計時全程引導'],['到「紀錄」看連續天數','做不到疼痛的程度；有不適立刻停止']]}
   };
+  /* 2026-10-19 版面美化：首訪三步改成「內嵌」——頁面有 [data-hf-steps] 容器（通常放在首屏 .hf-hero 裡）就把三步
+     渲染成 .hf-steps 放進去，不再跳全螢幕彈窗；沒有容器的頁面維持原彈窗（向下相容）。
+     「已看過」的 key 不變（hf_welcome_<slug>）；內嵌版有「知道了」可收起。容器若被 App 重繪（innerHTML）會自動補回，看過就不再補。 */
+  function _welSeen(key){ try{ return !!localStorage.getItem(key); }catch(e){ return true; } }
+  function _welEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+  function welcomeInline(slug, box){
+    const w=WELCOME[slug]; if(!w || !box) return false;
+    const key='hf_welcome_'+slug;
+    if(_welSeen(key)){ box.innerHTML=''; box.hidden=true; return true; }
+    if(box.querySelector('.hf-steps')) return true;
+    box.hidden=false;
+    const head=box.getAttribute('data-hf-steps-title')||'第一次用？三步開始';
+    box.innerHTML='<div class="hf-steps" role="note" aria-label="'+_welEsc(w.t)+'">'+
+      '<div class="hf-steps-h"><span><span class="hf-steps-short">'+_welEsc(head)+'</span><span class="hf-steps-lead">第一次用？'+_welEsc(w.l)+'</span></span><button type="button" class="hf-steps-x">知道了</button></div>'+
+      '<ol>'+w.s.map((x,i)=>'<li class="hf-step"><i class="n" aria-hidden="true">'+(i+1)+'</i><span><b>'+_welEsc(x[0])+'</b><small>'+_welEsc(x[1])+'</small></span></li>').join('')+'</ol></div>';
+    box.querySelector('.hf-steps-x').onclick=()=>{
+      try{ localStorage.setItem(key,'1'); }catch(e){}
+      document.querySelectorAll('[data-hf-steps]').forEach(b=>{ b.innerHTML=''; b.hidden=true; });
+      if(window._hcWelObs){ try{ window._hcWelObs.disconnect(); }catch(e){} window._hcWelObs=null; }
+    };
+    return true;
+  }
+  function _welInlineAll(slug){
+    const boxes=document.querySelectorAll('[data-hf-steps]'); if(!boxes.length) return false;
+    boxes.forEach(b=>welcomeInline(slug,b));
+    if(!window._hcWelObs && !_welSeen('hf_welcome_'+slug)){
+      let tm=0;
+      try{ window._hcWelObs=new MutationObserver(()=>{ clearTimeout(tm); tm=setTimeout(()=>{
+        if(_welSeen('hf_welcome_'+slug)){ if(window._hcWelObs){ window._hcWelObs.disconnect(); window._hcWelObs=null; } return; }
+        document.querySelectorAll('[data-hf-steps]').forEach(b=>{ if(!b.querySelector('.hf-steps')) welcomeInline(slug,b); });
+      },60); }); window._hcWelObs.observe(document.body,{childList:true,subtree:true}); }catch(e){}
+    }
+    return true;
+  }
   function welcome(slug){
     const w=WELCOME[slug]; if(!w) return;
     const key='hf_welcome_'+slug;
     try{ if(localStorage.getItem(key)) return; }catch(e){ return; }
+    if(_welInlineAll(slug)) return;
     setTimeout(()=>{
+      if(_welInlineAll(slug)) return;
       if(document.querySelector('.hc-wel')) return;
       const el=document.createElement('div'); el.className='hc-wel'; el.setAttribute('role','dialog'); el.setAttribute('aria-modal','true'); el.setAttribute('aria-label',w.t);
       el.innerHTML='<div class="sheet"><h2>'+w.t+'</h2><p class="lead">'+w.l+'</p><ol>'+
@@ -602,9 +638,9 @@ const HC = (function () {
     const p=getProfile();
     const list=FAMILY.map(f=>{ const cur=f.slug===current;
       return '<a class="fam-row'+(cur?' cur':'')+'" '+(cur?'':'href="'+FAMILY_BASE+f.slug+'/"')+'>'+
-        '<span class="fam-emo">'+f.emo+'</span><span class="fam-name">'+f.name+'</span>'+
+        '<span class="fam-emo"><i class="ti ti-'+f.ic+'" aria-hidden="true"></i></span><span class="fam-name">'+f.name+'</span>'+
         (cur?'<span class="fam-here">目前</span>':'<i class="ti ti-chevron-right"></i>')+'</a>'; }).join('');
-    const homeRow='<a class="fam-row" href="/hub/"><span class="fam-emo">🏠</span><span class="fam-name">健康家族 首頁</span><i class="ti ti-chevron-right"></i></a>';
+    const homeRow='<a class="fam-row" href="/hub/"><span class="fam-emo"><i class="ti ti-home" aria-hidden="true"></i></span><span class="fam-name">健康家族 首頁</span><i class="ti ti-chevron-right"></i></a>';
     ov.innerHTML='<div class="fam-sheet">'+
       '<div class="fam-title">健康家族</div>'+
       '<div class="fam-sub">資料存在本機；僅在你主動啟用 AI 時才會傳送給 Google</div>'+
@@ -658,7 +694,7 @@ const HC = (function () {
            bmi, bmiInfo, bmr, normalCdf, zToPercentile,
            getApiKey, saveApiKey, clearApiKey, isOffline, setOffline, callAI,
            buildICS, downloadICS, canNotify, notifyPermission, requestNotify, notify, notifyStatusHtml, _notifyBtn,
-           getProfile, patchProfile, familyMenu, welcome, _famSexSet, _famSaveProfile, _famClose, checkProfileFields, fieldError,
+           getProfile, patchProfile, familyMenu, welcome, welcomeInline, _famSexSet, _famSaveProfile, _famClose, checkProfileFields, fieldError,
            navSetup, navTrack, openLayer, closeLayer,
            promptInstall, isInstalled, installBar, _ibHide, applyAccent, setAccent,
            registerSW, lineChart };

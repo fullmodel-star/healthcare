@@ -1,4 +1,4 @@
-const CACHE='health-app-v23';
+const CACHE='health-app-v24';
 const ASSETS=[
   './',
   './index.html',
@@ -14,6 +14,15 @@ const ASSETS=[
   './icon-maskable-512.png',
   './ti-sub.css',
   './ti-sub.woff2',
+  // 2026-10-19 版面美化：圓體子集＋Fluent 3D 圖
+  './vendor/hf-round.woff2',
+  './vendor/fluent-3d/book.png',
+  './vendor/fluent-3d/salad.png',
+  './vendor/fluent-3d/shoe.png',
+  './vendor/fluent-3d/moon.png',
+  './vendor/fluent-3d/drop.png',
+  './vendor/fluent-3d/scale.png',
+  './vendor/fluent-3d/cal.png',
   'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'
 ];
 

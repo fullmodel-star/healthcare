@@ -7,8 +7,8 @@
 <title>健康管理</title>
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#534AB7">
-<meta name="theme-color" content="#141412" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#0C6D56">
+<meta name="theme-color" content="#1A1311" media="(prefers-color-scheme: dark)">
 <meta name="description" content="個人健康追蹤：飲食、體重、運動、睡眠、飲水、AI 建議">
 <link rel="icon" type="image/svg+xml" href="icon.svg">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -22,6 +22,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="stylesheet" href="ti-sub.css">
 <link rel="preload" href="ti-sub.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="vendor/hf-round.woff2" as="font" type="font/woff2" crossorigin>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" integrity="sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD" crossorigin="anonymous"></script>
 <script src="food-db.js?v=4"></script>
 <!-- 健康家族共用核心（主題／長輩大字／家族基本資料／家族選單）。只載 core.js，不載 core.css（會與自帶樣式相撞）。
@@ -29,17 +30,23 @@
 <script src="core.js"></script>
 <style>
 :root {
-  --bg: #F5F4F0;
+  /* 2026-10-19 版面美化（二系列 A「淺色暖光」）：值與 00_共用核心 core.css 一致（01 不載 core.css，照抄）；
+     主題色＝健康存摺薄荷綠（--brand；使用者在家族選單換強調色時由 core.js 覆寫） */
+  --bg: #FBF5EC;
   --surface: #FFFFFF;
-  --surface2: #EFEFEB;
-  --surface3: #E5E4E0;
-  --border: rgba(0,0,0,0.08);
-  --border2: rgba(0,0,0,0.14);
-  --text: #1A1917;
-  --text2: #6B6A67;
-  --text3: #6A6965;
-  --brand: #534AB7;
-  --brand-bg: #EEEDFE;
+  --surface2: #F5ECE0;
+  --surface3: #EADFD1;
+  --border: rgba(110,70,40,0.13);
+  --border2: rgba(110,70,40,0.22);
+  --text: #3A2118;
+  --text2: #6B5148;
+  --text3: #6E5A51; /* a11y：對 --bg 5.97:1，不可再調淡 */
+  --brand: #12A07E;
+  --brand-bg: #DDF5EC;
+  --shadow-sm: 0 1px 3px rgba(120,60,30,.07), 0 1px 2px rgba(120,60,30,.05);
+  --shadow-md: 0 8px 20px -6px rgba(120,60,30,.18);
+  --shadow-lg: 0 18px 34px -14px rgba(120,60,30,.30);
+  --nav-bg: #FFFFFF;
   --green: #1D9E75;
   --green-bg: #E1F5EE;
   --amber: #BA7517;
@@ -57,37 +64,23 @@
 /* 暗色變數 — 系統偏好（無手動設定時生效）+ 手動 data-theme=dark */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #141412;
-    --surface: #1E1D1B;
-    --surface2: #282724;
-    --surface3: #333230;
-    --border: rgba(255,255,255,0.08);
-    --border2: rgba(255,255,255,0.14);
-    --text: #F0EFE9;
-    --text2: #A8A7A3;
-    --text3: #9B9A96;
-    --green-bg: #0D2E22;
-    --amber-bg: #2D1F08;
-    --red-bg: #2D1210;
-    --blue-bg: #0A1E35;
-    --purple-bg: #1A1835;
+    --bg: #1A1311; --surface: #261C19; --surface2: #30241F; --surface3: #3E2E28;
+    --border: rgba(255,225,205,0.10); --border2: rgba(255,225,205,0.18);
+    --text: #FBEFE9; --text2: #D2BAB0; --text3: #BFA59A;
+    --green-bg: #0D2E22; --amber-bg: #2D1F08; --red-bg: #2D1210;
+    --blue-bg: #0A1E35; --purple-bg: #1A1835;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,.35); --shadow-md: 0 8px 20px -6px rgba(0,0,0,.55); --shadow-lg: 0 18px 36px -14px rgba(0,0,0,.7);
+    --nav-bg: #120D0B; --brand-bg: #10342A;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #141412;
-  --surface: #1E1D1B;
-  --surface2: #282724;
-  --surface3: #333230;
-  --border: rgba(255,255,255,0.08);
-  --border2: rgba(255,255,255,0.14);
-  --text: #F0EFE9;
-  --text2: #A8A7A3;
-  --text3: #9B9A96;
-  --green-bg: #0D2E22;
-  --amber-bg: #2D1F08;
-  --red-bg: #2D1210;
-  --blue-bg: #0A1E35;
-  --purple-bg: #1A1835;
+  --bg: #1A1311; --surface: #261C19; --surface2: #30241F; --surface3: #3E2E28;
+  --border: rgba(255,225,205,0.10); --border2: rgba(255,225,205,0.18);
+  --text: #FBEFE9; --text2: #D2BAB0; --text3: #BFA59A;
+  --green-bg: #0D2E22; --amber-bg: #2D1F08; --red-bg: #2D1210;
+  --blue-bg: #0A1E35; --purple-bg: #1A1835;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.35); --shadow-md: 0 8px 20px -6px rgba(0,0,0,.55); --shadow-lg: 0 18px 36px -14px rgba(0,0,0,.7);
+  --nav-bg: #120D0B; --brand-bg: #10342A;
 }
 html.bigfont, html.senior{font-size:18px}
 html.bigfont body, html.senior body{font-size:18px;line-height:1.6}
@@ -608,11 +601,179 @@ header .lineShareFab,header .reportFab,.rl-appbar .lineShareFab,.rl-appbar .repo
 /* 2026-10-12 A3.1：總覽只留「紫色主色＋琥珀強調（分數環）」，分數數字與狀態字不再各自上色；示範橫幅改中性底、按鈕不撐滿 */
 #p6 .sv[class*="c-"],#p6 .net-val[class*="c-"]{color:var(--text)}
 #p6 .sn[class*="c-"]{color:var(--text2)}
-#demo-banner{background:var(--surface2)!important;border-color:var(--border2)!important;color:var(--text)!important;max-width:640px}
-#demo-banner button:first-child{flex:0 0 auto!important;padding:7px 18px!important;background:var(--purple-ink,#534AB7)!important;border-color:transparent!important}
-#demo-banner button:last-child{flex:0 0 auto}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) #demo-banner button:first-child{background:#6A60D8!important}}
-:root[data-theme="dark"] #demo-banner button:first-child{background:#6A60D8!important}
+/* 2026-10-19：示範說明搬進首屏主視覺卡（.hc6-demo），原 #demo-banner 覆寫規則移除 */
+/* =============================================================
+   2026-10-19 版面美化第二階段・201 健康管理「健康存摺」（薄荷綠）
+   01 不載 core.css（會與自帶樣式相撞），以下「家族層」整段照抄 00_共用核心 core.css 的
+   @font-face／圓體／卡片／底欄／.hf-hero／.hf-go（值逐字相同；core.css 改了要重抄）。
+   之後的「hc6-」是 01 自己的個性：健康分數環放大成首屏儀表、六項分數 3D 小圖格。
+   ============================================================= */
+:root{--brand-solid:color-mix(in srgb,var(--brand) 68%,#000);--brand-ink:color-mix(in srgb,var(--brand) 68%,#000)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--brand-ink:color-mix(in srgb,var(--brand) 66%,#fff)}}
+:root[data-theme="dark"]{--brand-ink:color-mix(in srgb,var(--brand) 66%,#fff)}
+@font-face{font-family:'HF Round';src:url(vendor/hf-round.woff2) format('woff2');font-display:swap;font-weight:100 900}
+/* font-weight 100–900：圓體只有一個字重，宣告整段範圍讓瀏覽器不再「假粗體」（假粗會糊）；缺字時退回系統字仍照原本粗細 */
+:root{--hf-round:'HF Round',-apple-system,BlinkMacSystemFont,'PingFang TC','Noto Sans TC','Microsoft JhengHei','Segoe UI',sans-serif;
+  --hf-kicker:color-mix(in srgb,var(--brand) 55%,#000);
+  --hf-gold:#FFC83D;--hf-gold-d:#C99400;--hf-gold-ink:#3A2100}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--hf-kicker:var(--hf-gold)}}
+:root[data-theme="dark"]{--hf-kicker:var(--hf-gold)}
+
+/* 圓體套用範圍：標題、App 名、按鈕、分頁、卡片標題、大數字（內文維持系統字） */
+.rl-appbar .rl-title,.page-title,.card-title,.btn,.seg-btn,.nav-item span,.stat-card .sv,.stat-strip .ss b,.ring-val,.big-reading,
+.hc-wel h2,.hc-wel .go,.fam-title,.fam-name,
+.hf-hero-k,.hf-hero-t,.hf-go,.hf-stat b,.hf-tile b,.hf-sec,.hf-steps-h span,.hf-step b{font-family:var(--hf-round)}
+.rl-appbar .rl-title{letter-spacing:1px}
+
+/* 卡片：暖白卡＋細框＋暖色陰影、圓角加大 */
+.card{border-radius:18px;box-shadow:var(--shadow-sm)}
+.stat-card{border-radius:12px}
+.btn{border-radius:12px}
+
+/* 底部分頁列：不透明（300、701 都中過半透明透字），分頁字圓體 */
+.nav{background:var(--nav-bg,var(--surface));background-color:var(--nav-bg,var(--surface));-webkit-backdrop-filter:none;backdrop-filter:none;opacity:1;border-top-color:var(--border2)}
+.nav-item span{font-weight:400;font-size:14px}
+html.bigfont .nav-item span,html.simple .nav-item span{font-weight:400}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .nav-item.active{color:var(--hf-gold)}}
+:root[data-theme="dark"] .nav-item.active{color:var(--hf-gold)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .nav-dot{background:var(--hf-gold)}}
+:root[data-theme="dark"] .nav-dot{background:var(--hf-gold)}
+
+/* ── .hf-hero 首屏主視覺卡 ── */
+.hf-hero{--hf-ill:88px;position:relative;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr) var(--hf-ill);column-gap:10px;align-items:start;
+  border-radius:26px;padding:20px 18px 18px;margin:0 0 14px;color:var(--text);
+  background:linear-gradient(160deg,color-mix(in srgb,var(--brand) 7%,var(--surface)) 0%,color-mix(in srgb,var(--brand) 20%,var(--surface)) 100%);
+  border:1px solid color-mix(in srgb,var(--brand) 24%,var(--surface));
+  box-shadow:0 18px 30px -22px color-mix(in srgb,var(--brand-solid) 70%,transparent)}
+.hf-hero>*{grid-column:1;min-width:0}
+.hf-hero>.hf-hero-ill{grid-column:2;grid-row:1/span 3;width:var(--hf-ill);height:auto;aspect-ratio:1;object-fit:contain;justify-self:end;
+  filter:drop-shadow(0 12px 14px color-mix(in srgb,var(--brand-solid) 40%,transparent))}
+.hf-hero>.hf-go,.hf-hero>[data-hf-steps],.hf-hero>.hf-full{grid-column:1/-1}
+.hf-hero-k{font-size:15px;color:var(--hf-kicker);letter-spacing:2px;line-height:1.4}
+.hf-hero-t{margin:4px 0 8px;font-size:26px;line-height:1.3;font-weight:400;color:var(--text);letter-spacing:.5px}
+.hf-hero-p{margin:0 0 14px;font-size:15px;line-height:1.55;color:var(--text2)}
+.hf-hero>.hf-go{margin-top:6px}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .hf-hero{
+  background:linear-gradient(155deg,color-mix(in srgb,var(--brand) 38%,#1A1311) 0%,color-mix(in srgb,var(--brand) 16%,#1A1311) 75%);
+  border-color:color-mix(in srgb,var(--brand) 45%,#1A1311);box-shadow:0 20px 36px -18px color-mix(in srgb,var(--brand) 60%,transparent)}}
+:root[data-theme="dark"] .hf-hero{
+  background:linear-gradient(155deg,color-mix(in srgb,var(--brand) 38%,#1A1311) 0%,color-mix(in srgb,var(--brand) 16%,#1A1311) 75%);
+  border-color:color-mix(in srgb,var(--brand) 45%,#1A1311);box-shadow:0 20px 36px -18px color-mix(in srgb,var(--brand) 60%,transparent)}
+@media (min-width:1000px){
+  .hf-hero{--hf-ill:180px;padding:30px 32px;border-radius:30px;column-gap:20px}
+  .hf-hero-t{font-size:40px;line-height:1.25}
+  .hf-hero-p{font-size:16px}
+  html.simple .hf-hero .hf-hero-t,html.bigfont .hf-hero .hf-hero-t{font-size:42px}
+}
+html.simple .hf-hero-t,html.bigfont .hf-hero-t{font-size:30px}
+html.simple .hf-hero-p,html.bigfont .hf-hero-p,html.simple .hf-hero-k,html.bigfont .hf-hero-k{font-size:17px}
+@media (max-width:360px){.hf-hero{--hf-ill:64px}.hf-hero-t{font-size:23px}}
+
+/* ── .hf-go 唯一主行動大鈕 ── */
+.hf-go{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:60px;padding:14px 22px;border:0;border-radius:18px;
+  background:var(--brand-solid);color:#fff;font-size:21px;font-weight:400;line-height:1.25;text-decoration:none;cursor:pointer;
+  box-shadow:0 6px 0 color-mix(in srgb,var(--brand-solid) 62%,#000);transform:translateY(0);transition:transform .08s,box-shadow .08s;margin-bottom:6px}
+.hf-go img{width:32px;height:32px;object-fit:contain;flex:none}
+.hf-go i{font-size:24px}
+.hf-go:hover{filter:brightness(1.05)}
+.hf-go:active{transform:translateY(4px);box-shadow:0 2px 0 color-mix(in srgb,var(--brand-solid) 62%,#000)}
+.hf-go:disabled{opacity:.55;cursor:not-allowed}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .hf-go{background:var(--hf-gold);color:var(--hf-gold-ink);box-shadow:0 6px 0 var(--hf-gold-d)}
+  :root:not([data-theme="light"]) .hf-go:active{box-shadow:0 2px 0 var(--hf-gold-d)}}
+:root[data-theme="dark"] .hf-go{background:var(--hf-gold);color:var(--hf-gold-ink);box-shadow:0 6px 0 var(--hf-gold-d)}
+:root[data-theme="dark"] .hf-go:active{box-shadow:0 2px 0 var(--hf-gold-d)}
+html.simple .hf-go,html.bigfont .hf-go{min-height:70px;font-size:24px}
+@media (min-width:1000px){.hf-go:not(.block){display:inline-flex;width:auto;min-width:280px;padding:16px 30px;justify-self:start}}
+
+/* ── 01 自己的個性（前綴 hc6-）── */
+/* App 外框與主行動跟著主題色走（原本寫死紫色 --purple；--purple 仍保留給「運動」分類色） */
+/* 頁首：家族 .hf-bar 暖底淺色版（以下照抄 core.css，值逐字相同）；01 自帶的白底半透明鈕規則會被它的 !important 蓋過 */
+/* ── 選用：頁首暖底淺色版（.rl-appbar.hf-bar） ── */
+.rl-appbar.hf-bar{background:var(--bg);color:var(--text);padding-top:12px;padding-bottom:8px}
+.rl-appbar.hf-bar .rl-mark{background:var(--brand-solid)}
+.rl-appbar.hf-bar .rl-title{font-size:22px}
+.rl-appbar.hf-bar .rl-sub{color:var(--text2);opacity:1}
+.rl-appbar.hf-bar :is(button,a,.fam-fab,.lineShareFab,.reportFab){background:var(--surface)!important;color:var(--text2)!important;border:1px solid var(--border2)!important;box-shadow:none!important}
+.rl-appbar.hf-bar :is(button,a) i{color:inherit!important}
+/* 同 206：注入的 LINE／回報鈕 svg 寫死白色 → 改跟字色，避免白卡上白圖示看不見 */
+.rl-appbar.hf-bar :is(.lineShareFab,.reportFab) svg path{fill:currentColor}
+.rl-appbar .rl-title{font-weight:400}
+.nav-item.active{color:var(--brand-ink)}
+.nav-dot{background:var(--brand-ink)}
+.btn-primary{background:var(--brand-solid)}
+.btn-primary:hover{background:var(--brand-solid);filter:brightness(1.08)}
+input:focus,select:focus{border-color:var(--brand)}
+.score-num,.net-val,.hc6-met .sv,.cp-val,.rv{font-family:var(--hf-round);font-weight:400}
+.page-title{font-weight:400}
+.card-title{text-transform:none;letter-spacing:.3px;font-weight:400;font-size:16px;color:var(--text)}
+html.bigfont .card-title,html.senior .card-title{font-size:17px}
+
+/* 首屏儀表：分數環是主角 */
+.hc6-hero{grid-template-columns:minmax(0,1fr) 64px;--hc6-ring:var(--brand);--hf-ill:64px}
+.hc6-hero>.hc6-gauge,.hc6-hero>.hc6-why,.hc6-hero>#p6-score-info,.hc6-hero>.hc6-demo{grid-column:1/-1}
+.hc6-hero>.hc6-book{grid-column:2;grid-row:1/span 2;align-self:center}
+.hc6-hero .hf-hero-k{display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px}
+.hc6-hero .hf-hero-k .page-date{margin:0;font-size:inherit;color:inherit}
+.hc6-hero .hf-hero-t{margin-bottom:2px}
+.hc6-gauge{display:flex;justify-content:center;margin:2px 0 4px}
+.hc6-hero .score-ring-wrap{width:196px;height:196px;margin:0}
+.hc6-hero .score-ring-wrap .hc6-track{stroke:color-mix(in srgb,var(--brand) 26%,var(--surface))}
+.hc6-hero #p6-score-circle{stroke:var(--hc6-ring);filter:drop-shadow(0 3px 4px color-mix(in srgb,var(--brand-solid) 35%,transparent))}
+.hc6-hero .score-num{font-size:58px;line-height:1;color:var(--text)}
+.hc6-hero .score-lbl{font-size:15px;color:var(--text2)}
+.hc6-book{width:64px;height:64px;object-fit:contain}
+.hc6-why{display:flex;align-items:center;gap:8px;margin:2px 0 12px}
+.hc6-why .hf-hero-p{margin:0;flex:1;min-width:0}
+.hc6-info-btn{flex:none;display:inline-flex;align-items:center;gap:4px;min-height:44px;padding:0 14px;border-radius:999px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-size:15px;cursor:pointer}
+.hc6-info-btn i{font-size:16px}
+#p6-score-info{margin:0 0 12px}
+.hc6-demo{margin-top:10px;padding:12px 14px;border-radius:16px;border:1px dashed color-mix(in srgb,var(--brand) 45%,var(--border2));background:color-mix(in srgb,var(--surface) 78%,transparent);color:var(--text);font-size:15px;line-height:1.55}
+.hc6-demo .hc6-demo-t{display:flex;align-items:flex-start;gap:6px;margin-bottom:8px}
+.hc6-demo .hc6-demo-t i{font-size:16px;flex:none;margin-top:3px;color:var(--brand-ink)}
+.hc6-demo .hc6-demo-acts{display:flex;flex-wrap:wrap;gap:8px}
+.hc6-demo button{min-height:44px;padding:0 16px;border-radius:999px;font-size:15px;cursor:pointer;font-family:var(--hf-round)}
+.hc6-demo .hc6-demo-clear{border:1.5px solid var(--brand-ink);background:var(--surface);color:var(--brand-ink)}
+.hc6-demo .hc6-demo-keep{border:1px solid var(--border2);background:transparent;color:var(--text2)}
+
+/* 六項分數：3D 小圖格（可點進對應頁） */
+.hc6-mets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.hc6-met{display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-width:0;width:100%;text-align:left;padding:10px 10px 11px;border:1px solid var(--border);border-radius:14px;background:var(--surface2);color:var(--text);cursor:pointer;transition:transform .12s,border-color .12s}
+.hc6-met:hover{border-color:color-mix(in srgb,var(--brand) 45%,var(--border))}
+.hc6-met:active{transform:scale(.97)}
+.hc6-met img{width:34px;height:34px;object-fit:contain;margin-bottom:2px}
+.hc6-met .sl{font-size:15px;color:var(--text2);margin:0}
+.hc6-met .sv{font-size:24px;line-height:1.15}
+.hc6-met .su{font-size:14px;color:var(--text2);margin-left:2px}
+.hc6-met .sn{font-size:14px;color:var(--text2);line-height:1.3;overflow-wrap:anywhere}
+html.bigfont .hc6-met .sv,html.senior .hc6-met .sv{font-size:26px}
+html.bigfont .hc6-mets,html.senior .hc6-mets{grid-template-columns:repeat(2,minmax(0,1fr))}
+
+/* 深色：分數環用亮薄荷、主鈕走家族金色（.hf-go 已處理） */
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .hc6-hero{--hc6-ring:var(--brand-ink)}
+  :root:not([data-theme="light"]) .hc6-hero .score-ring-wrap .hc6-track{stroke:rgba(0,0,0,.32)}
+  :root:not([data-theme="light"]) .nav-dot{background:var(--hf-gold)}}
+:root[data-theme="dark"] .hc6-hero{--hc6-ring:var(--brand-ink)}
+:root[data-theme="dark"] .hc6-hero .score-ring-wrap .hc6-track{stroke:rgba(0,0,0,.32)}
+:root[data-theme="dark"] .nav-dot{background:var(--hf-gold)}
+
+/* 長輩大字：分數更大、環跟著放大，但不撐破手機寬 */
+html.bigfont .hc6-hero .score-num,html.senior .hc6-hero .score-num{font-size:64px}
+html.bigfont .hc6-hero .score-ring-wrap,html.senior .hc6-hero .score-ring-wrap{width:210px;height:210px}
+
+/* 桌機：左欄文字＋主行動，右欄大分數環 */
+@media (min-width:1000px){
+  .hc6-hero{grid-template-columns:minmax(0,1fr) 96px 260px;grid-template-rows:repeat(5,auto) 1fr;column-gap:28px;--hf-ill:96px}
+  .hc6-hero>.hc6-gauge{grid-column:3;grid-row:1/-1;align-self:center;margin:0}
+  .hc6-hero>.hc6-book{grid-column:2;grid-row:1/span 2;align-self:start}
+  .hc6-hero>.hf-go,.hc6-hero>.hc6-demo,.hc6-hero>#p6-score-info,.hc6-hero>.hc6-why{grid-column:1}
+  .hc6-hero .score-ring-wrap,html.bigfont .hc6-hero .score-ring-wrap{width:240px;height:240px}
+  .hc6-hero .score-num,html.bigfont .hc6-hero .score-num{font-size:74px}
+  .hc6-book{width:96px;height:96px}
+  .hc6-why{justify-content:flex-start;gap:14px}
+  .hc6-why .hf-hero-p{flex:0 1 auto}
+  .hc6-hero .hc6-demo{max-width:640px}
+  .hc6-mets{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
 </style>
 
 <!-- ── 分享預覽（稜線 App 分享卡系統 · 方案A 暖米白）─────────────────────
@@ -638,7 +799,7 @@ header .lineShareFab,header .reportFab,.rl-appbar .lineShareFab,.rl-appbar .repo
 <meta name="twitter:image:alt" content="健康管理 — 飲食運動睡眠一起管">
 </head>
 <body>
-<header class="rl-appbar"><span class="rl-mark"><img class="rl-glyph" src="rl-mark-kilimanjaro-white.png" width="30" height="30" alt="" style="object-fit:contain"></span><div><div class="rl-title">健康管理</div><div class="rl-sub">健康家族</div></div></header>
+<header class="rl-appbar hf-bar"><span class="rl-mark"><img class="rl-glyph" src="rl-mark-kilimanjaro-white.png" width="30" height="30" alt="" style="object-fit:contain"></span><div><div class="rl-title">健康管理</div><div class="rl-sub">健康家族</div></div></header>
 <div class="toast-wrap" id="toast-wrap"></div>
 <div class="app">
 
@@ -1171,50 +1332,55 @@ header .lineShareFab,header .reportFab,.rl-appbar .lineShareFab,.rl-appbar .repo
 
 <!-- ============ PAGE 6: 總覽 ============ -->
 <div class="page active" id="p6">
-  <div class="page-header">
-    <div class="page-icon" style="background:var(--amber-bg)"><i class="ti ti-layout-dashboard" style="color:var(--amber)"></i></div>
-    <h1 class="page-title">健康總覽</h1>
-    <div class="page-date" id="p6-date"></div>
-  </div>
-
-  <div id="demo-banner" style="display:none;background:var(--amber-bg);border:1px solid var(--amber);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px;font-size:15px;color:var(--amber-tx);line-height:1.5">
-    <div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:8px"><i class="ti ti-info-circle" style="font-size:15px;flex-shrink:0;margin-top:1px"></i><span>目前畫面上的體重、睡眠、運動、飲水是<strong>示範資料</strong>，只在畫面上顯示、<strong>不會存進你的紀錄</strong>。你新增第一筆真實紀錄時，示範會自動消失；也可以現在就清掉。</span></div>
-    <div style="display:flex;gap:6px">
-      <button onclick="clearDemoData()" style="flex:1;min-height:40px;padding:7px;border-radius:var(--radius-sm);border:1px solid #9A5F10;background:#9A5F10;color:#fff;font-size:15px;font-weight:600;cursor:pointer">清除示範，開始記錄</button>
-      <button onclick="dismissDemoBanner()" style="min-height:40px;padding:7px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-size:15px;cursor:pointer">先留著看</button>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title"><i class="ti ti-award"></i>今日健康分數
-      <button onclick="document.getElementById('p6-score-info').classList.toggle('show')" style="margin-left:auto;width:40px;height:40px;margin:-10px 0 -10px auto;border-radius:50%;border:1px solid var(--border2);background:var(--surface2);color:var(--text2);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center" aria-label="分數說明"><i class="ti ti-question-mark" style="font-size:15px"></i></button>
-    </div>
-    <div id="p6-score-info" style="display:none;font-size:15px;padding:10px 12px;background:var(--surface2);border-radius:var(--radius-sm);margin-bottom:10px;line-height:1.7">
-      <div style="font-weight:600;margin-bottom:4px;color:var(--text)">分數權重</div>
-      <div>飲食 <strong>25%</strong> · 運動 <strong>20%</strong> · 睡眠 <strong>20%</strong> · 飲水 <strong>15%</strong> · 體重 <strong>10%</strong> · 活動量 <strong>10%</strong></div>
-      <div style="font-size:15px;color:var(--text3);margin-top:6px">飲食看當日 kcal/TDEE 比；運動看消耗（≥400 kcal 滿分）；睡眠看時長對目標；飲水看達標 %；體重看 BMI 是否在 18.5–24；活動量看本週運動天數。</div>
-    </div>
-    <style>#p6-score-info.show{display:block!important}</style>
-    <div class="score-ring-wrap">
-      <svg viewBox="0 0 160 160">
-        <circle cx="80" cy="80" r="68" fill="none" stroke="var(--surface2)" stroke-width="12"/>
-        <circle cx="80" cy="80" r="68" fill="none" stroke="#EF9F27" stroke-width="12"
-          stroke-dasharray="427.3" stroke-dashoffset="427.3"
-          stroke-linecap="round" transform="rotate(-90 80 80)"
-          id="p6-score-circle" style="transition:stroke-dashoffset .8s ease"/>
-      </svg>
-      <div class="score-center">
-        <div class="score-num" id="p6-score">—</div>
-        <div class="score-lbl">/ 100</div>
+  <!-- 2026-10-19 版面美化：健康分數環放大成首屏儀表；唯一主行動「記一筆飲食」；示範說明收進同一張卡（原本分在三處） -->
+  <section class="hf-hero hc6-hero" aria-label="今日健康分數">
+    <div class="hf-hero-k"><span class="page-date" id="p6-date"></span><span aria-hidden="true">・</span><span>健康存摺</span></div>
+    <h1 class="hf-hero-t">今天的健康分數</h1>
+    <img class="hc6-book hf-hero-ill" src="vendor/fluent-3d/book.png" alt="" width="128" height="128">
+    <div class="hc6-gauge">
+      <div class="score-ring-wrap" style="position:relative">
+        <svg viewBox="0 0 160 160" aria-hidden="true">
+          <circle class="hc6-track" cx="80" cy="80" r="68" fill="none" stroke="var(--surface2)" stroke-width="12"/>
+          <circle cx="80" cy="80" r="68" fill="none" stroke="#EF9F27" stroke-width="12"
+            stroke-dasharray="427.3" stroke-dashoffset="427.3"
+            stroke-linecap="round" transform="rotate(-90 80 80)"
+            id="p6-score-circle" style="transition:stroke-dashoffset .8s ease"/>
+        </svg>
+        <div class="score-center">
+          <div class="score-num" id="p6-score">—</div>
+          <div class="score-lbl">/ 100</div>
+        </div>
       </div>
     </div>
-    <div class="stat-grid" style="grid-template-columns:repeat(3,1fr)">
-      <div class="stat-card"><div class="sl"><i class="ti ti-salad" style="font-size:15px"></i> 飲食</div><div><span class="sv" id="p6-m-diet">—</span><span class="su">分</span></div><div class="sn" id="p6-m-diet-n" style="color:var(--text3)">—</div></div>
-      <div class="stat-card"><div class="sl"><i class="ti ti-barbell" style="font-size:15px"></i> 運動</div><div><span class="sv" id="p6-m-ex">—</span><span class="su">分</span></div><div class="sn" id="p6-m-ex-n" style="color:var(--text3)">—</div></div>
-      <div class="stat-card"><div class="sl"><i class="ti ti-moon" style="font-size:15px"></i> 睡眠</div><div><span class="sv" id="p6-m-sleep">—</span><span class="su">分</span></div><div class="sn" id="p6-m-sleep-n" style="color:var(--text3)">—</div></div>
-      <div class="stat-card"><div class="sl"><i class="ti ti-droplet" style="font-size:15px"></i> 飲水</div><div><span class="sv" id="p6-m-water">—</span><span class="su">分</span></div><div class="sn" id="p6-m-water-n" style="color:var(--text3)">—</div></div>
-      <div class="stat-card"><div class="sl"><i class="ti ti-scale" style="font-size:15px"></i> 體重</div><div><span class="sv" id="p6-m-weight">—</span><span class="su">分</span></div><div class="sn" id="p6-m-weight-n" style="color:var(--text3)">—</div></div>
-      <div class="stat-card"><div class="sl"><i class="ti ti-walk" style="font-size:15px"></i> 活動量</div><div><span class="sv" id="p6-m-steps">—</span><span class="su">分</span></div><div class="sn" id="p6-m-steps-n" style="color:var(--text3)">—</div></div>
+    <div class="hc6-why">
+      <p class="hf-hero-p">依今天的飲食、運動、睡眠、飲水，加上體重與本週活動量計算。</p>
+      <button type="button" class="hc6-info-btn" onclick="document.getElementById('p6-score-info').classList.toggle('show')" aria-label="分數說明"><i class="ti ti-question-mark"></i>怎麼算</button>
+    </div>
+    <div id="p6-score-info" style="display:none;font-size:15px;padding:10px 12px;background:var(--surface);border-radius:var(--radius-sm);line-height:1.7">
+      <div style="font-weight:600;margin-bottom:4px;color:var(--text)">分數權重</div>
+      <div>飲食 <strong>25%</strong> · 運動 <strong>20%</strong> · 睡眠 <strong>20%</strong> · 飲水 <strong>15%</strong> · 體重 <strong>10%</strong> · 活動量 <strong>10%</strong></div>
+      <div style="font-size:15px;color:var(--text2);margin-top:6px">飲食看當日 kcal/TDEE 比；運動看消耗（≥400 kcal 滿分）；睡眠看時長對目標；飲水看達標 %；體重看 BMI 是否在 18.5–24；活動量看本週運動天數。</div>
+    </div>
+    <style>#p6-score-info.show{display:block!important}</style>
+    <button type="button" class="hf-go" onclick="p6GoLog('p2')"><img src="vendor/fluent-3d/salad.png" alt="" width="32" height="32">記一筆飲食</button>
+    <div id="demo-banner" class="hc6-demo" style="display:none">
+      <div class="hc6-demo-t"><i class="ti ti-info-circle"></i><span>目前畫面上的體重、睡眠、運動、飲水是<strong>示範資料</strong>，只在畫面上顯示、<strong>不會存進你的紀錄</strong>。你新增第一筆真實紀錄時，示範會自動消失；也可以現在就清掉。</span></div>
+      <div class="hc6-demo-acts">
+        <button type="button" class="hc6-demo-clear" onclick="clearDemoData()">清除示範，開始記錄</button>
+        <button type="button" class="hc6-demo-keep" onclick="dismissDemoBanner()">先留著看</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="card">
+    <div class="card-title"><i class="ti ti-award"></i>六項分數 <span style="font-size:15px;color:var(--text2);margin-left:4px">點一格去記錄</span></div>
+    <div class="hc6-mets">
+      <button type="button" class="stat-card hc6-met" data-go="p2" onclick="hc6Go(this.dataset.go)" aria-label="飲食分數，到飲食頁"><img src="vendor/fluent-3d/salad.png" alt="" width="34" height="34"><span class="sl">飲食</span><span><span class="sv" id="p6-m-diet">—</span><span class="su">分</span></span><span class="sn" id="p6-m-diet-n">—</span></button>
+      <button type="button" class="stat-card hc6-met" data-go="p4" onclick="hc6Go(this.dataset.go)" aria-label="運動分數，到運動頁"><img src="vendor/fluent-3d/shoe.png" alt="" width="34" height="34"><span class="sl">運動</span><span><span class="sv" id="p6-m-ex">—</span><span class="su">分</span></span><span class="sn" id="p6-m-ex-n">—</span></button>
+      <button type="button" class="stat-card hc6-met" data-go="p5" onclick="hc6Go(this.dataset.go)" aria-label="睡眠分數，到睡眠頁"><img src="vendor/fluent-3d/moon.png" alt="" width="34" height="34"><span class="sl">睡眠</span><span><span class="sv" id="p6-m-sleep">—</span><span class="su">分</span></span><span class="sn" id="p6-m-sleep-n">—</span></button>
+      <button type="button" class="stat-card hc6-met" data-go="p5" onclick="hc6Go(this.dataset.go)" aria-label="飲水分數，到飲水頁"><img src="vendor/fluent-3d/drop.png" alt="" width="34" height="34"><span class="sl">飲水</span><span><span class="sv" id="p6-m-water">—</span><span class="su">分</span></span><span class="sn" id="p6-m-water-n">—</span></button>
+      <button type="button" class="stat-card hc6-met" data-go="p3" onclick="hc6Go(this.dataset.go)" aria-label="體重分數，到體重頁"><img src="vendor/fluent-3d/scale.png" alt="" width="34" height="34"><span class="sl">體重</span><span><span class="sv" id="p6-m-weight">—</span><span class="su">分</span></span><span class="sn" id="p6-m-weight-n">—</span></button>
+      <button type="button" class="stat-card hc6-met" data-go="p4" onclick="hc6Go(this.dataset.go)" aria-label="活動量分數，到活動量頁"><img src="vendor/fluent-3d/cal.png" alt="" width="34" height="34"><span class="sl">活動量</span><span><span class="sv" id="p6-m-steps">—</span><span class="su">分</span></span><span class="sn" id="p6-m-steps-n">—</span></button>
     </div>
   </div>
 
@@ -2529,6 +2695,9 @@ function p6GoLog(page){
   const inp=document.getElementById(page==='p3'?'p3-inp-weight':'p2-search-q');
   if(inp){ try{ inp.scrollIntoView({block:'center'}); inp.focus({preventScroll:true}); }catch(e){} }
 }
+
+// 2026-10-19 六項分數格：切到對應頁（返回鍵回總覽，由 goPage→HC.navTrack 處理）
+function hc6Go(page){ goPage(page, document.querySelector('.nav-item[data-page="'+page+'"]')); window.scrollTo(0,0); }
 
 function p6Render(){
   const tdee=calcTDEE(); const ts=todayStr();

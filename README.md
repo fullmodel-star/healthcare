@@ -6,6 +6,18 @@
 
 ---
 
+## 2026-10-19 · 版面美化第二階段「健康存摺」（薄荷綠）（未 commit／**未部署**）
+- **為什麼**：老闆選定二系列方向 A「淺色暖光」（深色＝樣稿 B 暖深底＋金色主鈕）；評比 201 輸在「首屏先是示範說明框與紫色小鈕，分數環被推到下方，視線要跳兩次」。派工說明 `04_管理工具\_docs\App版面美化_2026-10-19\POLISH_BRIEF_二系列.md`。
+- **01 不載 core.css**：家族暖色 tokens（淺 `#FBF5EC`／深 `#1A1311`、`#261C19`、底欄 `#120D0B`）照 core.css 的值寫進自己的 `:root`；`@font-face HF Round`、圓體套用、卡片、不透明底欄、`.hf-hero`、`.hf-go`（深色金 `#FFC83D`）整段**逐字照抄** core.css（index.html `<style>` 尾段，註解標明；core.css 改了要重抄）。core.js／00 共用核心未改。
+- **首屏儀表**：總覽的頁首＋示範橫幅＋分數卡合併成一張 `.hf-hero.hc6-hero`：日期・健康存摺、大標「今天的健康分數」、分數環放大（手機 196px／桌機 240px，圓體大數字，3D 綠色書本貼紙）、「怎麼算」說明、**唯一主行動「記一筆飲食」**（→飲食頁，原 `p6GoLog('p2')`）；示範說明（`#demo-banner`，文字與 `clearDemoData／dismissDemoBanner` 不變）收進同一張卡、改成虛線框次要鈕。桌機左欄文字＋主鈕、右欄大分數環。
+- **六項分數**改成 3D 小圖格（沙拉／跑鞋／月亮／水滴／天平／月曆），每格可點進對應頁（新增 `hc6Go()`，返回鍵回總覽）；元素 id 與 `setMetric` 邏輯不變。
+- 頁首、主要按鈕、分頁選中改走 `--brand`（預設薄荷 `#12A07E`，白字底 `--brand-solid`）；`--purple` 仍是「運動」分類色。家族選單換強調色後主鈕／頁首／分數環跟著換。`theme-color` 改 `#0C6D56`／深色 `#1A1311`（manifest.json 與 play-store 未動）。
+- **套件**：jf open 粉圓 v2.1（OFL-1.1）子集 `vendor/hf-round.woff2` 213KB（1014 字；用 00 的 `build_hf_round.py`，但把 `food-db.js` 排除——2,261 筆食品名不用圓體，收進來會超過 600KB；重產指令：`PYTHONPATH=<pylib>;00_共用核心_health-core/_tools python -c "import sys,build_hf_round as b; b.SKIP_JS|={'food-db.js'}; sys.argv=['x','01_健康管理_healthcare']; b.main()"`）＋`hf-round-LICENSE.txt`；Microsoft Fluent Emoji 3D（MIT）7 張 128px `vendor/fluent-3d/`（book=Green book、salad=Green salad、shoe=Running shoe、moon=Crescent moon、drop=Droplet、scale=Balance scale、cal=Calendar）＋LICENSE.txt。新增約 306KB（之後走快取）。
+- **sw**：`health-app-v23 → v24`，預先快取加 `vendor/hf-round.woff2` 與 7 張 3D 圖。
+- **測試**：新增 `_tools/ui_tests.mjs`（`node _tools/ui_tests.mjs [--root=副本] [--shots=資料夾]`）44 項：示範資料流程（不落盤／先留著看／清除示範要確認且重整後不再出現）、有資料狀態、主視覺與唯一主鈕在首屏、分數環弧長＝分數、圓體載入且被用到、3D 圖 new Image 全載得出來、操作元件無 emoji、桌機兩欄、360/390 六頁無水平捲動、底欄不透明、深色（系統／手動）對比 ≥4.5 與金色主鈕、換強調色、長輩模式不溢出、sw 清單、只連本機（＋既有 Chart.js cdnjs）。改前 16/44 → 改後 44/44。品牌檢核 0 FAIL（4 WARN 皆既有：brand.config、favicon-32、reg.update、Chart.js CDN）。截圖 `04_管理工具\_docs\App版面美化_2026-10-19\201截圖\`。
+- **審查退回修正（同日）**：3D 書本移出分數環，改放主視覺卡右上與大標同列（桌機在文字與環之間）；頁首改家族暖底淺色版 `.rl-appbar.hf-bar`（從 core.css 逐字抄入；深色＝暖深底；山形磚走 --brand-solid、換強調色同步；注入的 LINE／回報鈕 svg 改跟字色，同 206）。測試加書本／環不重疊與頁首檢查，改前 16/44 → 改後 44/44。
+- 未做：`build.ps1 -NoOpen` 沒跑（會把 00 的 core 同步到其他支、與並行 agent 互撞；`vendor/` 不是 `_` 開頭會照常出貨、`_tools/` 會被排除）。
+
 ## 快速開始
 
 1. 直接開啟（或從《健康家族 HUB》安裝）
