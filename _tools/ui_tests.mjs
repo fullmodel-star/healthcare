@@ -11,6 +11,7 @@
  * - 每條斷言盡量印出樣本數，避免空集合假通過。
  * 示範資料流程（首訪只在畫面顯示示範、不落盤；清除示範／新增第一筆才結束）是這支的核心，第 2 節專門守它。
  */
+import { backTests } from '../../00_共用核心_health-core/_tools/back_test_lib.mjs'; // 2026-10-20 返回鍵共用測試
 import { createServer } from 'node:http';
 import { readFile, mkdtemp, rm, mkdir, writeFile } from 'node:fs/promises';
 import { existsSync, readFileSync } from 'node:fs';
@@ -370,6 +371,10 @@ try {
     await c.shot(path.join(SHOTS, '201_data_senior_m.png'));
     console.log('截圖 → ' + SHOTS);
   }
+  // ── 返回鍵（2026-10-20 BACK_FIX_BRIEF）：分頁→上一頁回首頁、家族選單／彈出層先關、首頁才離開、重新整理後仍有紀錄（共用 00_共用核心_health-core/_tools/back_test_lib.mjs，跑本機預覽 8711）──
+  console.log('\n[返回鍵]');
+  await backTests({ url: "http://127.0.0.1:8711/200_%E5%81%A5%E5%BA%B7%E5%AE%B6%E6%97%8F/01_%E5%81%A5%E5%BA%B7%E7%AE%A1%E7%90%86_healthcare/", ok, modals: [{"name": "自訂飲水量對話框", "trigger": "[onclick=\"p5CustomWater()\"]", "isOpen": "!!document.getElementById('hcd-overlay')"}] });
+
 } catch (e) {
   fail++;
   console.log('  FAIL 測試程式本身出錯：' + (e && e.stack || e));

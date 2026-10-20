@@ -211,36 +211,59 @@ const HC = (function () {
   /* ---------- 返回鍵（2026-10-13 UI/UX 評比 X5：分頁切換不進瀏覽紀錄，手機返回鍵直接離開 App）----------
      規則（同 Android 底部導覽慣例）：首頁＝第一個 .nav-item；從首頁切到其他分頁 pushState 一筆，分頁之間 replaceState，
      點回首頁則 history.back()。所以任何分頁按返回 → 回首頁；在首頁按返回才離開 App。網址不變（重新整理一律回首頁）。
-     內層畫面（例如伸展播放中、家族選單）用 HC.openLayer(name,onBack)：返回鍵先呼叫 onBack，回傳 false 代表使用者取消、留在原畫面。 */
-  const _nav={home:null, show:null, onShow:null, restoring:false, skip:0, layers:[]};
+     內層畫面（例如伸展播放中、家族選單）用 HC.openLayer(name,onBack)：返回鍵先呼叫 onBack，回傳 false 代表使用者取消、留在原畫面。
+     2026-10-20 返回鍵修正（BACK_FIX_BRIEF）：
+       ① 重新整理會保留 history.state：在分頁上或家族選單開著時重整，殘留的 {hcPage}／{hcLayer} 讓下一次切分頁誤判成「已在分頁紀錄上」
+          而改用 replaceState → 沒有上一頁紀錄，按返回直接離開 App（10-20 巡檢 201–208 的真因）。
+          → 載入時一律 replaceState({hcPage:首頁}) 標記首頁；判斷「在分頁紀錄上」改成 hcPage 存在且不是首頁、也不是內層。
+       ② closeLayer／回首頁的 history.back() 是非同步：期間若立刻又開下一層（連續兩個對話框、確認窗→播放器），先排隊等 popstate 再 push。
+       ③ 內層可帶 {isOpen}：已被其他途徑關掉的內層，返回時直接略過，不會白按一次。
+       ④ HC.layerFns(name, 開函式名, 關函式名, {el, form})：把各支既有的彈出層開／關函式包成內層；form:true 時表單改過才按返回會先問。 */
+  const _nav={home:null, show:null, onShow:null, restoring:false, skip:0, layers:[], pend:[], skipT:0};
   function _navHome(){ if(_nav.home) return _nav.home; const b=document.querySelector('.nav-item[data-page]'); if(b) return b.getAttribute('data-page'); const p=document.querySelector('.page'); return p?p.id:''; }
   function _navCur(){ const p=document.querySelector('.page.active'); return p?p.id:''; }
   function navSetup(o){ Object.assign(_nav, o||{}); }
+  function _navFlush(){ const q=_nav.pend.splice(0); q.forEach(f=>{ try{ f(); }catch(e){} }); }
+  function _navBack(){
+    _nav.skip++; clearTimeout(_nav.skipT);
+    _nav.skipT=setTimeout(()=>{ if(_nav.skip>0){ _nav.skip=0; _navFlush(); } }, 1500); // 保險：popstate 沒來就不要永遠卡住
+    history.back();
+  }
+  function _navLater(f){ if(_nav.skip>0){ _nav.pend.push(f); return true; } return false; }
   function navTrack(from, to){
     if(_nav.restoring || !from || !to || from===to) return;
+    if(_navLater(()=>navTrack(from, to))) return;
     const st=history.state||{}; const home=_navHome();
+    const onTab=!!(st.hcPage && st.hcPage!==home && !st.hcLayer);
     try{
-      if(to===home){ if(st.hcPage && st.hcPage!==home){ _nav.skip++; history.back(); } }
-      else if(st.hcPage) history.replaceState(Object.assign({}, st, {hcPage:to}), '');
+      if(to===home){ if(onTab) _navBack(); }
+      else if(onTab) history.replaceState(Object.assign({}, st, {hcPage:to}), '');
       else history.pushState({hcPage:to}, '');
     }catch(e){}
   }
-  function openLayer(name, onBack){
-    try{ _nav.layers.push({name, onBack}); history.pushState({hcPage:_navCur()||(history.state&&history.state.hcPage)||null, hcLayer:name}, ''); }catch(e){}
+  function openLayer(name, onBack, opts){
+    const dup=_nav.layers.find(l=>l.name===name);
+    if(dup){ if(dup.isOpen && !dup.isOpen()) _nav.layers.splice(_nav.layers.indexOf(dup),1); else return; }
+    const L={name, onBack, isOpen:opts&&opts.isOpen, pushed:false};
+    _nav.layers.push(L);
+    const push=()=>{ if(_nav.layers.indexOf(L)<0) return; try{ history.pushState({hcPage:_navCur()||(history.state&&history.state.hcPage)||null, hcLayer:name}, ''); L.pushed=true; }catch(e){} };
+    if(!_navLater(push)) push();
   }
   // 內層畫面由畫面上的按鈕關閉時呼叫：把 openLayer 那一筆紀錄退掉（不觸發 onBack）
   function closeLayer(name){
     const i=_nav.layers.map(l=>l.name).lastIndexOf(name); if(i<0) return;
-    _nav.layers.splice(i,1);
-    try{ if(history.state && history.state.hcLayer===name){ _nav.skip++; history.back(); } }catch(e){}
+    const L=_nav.layers[i]; _nav.layers.splice(i,1);
+    if(!L.pushed) return; // 還在排隊、沒寫進紀錄
+    try{ if(history.state && history.state.hcLayer===name) _navBack(); }catch(e){}
   }
   window.addEventListener('popstate', e=>{
-    if(_nav.skip>0){ _nav.skip--; return; }
+    if(_nav.skip>0){ _nav.skip--; if(!_nav.skip){ clearTimeout(_nav.skipT); _navFlush(); } return; }
+    while(_nav.layers.length){ const T=_nav.layers[_nav.layers.length-1]; if(T.isOpen && !T.isOpen()) _nav.layers.pop(); else break; }
     if(_nav.layers.length){
       const L=_nav.layers[_nav.layers.length-1]; let ok=true;
       try{ ok=(L.onBack? L.onBack() : true)!==false; }catch(err){}
       if(ok){ const i=_nav.layers.indexOf(L); if(i>=0) _nav.layers.splice(i,1); } // onBack 內若已自行 closeLayer，這裡不重複移除
-      else { try{ history.pushState({hcPage:_navCur()||null, hcLayer:L.name}, ''); }catch(err){} }
+      else { try{ history.pushState({hcPage:_navCur()||null, hcLayer:L.name}, ''); L.pushed=true; }catch(err){} }
       return;
     }
     const st=e.state||{}; const target=st.hcPage||_navHome();
@@ -249,6 +272,42 @@ const HC = (function () {
     try{ if(_nav.show) _nav.show(target); else goPage(target, null, _nav.onShow); }catch(err){}
     _nav.restoring=false;
   });
+  // ① 首次載入：把目前這筆紀錄標成首頁（清掉重新整理殘留的分頁／內層 state）
+  function _navInit(){
+    try{
+      const home=_navHome(); if(!home) return;
+      const st=history.state;
+      if(!st || st.hcPage!==home || st.hcLayer) history.replaceState({hcPage:home}, '');
+    }catch(e){}
+  }
+  try{ if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', _navInit); else _navInit(); }catch(e){}
+  // ④ 各支彈出層接上返回鍵：openName／closeName 是全域函式名（inline onclick 呼叫的那個）
+  function layerFns(name, openName, closeName, opts){
+    opts=opts||{};
+    const o=window[openName], c=window[closeName];
+    if(typeof o!=='function' || typeof c!=='function') return false;
+    const el=()=>opts.el?document.getElementById(opts.el):null;
+    const isOpen=opts.isOpen||(()=>{ const m=el(); return !!(m && m.isConnected && getComputedStyle(m).display!=='none'); });
+    const snapOf=()=>{ const m=el(); if(!m) return '';
+      return [...m.querySelectorAll('input,select,textarea')].filter(i=>i.type!=='search' && !/search/i.test(i.id||'')).map(i=>(i.type==='checkbox'||i.type==='radio')?i.checked:i.value).join('\u0001')
+        +'|'+[...m.querySelectorAll('.pick-btn.on,.chip.on,[aria-pressed="true"]')].map(b=>(b.dataset&&(b.dataset.t||b.dataset.s))||b.textContent.trim()).join(','); };
+    let snap='';
+    window[openName]=function(){
+      const r=o.apply(this, arguments);
+      try{
+        if(isOpen()){
+          snap=opts.form?snapOf():'';
+          openLayer(name, ()=>{
+            if(opts.form && snapOf()!==snap && !confirm(opts.ask||'剛剛填的內容還沒儲存，確定要關閉嗎？')) return false;
+            c();
+          }, {isOpen});
+        }
+      }catch(e){}
+      return r;
+    };
+    window[closeName]=function(){ try{ closeLayer(name); }catch(e){} return c.apply(this, arguments); };
+    return true;
+  }
 
   /* ---------- 分頁導覽 ---------- */
   function goPage(id, btn, onShow){
@@ -450,7 +509,7 @@ const HC = (function () {
       if(isInstalled()) return;                                   // 已在桌面模式就不吵
       const urge=/[?&]install=1/.test(location.search);            // 從 HUB「安裝」進來 → 強調脈動＋忽略先前關閉
       if(!urge && sessionStorage.getItem('hcIB_'+(slug||''))==='x') return; // 這次瀏覽已被關掉
-      if(urge){ try{ history.replaceState({},'',location.pathname); }catch(e){} } // 清掉網址上的 ?install=1
+      if(urge){ try{ history.replaceState(history.state,'',location.pathname); }catch(e){} } // 清掉網址上的 ?install=1
       const ua=navigator.userAgent;
       const isIOS=/iphone|ipad|ipod/i.test(ua) || (/macintosh/i.test(ua) && 'ontouchend' in document);
       const inApp=/fbav|fban|instagram|line\/|micromessenger/i.test(ua); // 社群內建瀏覽器：iOS 無法加主畫面
@@ -621,10 +680,12 @@ const HC = (function () {
       el.innerHTML='<div class="sheet"><h2>'+w.t+'</h2><p class="lead">'+w.l+'</p><ol>'+
         w.s.map((x,i)=>'<li><b class="n">'+(i+1)+'</b><div>'+x[0]+'<small>'+x[1]+'</small></div></li>').join('')+
         '</ol><button type="button" class="go">開始使用</button></div>';
-      const close=()=>{ try{ localStorage.setItem(key,'1'); }catch(e){} el.remove(); };
+      const shut=()=>{ try{ localStorage.setItem(key,'1'); }catch(e){} el.remove(); };
+      const close=()=>{ closeLayer('wel'); shut(); }; // 2026-10-20：彈窗也進返回鍵（按返回＝關掉彈窗，不離開 App）
       el.querySelector('.go').onclick=close;
       el.addEventListener('click',e=>{ if(e.target===el) close(); });
       document.body.appendChild(el);
+      openLayer('wel', shut, {isOpen:()=>el.isConnected});
     },700);
   }
 
@@ -670,7 +731,7 @@ const HC = (function () {
       '<footer class="rl-signature"><div class="rl-sig-row"><svg class="rl-sig-glyph" width="56" height="56" viewBox="0 0 64 64" fill="none" stroke-linejoin="round" stroke-linecap="round" stroke-width="3.6"><path d="M0 54 L8 48 L14 51 L22 38 L26 42 L36 14 L46 34 L61 44" stroke="currentColor"/><path d="M31.3 27.2 L36 14 L38.7 19.4" stroke="#DE9A45"/></svg><span class="rl-sig-rule"></span><p class="rl-sig-quote">人生走稜，<br>高低都是風景。</p></div><p class="rl-sig-by">Ridgeline · by Lucas</p><p class="fam-credits">© 2026 版權所有，保留一切權利 · 圖示 Tabler · 圖表 Chart.js · 生長標準 WHO · 時程 衛福部<br>免責：本 App 內容與提醒僅供健康參考，不能取代醫師診斷；身體不適請就醫。</p></footer>'+
       '<div class="fam-close" role="button" tabindex="0" onclick="HC._famClose()">關閉</div>'+
       '</div>';
-    fab.onclick=()=>{ ov.classList.add('show'); _famRefresh(); openLayer('fam', ()=>{ ov.classList.remove('show'); }); };
+    fab.onclick=()=>{ ov.classList.add('show'); _famRefresh(); openLayer('fam', ()=>{ ov.classList.remove('show'); }, {isOpen:()=>ov.classList.contains('show')}); };
     ov.addEventListener('click',e=>{ if(e.target===ov) _famClose(); });
     // 2026-10-13 HUB「已使用過的 App N/8」原本只看資料 key，打開但還沒存東西的 App 不算（評比 200：開過 2 支仍 0/8）→ 開啟就記一筆
     try{ localStorage.setItem('hf_opened_'+current, todayStr()); }catch(e){}
@@ -695,7 +756,7 @@ const HC = (function () {
            getApiKey, saveApiKey, clearApiKey, isOffline, setOffline, callAI,
            buildICS, downloadICS, canNotify, notifyPermission, requestNotify, notify, notifyStatusHtml, _notifyBtn,
            getProfile, patchProfile, familyMenu, welcome, welcomeInline, _famSexSet, _famSaveProfile, _famClose, checkProfileFields, fieldError,
-           navSetup, navTrack, openLayer, closeLayer,
+           navSetup, navTrack, openLayer, closeLayer, layerFns,
            promptInstall, isInstalled, installBar, _ibHide, applyAccent, setAccent,
            registerSW, lineChart };
 })();

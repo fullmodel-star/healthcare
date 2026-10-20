@@ -1894,8 +1894,10 @@ function hcDialog(opts){
       +'</div>';
     document.body.appendChild(overlay);
     requestAnimationFrame(()=>overlay.classList.add('show'));
+    // 2026-10-20 返回鍵：對話框開著按返回＝取消（不換頁、不離開 App）
+    try{ HC.openLayer('hcd', ()=>close(null), {isOpen:()=>overlay.isConnected && overlay.classList.contains('show')}); }catch(e){}
     const input=overlay.querySelector('#hcd-input');
-    function close(val){ overlay.classList.remove('show'); setTimeout(()=>overlay.remove(),180); resolve(val); }
+    function close(val){ try{ HC.closeLayer('hcd'); }catch(e){} overlay.classList.remove('show'); setTimeout(()=>overlay.remove(),180); resolve(val); }
     overlay.querySelector('#hcd-cancel').onclick=()=>close(null);
     overlay.querySelector('#hcd-ok').onclick=()=>{ const v=input.value; close(v===''?null:v); };
     overlay.addEventListener('click',e=>{ if(e.target===overlay) close(null); });
