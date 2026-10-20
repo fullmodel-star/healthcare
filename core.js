@@ -439,7 +439,8 @@ const HC = (function () {
     let _reloading=false;
     // 首訪（載入時沒有 controller）時 SW 第一次 clients.claim() 只記下、不重整；之後的 controllerchange（＝新版接手）才重整（2026-10-12）
     let _hadCtrl=!!navigator.serviceWorker.controller;
-    navigator.serviceWorker.addEventListener('controllerchange',()=>{ if(!_hadCtrl){ _hadCtrl=true; return; } if(!_reloading){ _reloading=true; location.reload(); } });
+    // 2026-10-20：各支頁尾 RL_UPDATE_OPEN（打開 10 秒內套用已下載好的新版）也掛 controllerchange 重載；共用 window.__rlUpdReload 旗標，只重整一次
+    navigator.serviceWorker.addEventListener('controllerchange',()=>{ if(!_hadCtrl){ _hadCtrl=true; return; } if(!_reloading && !window.__rlUpdReload){ _reloading=true; window.__rlUpdReload=1; location.reload(); } });
     window.addEventListener('load',()=>{
       navigator.serviceWorker.register('./sw.js').then(reg=>{
         if(reg.waiting && navigator.serviceWorker.controller) _updateBar(reg.waiting); // 已有等待中的新版
