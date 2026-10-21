@@ -47,7 +47,7 @@
   });
 })();
 /* RL_FRESH_END */
-const CACHE='health-app-v29';
+const CACHE='health-app-v30';
 const ASSETS=[
   './',
   './index.html',
@@ -72,7 +72,7 @@ const ASSETS=[
   './vendor/fluent-3d/drop.png',
   './vendor/fluent-3d/scale.png',
   './vendor/fluent-3d/cal.png',
-  'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js'
+  './vendor/chartjs/chart.umd.min.js'
 ];
 
 self.addEventListener('install', e=>{

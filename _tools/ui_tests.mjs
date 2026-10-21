@@ -12,6 +12,8 @@
  * 示範資料流程（首訪只在畫面顯示示範、不落盤；清除示範／新增第一筆才結束）是這支的核心，第 2 節專門守它。
  */
 import { backTests } from '../../00_共用核心_health-core/_tools/back_test_lib.mjs'; // 2026-10-20 返回鍵共用測試
+import { vendorOfflineTests } from '../../00_共用核心_health-core/_tools/vendor_offline_lib.mjs'; // 2026-10-21 外部資源／離線共用測試
+import { fileURLToPath as hfF2P } from 'node:url';
 import { createServer } from 'node:http';
 import { readFile, mkdtemp, rm, mkdir, writeFile } from 'node:fs/promises';
 import { existsSync, readFileSync } from 'node:fs';
@@ -28,8 +30,8 @@ const SHOTS = arg('shots');
 const CHROME = process.env.CHROME || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.json': 'application/json',
   '.png': 'image/png', '.svg': 'image/svg+xml', '.css': 'text/css', '.txt': 'text/plain', '.woff2': 'font/woff2' };
-// 既有、非本次加入的外部資源：Chart.js（cdnjs，index.html 第 25 行，有 SRI）。其他網域一律不准。
-const ALLOWED_EXT = /^cdnjs\.cloudflare\.com$/;
+// 外部網域一律不准（2026-10-21 起 Chart.js 改 vendor 自帶，不再有 cdnjs 例外）。
+const ALLOWED_EXT = /(?!)/;
 
 let pass = 0, fail = 0;
 function ok(name, cond, extra) {
@@ -353,7 +355,7 @@ try {
   ok('13.1 全程沒有未捕捉的 JS 例外', c.errors.length === 0, c.errors.slice(0, 3));
   const hosts = [...new Set(c.requests.filter((u) => /^https?:/i.test(u)).map((u) => new URL(u).hostname))];
   const unexpected = hosts.filter((h) => h !== '127.0.0.1' && !ALLOWED_EXT.test(h));
-  ok('13.2 只連本機（＋既有的 Chart.js cdnjs）；實際主機：' + hosts.join(', '), unexpected.length === 0, unexpected);
+  ok('13.2 只連本機（Chart.js 已 vendor 自帶，無例外）；實際主機：' + hosts.join(', '), unexpected.length === 0, unexpected);
   const f404 = [...new Set(c.failed.filter((u) => u.includes('127.0.0.1')))];
   ok('13.3 本機資源沒有 404', f404.length === 0, f404.slice(0, 5));
 
@@ -374,6 +376,8 @@ try {
   // ── 返回鍵（2026-10-20 BACK_FIX_BRIEF）：分頁→上一頁回首頁、家族選單／彈出層先關、首頁才離開、重新整理後仍有紀錄（共用 00_共用核心_health-core/_tools/back_test_lib.mjs，跑本機預覽 8711）──
   console.log('\n[返回鍵]');
   await backTests({ url: "http://127.0.0.1:8711/200_%E5%81%A5%E5%BA%B7%E5%AE%B6%E6%97%8F/01_%E5%81%A5%E5%BA%B7%E7%AE%A1%E7%90%86_healthcare/", ok, modals: [{"name": "自訂飲水量對話框", "trigger": "[onclick=\"p5CustomWater()\"]", "isOpen": "!!document.getElementById('hcd-overlay')"}] });
+  // ── 外部資源／離線（2026-10-21 QA E-B3）：只連本站、CDN 不通照樣畫圖、真離線（關伺服器）重新整理照樣畫圖；共用 00_共用核心_health-core/_tools/vendor_offline_lib.mjs，自開 8996–8999 ──
+  await vendorOfflineTests({ ok, appDir: hfF2P(new globalThis.URL('..', import.meta.url)), chart: true, appChart: { seed: (() => { const d = (o) => { const t = new Date(); t.setDate(t.getDate() + o); return t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0'); }; return { healthAppState: { profile: { height: 165, weight: 62, age: 45, sex: 'f', actFactor: 1.375, goal: 'lose', waterGoal: 2000, sleepGoal: 7.5, goalWeight: 58 }, meals: {}, weightRecords: [{ date: d(-6), weight: 63.2, time: '07:00' }, { date: d(-3), weight: 62.8, time: '07:00' }, { date: d(0), weight: 62.4, time: '07:00' }], exerciseRecords: [], sleepRecords: [], waterLogs: [] } }; })(), show: "goPage('p3',document.querySelector('.nav-item[data-page=p3]'))", canvas: '#p3-chart' } });
 
 } catch (e) {
   fail++;

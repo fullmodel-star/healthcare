@@ -1,0 +1,18 @@
+Chart.js v4.4.1 (UMD, minified)
+Source: https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js (downloaded 2026-10-21)
+md5    50cf2ab0db25f5d6df90a1046520e68e
+sha256 81ffafe13c37e1b25793b020d446f4d9739b949dadb7f9f79d709a0cad781c2f
+sha384 bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD (= the SRI previously pinned in index.html)
+Cross-check: cdnjs chart.umd.js (unminified) md5 283d65ad75eca387c3fc8d0f8d37ae3b == npm chart.js@4.4.1 dist/chart.umd.js
+  (npm tarball shasum ac5dc0e69a7758909158a96fe80ce43b3bb96a9f matches registry dist.shasum).
+License: MIT, (c) 2014-2022 Chart.js Contributors - full text below, copied from npm chart.js@4.4.1 LICENSE.md.
+
+The MIT License (MIT)
+
+Copyright (c) 2014-2022 Chart.js Contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

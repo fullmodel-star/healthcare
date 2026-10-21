@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' data: https://cdn.jsdelivr.net; img-src 'self' data: blob:; connect-src 'self' https://generativelanguage.googleapis.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self' https://generativelanguage.googleapis.com; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>健康管理</title>
 <!-- PWA -->
@@ -23,7 +23,7 @@
 <link rel="stylesheet" href="ti-sub.css">
 <link rel="preload" href="ti-sub.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="vendor/hf-round.woff2" as="font" type="font/woff2" crossorigin>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" integrity="sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD" crossorigin="anonymous"></script>
+<script src="vendor/chartjs/chart.umd.min.js" integrity="sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD"></script>
 <script src="food-db.js?v=4"></script>
 <!-- 健康家族共用核心（主題／長輩大字／家族基本資料／家族選單）。只載 core.js，不載 core.css（會與自帶樣式相撞）。
      放在 head 而非 body 結尾：主程式 inline script 在 body 內就會呼叫 HC.*，且 HC 會在載入時先套用手動主題避免閃爍。 -->
