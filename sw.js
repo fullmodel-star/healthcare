@@ -47,7 +47,7 @@
   });
 })();
 /* RL_FRESH_END */
-const CACHE='health-app-v30';
+const CACHE='health-app-v31'; // 2026-11-26：手機主畫面 icon 字放大
 const ASSETS=[
   './',
   './index.html',
